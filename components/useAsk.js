@@ -11,6 +11,7 @@ import { useChatGpt } from 'react-native-chatgpt';
 
 export default function useAsk(xid = "random", defaultQuestion, timeout0 = 60000) {
     const { sendMessage, status, login } = useChat();
+
     const dispatch = useDispatch();
     const $sessions= React.useRef(null)
     $sessions.current=useSelector(state => state.my.sessions)
@@ -39,36 +40,37 @@ export default function useAsk(xid = "random", defaultQuestion, timeout0 = 60000
 
 function useChat() {
     const enableChatGPT = useSelector(state => hasChatGPTAccount(state));
-    return React.useMemo(()=>{
-        if (enableChatGPT){
-            const {sendMessage, ...status}=useChatGpt()
-            return {
-                ...status,
-                sendMessage(ask){
-                    if(ask.onAccumulatedResponse){
-                        return new Promise((resolve,reject)=>{
-                            sendMessage({
-                                ...ask,
-                                onAccumulatedResponse({isDone, ...response}){
-                                    ask.onAccumulatedResponse(...arguments)
-                                    if(isDone){
-                                        resolve(response)
-                                    }
-                                },
-                                onError(error){
-                                    ask.onError?.(error)
-                                    reject(error)
+    if (enableChatGPT){
+        const {sendMessage, ...status}=useChatGpt()
+        return {
+            ...status,
+            sendMessage:React.useCallback((ask)=>{
+                if(ask.onAccumulatedResponse){
+                    return new Promise((resolve,reject)=>{
+                        sendMessage({
+                            ...ask,
+                            onAccumulatedResponse({isDone, ...response}){
+                                ask.onAccumulatedResponse(...arguments)
+                                if(isDone){
+                                    resolve(response)
                                 }
-                            })
+                            },
+                            onError(error){
+                                ask.onError?.(error)
+                                reject(error)
+                            }
                         })
-                    }else{
-                        return sendMessage(...arguments)
-                    }
+                    })
+                }else{
+                    return sendMessage(...arguments)
                 }
-            }
+            },[])
         }
-    
-        async function sendMessage(message, options, id, timeout) {
+    }
+
+    return React.useMemo(()=>({ 
+        status: "authenticated", 
+        sendMessage:async (message, options, id, timeout)=>{
             const [request, processData = a => a, onError = a => a] = (() => {
                 if (id == "chat") { //no helper then no session
                     if (typeof (message) == "object") {
@@ -101,7 +103,5 @@ function useChat() {
                 onError(error)
             }
         }
-    
-        return { sendMessage, status: "proxy" };
-    },[enableChatGPT])
+    }),[])
 }

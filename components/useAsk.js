@@ -44,7 +44,7 @@ function useChat() {
         const {sendMessage, ...status}=useChatGpt()
         return {
             ...status,
-            sendMessage:function(ask){
+            sendMessage:React.useCallback(function(ask){
                 if(ask.onAccumulatedResponse){
                     return new Promise((resolve,reject)=>{
                         sendMessage({
@@ -64,7 +64,7 @@ function useChat() {
                 }else{
                     return sendMessage(...arguments)
                 }
-            }
+            },[sendMessage])
         }
     }
 

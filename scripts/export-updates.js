@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 require('dotenv').config()
 const ExpoConfig = require("@expo/config");
 const FormData = require("form-data");

@@ -64,7 +64,7 @@ function useChat() {
                 }else{
                     return sendMessage(...arguments)
                 }
-            },[])
+            },[sendMessage])
         }
     }
 

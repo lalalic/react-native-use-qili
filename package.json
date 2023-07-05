@@ -28,5 +28,8 @@
     "expo-updates-server": "^1.0.2",
     "form-data": "^4.0.0",
     "node-fetch2": "^1.6.3"
+  },
+  "bin":{
+    "export-updates":"./scripts/export-updates.js"
   }
 }

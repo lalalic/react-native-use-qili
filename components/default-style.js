@@ -99,6 +99,10 @@ if(!Date.prototype.getWeek){
         return parseInt((a=>a.substring(0,6))(`${padPart}000000`))
     }
 
+    Date.fromTimeInt=time=>{
+        return Date.from(`${new Date().asDateString()} ${time}`)
+    }
+
     Date.prototype.asTimeInt=function(){
         return parseInt(this.asTimeString().replace(/\:/g,""))
     }

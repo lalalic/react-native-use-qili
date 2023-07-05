@@ -1,7 +1,7 @@
 const { withFilter }=require("graphql-subscriptions")
 let uuid=Date.now()
 
-module.exports={
+module.exports=(pubsub)=>({
     name:"qili-web-proxy",
     typeDefs:`
         extend type Query{
@@ -67,6 +67,9 @@ module.exports={
         }
     },
     pubsub:{
+        init(){
+            return pubsub
+        },
         onDisconnect({app,user, request}){
             switch(request?.id){
                 case "helpQueue":
@@ -76,7 +79,7 @@ module.exports={
             }
         }
     },
-}
+})
 
 class Helpers{
     constructor(){

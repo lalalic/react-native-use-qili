@@ -8,10 +8,10 @@ const fetch = require("node-fetch2");
 
 const { version } = require("../package.json");
 let platform = "ios";
-const token = process.env['QILI_TOKEN']
+const {['QILI_TOKEN']:token, ['QILI_APP']: apiKey, ["QILI_UPDATES"]:updates} = process.env
 
 const cwd = process.cwd();
-const [, , root = "dist"] = process.argv;
+const [, , root = "dist", ] = process.argv;
 const folder = `${root}/${version}/${toDateTimeInt(new Date())}`;
 
 const { exp } = ExpoConfig.getConfig(".", {
@@ -94,7 +94,7 @@ async function fetchQili(request) {
 		method: "post",
 		headers: {
 			"Content-Type": "application/json",
-			"x-application-id": "parrot",
+			"x-application-id": apiKey,
 			"x-session-token": token,
 		},
 		body: JSON.stringify(request),
@@ -114,7 +114,7 @@ async function upload(assets) {
 				key
 			}
 		`);
-			all.variables[k] = `updates/${version}/${asset.key}`;
+			all.variables[k] = `${updates}/${version}/${asset.key}`;
 
 			return all;
 		},
@@ -196,7 +196,7 @@ async function moveFilesRecursively(sourceDir, destinationDir) {
 	exportUpdate();
 	const manifest = await createManifest({ 
 		downloadURL({ runtimeVersion, platform, assetFilePath }){
-			return `https://cdn.qili2.com/parrot/updates/${runtimeVersion}/${assetFilePath.split(/[\/\\]/g).pop()}`
+			return `https://cdn.qili2.com/${apiKey}/${updates}/${runtimeVersion}/${assetFilePath.split(/[\/\\]/g).pop()}`
 		} 
 	});
 

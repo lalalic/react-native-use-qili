@@ -4,7 +4,9 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 
 export default function makeQiliService(getSession) {
 	return {
-		service: "https://api.qili2.com/1/graphql",
+		get service(){
+			return globalThis.qiliService||"https://api.qili2.com/1/graphql"
+		},
 		storage: "https://up.qbox.me",
 		async fetch(request, { headers } = {}) {
 			const res = await fetch(this.service, {

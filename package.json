@@ -31,6 +31,6 @@
     
   },
   "bin":{
-    "export-updates":"./scripts/export-updates.js"
+    "qili-export-updates":"./scripts/export-updates.js"
   }
 }

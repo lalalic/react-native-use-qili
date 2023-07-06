@@ -1,6 +1,10 @@
 
+require('dotenv').config()
+const projectRoot=process.cwd()
+const {["QILI_APP"]:qiliApp} = process.env
+
 module.exports=()=>({
-    entry:[`${process.cwd()}/cloud/index.js`],
+    entry:[`${projectRoot}/cloud/index.js`],
     target:"node",
     externals: [
         function(context, request, callback){
@@ -18,15 +22,15 @@ module.exports=()=>({
         }
     ],
     output:{
-        path:`${__dirname}/cloud`,
+        path:`${projectRoot}/cloud`,
         filename:"bundled.js",
-        devtoolNamespace:"wechat-bot"
+        devtoolNamespace: qiliApp
     },
     mode:"production",
     plugins:[
         new (require("webpack")).EvalSourceMapDevToolPlugin({
             exclude:/node_modules/,//(?!\/qili\-app)/,
-            moduleFilenameTemplate: 'webpack:///wechat-bot/[resource-path]?[loaders]'
+            moduleFilenameTemplate: `webpack:///${qiliApp}/[resource-path]?[loaders]`
         })
     ]
 })

@@ -36,6 +36,13 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
                 console.debug({ event: type, data });
                 (events[type] || []).forEach(fn => fn(data));
                 return proxy;
+            },
+            un(type, fn){
+                const i=events[type]?.indexOf(fn)
+                if(i>-1){
+                    events[type].splice(i,1)
+                }
+                return proxy
             }
         };
 

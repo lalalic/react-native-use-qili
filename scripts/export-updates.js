@@ -5,12 +5,12 @@ const ExpoConfig = require("@expo/config");
 const FormData = require("form-data");
 
 const fetch = require("node-fetch2");
+const cwd = process.cwd();
 
-const { version } = require("../package.json");
+const { version } = require(`${cwd}/package.json`);
 let platform = "ios";
 const {['QILI_TOKEN']:token, ['QILI_APP']: apiKey, ["QILI_UPDATES"]:updates} = process.env
 
-const cwd = process.cwd();
 const [, , root = "dist", ] = process.argv;
 const folder = `${root}/${version}/${toDateTimeInt(new Date())}`;
 

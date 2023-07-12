@@ -10,6 +10,7 @@
   "dependencies": {
     "react-native-chatgpt": "^0.9.0",
     "react-native-iap": "~11.0.0",
+    "graphql-subscriptions":"^1.1.0",
     "subscriptions-transport-ws": "^0.11.0"
   },
   "peerDependencies": {

@@ -1,4 +1,4 @@
-export default function mergeServices(dirChromeExtension=`${process.cwd()}/chrome-extension`) {
+module.exports=function mergeServices(dirChromeExtension=`${process.cwd()}/chrome-extension`) {
 	const fs = require('fs');
 	const codes = [];
 	const uris = require(`${dirChromeExtension}/manifest.json`)

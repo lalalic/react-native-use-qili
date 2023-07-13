@@ -25,6 +25,5 @@ api
 * scripts: load .env for keys: [QILI_TOKEN, QILI_APP, QILI_UPDATES: updates uri context]
     * chrome-extension-to-service
     * export-updates
-* webpack.cloud.js
 
 

@@ -3,18 +3,21 @@ import prepareFolder from "./prepareFolder";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
 export default function makeQiliService(getSession) {
-	return {
-		get service(){
-			return globalThis.qiliService||"https://api.qili2.com/1/graphql"
-		},
+	if(!'QiliConf' in globalThis){
+		throw new Error(`Please useQili to configure Qili service first.`)
+	}
+
+	let QiliConf=globalThis.QiliConf||{apiKey:"", api:"https://api.qili2.com/1/graphql"}
+
+	const factory=({api, apiKey})=>({
+		service: api,
 		storage: "https://up.qbox.me",
-		async fetch(request, { headers } = {}) {
+		async fetch(request, headers) {
+			headers=headers||{"x-application-id": apiKey,...getSession(),}
 			const res = await fetch(this.service, {
 				method: "POST",
 				headers: {
 					'Content-Type': 'application/json',
-					"x-application-id": globalThis.qiliAppApiKey,
-					...getSession(),
 					...headers,
 				},
 				body: request instanceof FormData ? request : JSON.stringify(request)
@@ -55,14 +58,14 @@ export default function makeQiliService(getSession) {
 
 			return data?.file_create?.url;
 		},
-		subscribe(request, callback) {
+		subscribe(request, callback, headers) {
+			headers=headers||{"x-application-id": apiKey,...getSession(),}
 			const url = this.service.replace(/^http/, "ws");
 			//@Why: a shared client can't work, is it because close method is changed ???
 			const client = new SubscriptionClient(url, {
 				reconnect: true,
 				connectionParams: {
-					"x-application-id": globalThis.qiliAppApiKey,
-					...getSession(),
+					...headers,
 					request: {
 						id: request.id,
 						variables: request.variables
@@ -90,31 +93,46 @@ export default function makeQiliService(getSession) {
 				console.log(`subscription for ${request.id} closed`)
 			};
 		},
-		askThenWaitAnswer(ask, timeout) {
-			return new Promise((resolve, reject) => {
-				const unsub = this.subscribe({
-					id: "askThenWaitAnswer",
-					query: `subscription a($message:JSON!){
+
+	})
+
+	const Qili=factory(QiliConf)
+
+	let bridge={...Qili}
+
+	if(QiliConf.bridge){
+		const {api:_1, apiKey:_2, bridge:{api=_1, apiKey=_2, accessToken}}=QiliConf.bridge
+		bridge=factory({api, apiKey, headers:{"x-application-id":apiKey, "x-access-token":accessToken}})	
+	}
+
+	bridge.askThenWaitAnswer=function(ask, timeout) {
+		return new Promise((resolve, reject) => {
+			const unsub = this.subscribe({
+				id: "askThenWaitAnswer",
+				query: `subscription a($message:JSON!){
 						askThenWaitAnswer(message:$message)
-					}`,
-					variables: { message: ask }
-				}, ({ data, errors }) => {
-					timer && clearTimeout(timer)
+				}`,
+				variables: { message: ask }
+			}, ({ data, errors }) => {
 					unsub();
 					if (errors) {
 						console.error(errors);
 						reject(new Error("Your request can't be processed now."));
 					} else {
 						resolve(data.askThenWaitAnswer);
-					}
-
-				});
-
-				const timer=timeout && setTimeout(e=>{
-					unsub()
-					reject(new Error("Your request can't be processed now."))
-				}, timeout)
-			});
-		}
+					  }
+				})
+		})
 	}
+
+	
+	Object.defineProperties(Qili, {
+		bridge:{
+			get(){
+				bridge
+			}
+		}
+	})
+
+	return Qili
 }

@@ -44,7 +44,7 @@ export default function SubscribeHelpQueue({children, services}){
         }
 
         const window={isLocal:true}
-        services.subscriptAsHelper({helper,Qili, chrome, window})
+        services.subscriptAsHelper({helper,Qili:Qili.bridge, chrome, window})
         window.bros.chatgpt.getToken=()=>{
             return $chatgptAccessToken.current.split(" ")[1]
         }

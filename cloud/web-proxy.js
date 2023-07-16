@@ -1,7 +1,7 @@
 const { withFilter }=require("graphql-subscriptions")
 let uuid=Date.now()
 
-module.exports=(pubsub)=>({
+module.exports=(pubsub,topic="default")=>({
     name:"qili-web-proxy",
     typeDefs:`
         extend type Query{
@@ -10,13 +10,13 @@ module.exports=(pubsub)=>({
 
         extend type Subscription{
             askThenWaitAnswer(message:JSON!):JSON
-            helpQueue(helper:String!):JSON
+            helpQueue(helper:String):JSON
         }
     `,
     resolver:{
         Query:{
             answerHelp(_,{session, response}, {app}){
-                app.pubsub.publish("answer", {session, response})
+                app.pubsub.publish(`${app.app.apiKey}.${topic}.answer`, {session, response})
                 return true
             },
         },
@@ -28,9 +28,9 @@ module.exports=(pubsub)=>({
                         throw new Error("Your request can't be processed now!")
                     }
                     const ask={session:`${++uuid}`,message}
-                    app.pubsub.publish("ask", ask)
+                    app.pubsub.publish(`${app.app.apiKey}.${topic}.ask`, ask)
                     return withFilter(
-                        ()=>app.pubsub.asyncIterator(['answer']),
+                        ()=>app.pubsub.asyncIterator([`${app.app.apiKey}.${topic}.answer`]),
                         answer=>{
                             const answered=answer.session==ask.session
                             if(answered){
@@ -49,7 +49,7 @@ module.exports=(pubsub)=>({
                 subscribe(_,{helper}, {app,user}){
                     Helpers.add(helper=user._id||helper)
                     return withFilter(
-                        ()=>app.pubsub.asyncIterator(["ask"]),
+                        ()=>app.pubsub.asyncIterator([`${app.app.apiKey}.${topic}.ask`]),
                         ask=>{
                             const picked=Helpers.pick1(ask)===helper
                             if(picked){
@@ -79,6 +79,12 @@ module.exports=(pubsub)=>({
             }
         }
     },
+        
+    finalize(app){
+        if(pubsub && !pubsub.closed){
+            pubsub.close?.()
+        }
+    }
 })
 
 class Helpers{

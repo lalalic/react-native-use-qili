@@ -21,8 +21,6 @@ export function myReducer(state = {
     return state
 }
 
-export const Qili=makeQiliService(getSession)
-
 export async function isAdmin(state=globalThis.store.getState()){
 	if(isUserLogin(state)){
 		const data=await Qili.fetch({
@@ -53,3 +51,5 @@ export function getSession(){
 	const {my:{admin}}=globalThis.store.getState()
 	return admin?.headers
 }
+
+export const Qili=makeQiliService(getSession)

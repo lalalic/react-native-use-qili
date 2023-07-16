@@ -97,7 +97,7 @@ function useChat() {
             })();
             console.debug({ event: "askThenWaitAnswer", message, options, id, timeout });
             try{
-                const message=await Qili.askThenWaitAnswer(request, timeout)
+                const message=await Qili.bridge.askThenWaitAnswer(request, timeout)
                 return processData(message)
             }catch(error){
                 onError(error)

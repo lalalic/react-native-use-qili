@@ -101,7 +101,7 @@ export default function makeQiliService(getSession) {
 	let bridge={...Qili}
 
 	if(QiliConf.bridge){
-		const {api:_1, apiKey:_2, bridge:{api=_1, apiKey="bridge", accessToken}}=QiliConf.bridge
+		const {api:_1, apiKey:_2, bridge:{api=_1, apiKey="bridge", accessToken}}=QiliConf
 		bridge=factory({api, apiKey, headers:{"x-application-id":apiKey, "x-access-token":accessToken}})	
 	}
 

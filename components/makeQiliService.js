@@ -7,7 +7,7 @@ export default function makeQiliService(getSession) {
 		throw new Error(`Please useQili to configure Qili service first.`)
 	}
 
-	let QiliConf=globalThis.QiliConf||{apiKey:"", api:"https://api.qili2.com/1/graphql"}
+	let QiliConf=globalThis.QiliConf
 
 	const factory=({api, apiKey})=>({
 		service: api,
@@ -101,7 +101,7 @@ export default function makeQiliService(getSession) {
 	let bridge={...Qili}
 
 	if(QiliConf.bridge){
-		const {api:_1, apiKey:_2, bridge:{api=_1, apiKey="bridge", accessToken}}=QiliConf
+		const {api=QiliConf.api, apiKey="bridge", accessToken}=QiliConf.bridge
 		bridge=factory({api, apiKey, headers:{"x-application-id":apiKey, "x-access-token":accessToken}})	
 	}
 

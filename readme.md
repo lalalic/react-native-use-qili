@@ -26,4 +26,6 @@ api
     * chrome-extension-to-service
     * export-updates
 
-
+scripts
+=====
+* chrome-extension-to-service.js : merge content_scripts, services, and background into a js for react web/native 

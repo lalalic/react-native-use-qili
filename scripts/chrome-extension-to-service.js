@@ -6,7 +6,7 @@ module.exports=function mergeServices(dirChromeExtension=`${process.cwd()}/chrom
 		.reduce((uris, a) => {
 			const name = a.js[0].replace(".js", "").split("/").pop();
 			uris.push(`${name} : "${a.matches[0]}"`);
-			const code = fs.readFileSync(`./chrome-extension/${a.js[0]}`, { encoding: "utf8" })
+			const code = fs.readFileSync(`${dirChromeExtension}/${a.js[0]}`, { encoding: "utf8" })
 				.replace("function", "export function")
 				.replace("injectBro", name);
 			codes.push(code);

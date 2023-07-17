@@ -38,7 +38,7 @@ export default function webviewServicesFactory(extension){
                                 return (...args)=>{
                                     const message={fnKey, args, $service: id}
                                     console.debug(message)
-                                    return Qili.askThenWaitAnswer(message)
+                                    return Qili.bridge.askThenWaitAnswer(message)
                                 }
                             }
                         })

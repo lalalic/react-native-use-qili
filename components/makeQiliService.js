@@ -128,9 +128,7 @@ export default function makeQiliService(getSession) {
 	
 	Object.defineProperties(Qili, {
 		bridge:{
-			get(){
-				bridge
-			}
+			value: bridge
 		}
 	})
 

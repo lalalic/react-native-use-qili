@@ -1,11 +1,10 @@
 import React from 'react';
 import { View, TextInput, Button } from "react-native";
-import { useDispatch } from "react-redux";
-import { Qili } from "../store";
+import { useDispatch, useSelector } from "react-redux";
+import { isUserLogin, Qili } from "../store";
 import FlyMessage from "./FlyMessage";
 
-
-export default Object.assign(function Login({ }) {
+export default function Login({}) {
     const dispatch = useDispatch();
     const [contact, setContact] = React.useState("");
     const [authReady, setAuthReady] = React.useState(false);
@@ -105,19 +104,26 @@ export default Object.assign(function Login({ }) {
             </View>
         </View>
     );
-}, {
-    async updateToken(admin, dispatch) {
-        const data = await Qili.fetch({
-            id: "authentication_renewToken_Query",
-        }, admin);
+}
 
-        if (data?.errors) {
-            dispatch({ type: "my", payload: { admin: undefined, requireLogin: true } });
-            return;
-        }
+Login.updateToken=async function updateToken(admin, dispatch) {
+    const data = await Qili.fetch({
+        id: "authentication_renewToken_Query",
+    }, admin);
 
-        if (data?.me?.token) {
-            dispatch({ type: "my", payload: { admin: { ...admin, headers: { ...admin.headers, "x-session-token": data.me.token } } } });
-        }
+    if (data?.errors) {
+        dispatch({ type: "my", payload: { admin: undefined, requireLogin: true } });
+        return;
     }
-});
+
+    if (data?.me?.token) {
+        dispatch({ type: "my", payload: { admin: { ...admin, headers: { ...admin.headers, "x-session-token": data.me.token } } } });
+    }
+}
+
+Login.Required=({children})=>{
+    const logined=useSelector(isUserLogin)
+    if(logined)
+        return children
+    return <Login/>
+}

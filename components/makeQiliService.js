@@ -13,11 +13,12 @@ export default function makeQiliService(getSession) {
 		service: api,
 		storage: "https://up.qbox.me",
 		async fetch(request, headers) {
-			headers=headers||{"x-application-id": apiKey,...getSession(),}
+			headers=headers||{...getSession(),}
 			const res = await fetch(this.service, {
 				method: "POST",
 				headers: {
 					'Content-Type': 'application/json',
+					"x-application-id": apiKey,
 					...headers,
 				},
 				body: request instanceof FormData ? request : JSON.stringify(request)
@@ -59,12 +60,13 @@ export default function makeQiliService(getSession) {
 			return data?.file_create?.url;
 		},
 		subscribe(request, callback, headers) {
-			headers=headers||{"x-application-id": apiKey,...getSession(),}
+			headers=headers||{...getSession(),}
 			const url = this.service.replace(/^http/, "ws");
 			//@Why: a shared client can't work, is it because close method is changed ???
 			const client = new SubscriptionClient(url, {
 				reconnect: true,
 				connectionParams: {
+					"x-application-id": apiKey,
 					...headers,
 					request: {
 						id: request.id,

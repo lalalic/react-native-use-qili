@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, TextInput, Button } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useStore } from "react-redux";
 import { isUserLogin, Qili } from "../store";
 import FlyMessage from "./FlyMessage";
+import Loading from "./Loading"
 
-export default function Login({}) {
+export default function Login({onLogin}) {
     const dispatch = useDispatch();
     const [contact, setContact] = React.useState("");
     const [authReady, setAuthReady] = React.useState(false);
@@ -65,6 +66,7 @@ export default function Login({}) {
                     requireLogin: false,
                 }
             });
+            onLogin?.()
         } catch (e) {
             FlyMessage.error(e.message);
         }
@@ -107,23 +109,43 @@ export default function Login({}) {
 }
 
 Login.updateToken=async function updateToken(admin, dispatch) {
-    const data = await Qili.fetch({
-        id: "authentication_renewToken_Query",
-    }, admin);
+    try{
+        const data = await Qili.fetch({
+            id: "authentication_renewToken_Query",
+        }, admin.headers);
 
-    if (data?.errors) {
+        if (data?.me?.token) {
+            dispatch({ type: "my", payload: { admin: { ...admin, headers: { ...admin.headers, "x-session-token": data.me.token } } } });
+            return true
+        }
+
         dispatch({ type: "my", payload: { admin: undefined, requireLogin: true } });
-        return;
-    }
-
-    if (data?.me?.token) {
-        dispatch({ type: "my", payload: { admin: { ...admin, headers: { ...admin.headers, "x-session-token": data.me.token } } } });
+        return false
+    }catch(e){
+        dispatch({ type: "my", payload: { admin: undefined, requireLogin: true } });
+        return false
     }
 }
 
 Login.Required=({children})=>{
-    const logined=useSelector(isUserLogin)
-    if(logined)
+    const store=useStore()
+    const [logined, setLogined]=React.useState()
+    React.useEffect(()=>{
+        (async()=>{
+            const state=store.getState()
+            if(isUserLogin(state)){
+                const done=await Login.updateToken(state.my.admin, store.dispatch)
+                setLogined(!!done)
+            }else{
+                setLogined(false)
+            }
+        })();
+    },[])
+    if(logined===true){
         return children
-    return <Login/>
+    } else if(logined===false){
+        return <Login onLogin={e=>setLogined(true)}/>
+    }
+
+    return <Loading/>
 }

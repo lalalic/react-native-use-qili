@@ -9,6 +9,7 @@ import { Provider as ReduxProvider} from "react-redux"
 import { PersistGate } from 'redux-persist/integration/react'
 import { persistStore,persistReducer, FLUSH,REHYDRATE,PAUSE,PERSIST,PURGE,REGISTER } from 'redux-persist'
 import makeQiliService from "./components/makeQiliService";
+import Loading from "./components/Loading"
 
 
 export function myReducer(state = {
@@ -94,7 +95,7 @@ export function createStore({reducers:extendReducers,storage}){
 	return {store, persistor:persistStore(store)}
 }
 
-export const Provider=({children, onReady, loading, reducers, storage=ExpoFileSystemStorage})=>{
+export const Provider=({children, onReady, loading=<Loading/>, reducers, storage=ExpoFileSystemStorage})=>{
 	const {store, persistor}=React.useMemo(()=>{
 		const data=createStore({reducers, storage})
 		const unsub=data.store.subscribe(async ()=>{

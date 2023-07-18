@@ -75,12 +75,13 @@ export default function Login({onLogin}) {
     const textStyle = { height: 40, fontSize: 20, borderWidth: 1, borderColor: "gray", padding: 4 };
 
     return (
-        <View style={{ backgroundColor: "white", padding: 10, width: "100%" }}>
+        <View style={{ flex:1, backgroundColor: "white", padding: 10}}>
             <View style={{ flexDirection: "row", height: 40 }}>
                 <TextInput style={{ flex: 1, ...textStyle }}
                     editable={!tick}
                     value={contact}
                     placeholder="Phone Number"
+                    placeholderTextColor="gray"
                     onChangeText={text => setContact(text)} />
                 <Button style={{ width: 500 }}
                     disabled={!!tick}
@@ -91,9 +92,10 @@ export default function Login({onLogin}) {
             <TextInput value={code} style={{ ...textStyle, marginTop: 20, marginBottom: 20 }}
                 editable={!!authReady}
                 placeholder="Verification Code"
+                placeholderTextColor="gray"
                 onChangeText={text => setCode(text)} />
 
-            <View style={{ flexDirection: "row", height: 50, width: "100%" }}>
+            <View style={{ flex:1, flexDirection: "row", height: 50 }}>
                 <View style={{ flex: 1 }}>
                     <Button title="Cancel"
                         onPress={e => dispatch({ type: "my", payload: { requireLogin: false } })} />

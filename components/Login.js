@@ -77,16 +77,20 @@ export default function Login({onLogin}) {
     return (
         <View style={{ flex:1, backgroundColor: "white", padding: 10}}>
             <View style={{ flexDirection: "row", height: 40 }}>
-                <TextInput style={{ flex: 1, ...textStyle }}
-                    editable={!tick}
-                    value={contact}
-                    placeholder="Phone Number"
-                    placeholderTextColor="gray"
-                    onChangeText={text => setContact(text)} />
-                <Button style={{ width: 500 }}
-                    disabled={!!tick}
-                    onPress={e => requestCode(contact)}
-                    title={tick ? tick + "" : (tick === 0 ? "Re-Request" : "Request Code")} />
+                <View style={{flexGrow:1, marginRight:10}}>
+                    <TextInput style={textStyle}
+                        editable={!tick}
+                        value={contact}
+                        placeholder="Phone Number"
+                        placeholderTextColor="gray"
+                        onChangeText={text => setContact(text)} />
+                </View>
+                <View style={{ width: 150, justifyContent:"center" }}>
+                    <Button
+                        disabled={!!tick}
+                        onPress={e => requestCode(contact)}
+                        title={tick ? tick + "" : (tick === 0 ? "Re-Request" : "Request Code")} />
+                </View>
             </View>
 
             <TextInput value={code} style={{ ...textStyle, marginTop: 20, marginBottom: 20 }}
@@ -96,11 +100,11 @@ export default function Login({onLogin}) {
                 onChangeText={text => setCode(text)} />
 
             <View style={{ flex:1, flexDirection: "row", height: 50 }}>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, alignItems:"center" }}>
                     <Button title="Cancel"
                         onPress={e => dispatch({ type: "my", payload: { requireLogin: false } })} />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, alignItems:"center" }}>
                     <Button title="Login"
                         disabled={!authReady}
                         onPress={e => login({ contact, code })} />

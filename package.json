@@ -1,16 +1,12 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
   "author": "lalalic@139.com",
   "license": "MIT",
   "dependencies": {
-    "react-native-chatgpt": "^0.9.0",
-    "react-native-iap": "~11.0.0",
-    "graphql-subscriptions":"^1.1.0",
-    "subscriptions-transport-ws": "^0.11.0"
   },
   "peerDependencies": {
     "expo": "~46.0.16",
@@ -25,6 +21,10 @@
     "node-fetch2": "^1.6.3"
   },
   "optionalDependencies": {
+    "react-native-chatgpt": "^0.9.0",
+    "react-native-iap": "~11.0.0",
+    "graphql-subscriptions":"^1.1.0",
+    "subscriptions-transport-ws": "^0.11.0",
     "react-redux": "^8.0.4",
     "redux": "^4.2.0",
     "react-router-native": "^6.4.2",
@@ -33,7 +33,9 @@
     "expo-file-system": "^15.2.2",
     "expo-updates": "~0.14.7",
     "react-native-webview": "11.23.0",
-    "redux-persist-expo-filesystem": "^2.0.0"
+    "redux-persist-expo-filesystem": "^2.0.0",
+    "expo-splash-screen": "~0.16.2",
+    "expo-status-bar": "~1.4.0"
   },
   "bin": {
     "qili-export-updates": "./scripts/export-updates.js"

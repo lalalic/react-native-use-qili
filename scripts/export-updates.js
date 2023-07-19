@@ -19,7 +19,7 @@ const { exp } = ExpoConfig.getConfig(".", {
 	isPublicConfig: true,
 });
 
-//console.log({api, apiKey, token, updates, platform, version, root})
+console.log({api, apiKey, token, updates, platform, version, root})
 
 function toDateTimeInt(d) {
 	const pad = (i) => String(i).padStart(2, "0");
@@ -98,7 +98,7 @@ async function fetchQili(request) {
 			headers: {
 				"Content-Type": "application/json",
 				"x-application-id": apiKey,
-				"x-session-token": token,
+				[token.length>100 ? "x-session-token": "x-access-token"]: token,
 			},
 			body: JSON.stringify(request),
 		});
@@ -131,7 +131,8 @@ async function upload(assets) {
 		${querys.join("\n")}
 	}`;
 
-	const tokens = Object.values(await fetchQili({ query, variables }));
+	const tokens = Object.values(await fetchQili({ query, variables })).filter(a=>!!a);
+	console.assert(tokens.length==assets.length, "error when requiring uploading token")
 	return Promise.allSettled(
 		assets.map(async (asset, i) => {
 			const form = new FormData();
@@ -158,7 +159,12 @@ async function upload(assets) {
 				})
 			})();
 		})
-	)
+	).then(results=>{
+		const rejected=results.filter(a=>a.status=="rejected")
+		if(rejected.length!=0){
+			throw new Error(`${rejected.length}/${assets.length} upload failed`)
+		}
+	})
 }
 
 async function moveFilesRecursively(sourceDir, destinationDir) {
@@ -198,28 +204,33 @@ async function moveFilesRecursively(sourceDir, destinationDir) {
 }
 
 (async () => {
-	platform = "ios";
-	exportUpdate();
-	const manifest = await createManifest({ 
-		downloadURL({ runtimeVersion, platform, assetFilePath }){
-			return `https://cdn.qili2.com/${apiKey}/${updates}/${runtimeVersion}/${assetFilePath.split(/[\/\\]/g).pop()}`
-		} 
-	});
 
-	require("fs").writeFileSync(
-		`${folder}/../${platform}-manifest.json`,
-		JSON.stringify(manifest)
-	)
+	try{
+		platform = "ios";
+		exportUpdate();
+		const manifest = await createManifest({ 
+			downloadURL({ runtimeVersion, platform, assetFilePath }){
+				return `https://cdn.qili2.com/${apiKey}/${updates}/${runtimeVersion}/${assetFilePath.split(/[\/\\]/g).pop()}`
+			} 
+		});
 
-	const {assets, launchAsset}=manifest
-	//upload version/asset.key
-	await upload([
-		...assets.map(a=>({...a, filePath:`assets/${a.key}`})),
-		{ ...launchAsset, key: `${platform}-${launchAsset.key}.js`, filePath:`bundles/${platform}-${launchAsset.key}.js` },
-		{key:`${platform}-manifest.json`, filePath:`../${platform}-manifest.json`}
-	]);
+		require("fs").writeFileSync(
+			`${folder}/../${platform}-manifest.json`,
+			JSON.stringify(manifest)
+		)
 
-	await moveFilesRecursively(folder, `${folder}/..`);
-	await new Promise(resolve=>require('fs').rm(folder, {recursive:true, maxRetries:2}, resolve))
-	console.log(`done: total ${assets.length+2} uploaded`)
+		const {assets, launchAsset}=manifest
+		//upload version/asset.key
+		await upload([
+			...assets.map(a=>({...a, filePath:`assets/${a.key}`})),
+			{ ...launchAsset, key: `${platform}-${launchAsset.key}.js`, filePath:`bundles/${platform}-${launchAsset.key}.js` },
+			{key:`${platform}-manifest.json`, filePath:`../${platform}-manifest.json`}
+		]);
+
+		await moveFilesRecursively(folder, `${folder}/..`);
+		await new Promise(resolve=>require('fs').rm(folder, {recursive:true, maxRetries:2}, resolve))
+		console.log(`done: total ${assets.length+2} uploaded`)
+	}catch(e){
+		console.error(e.message)
+	}
 })();

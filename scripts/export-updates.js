@@ -9,9 +9,9 @@ const cwd = process.cwd();
 
 const { version } = require(`${cwd}/package.json`);
 let platform = "ios";
-const {['QILI_TOKEN']:token, ['QILI_APP']: apiKey, ["QILI_UPDATES"]:updates, api="https://api.qili2.com/1/graphql"} = process.env
+const {['QILI_TOKEN']:$token, ['QILI_APP']: $apiKey, ["QILI_UPDATES"]:$updates, api:$api="https://api.qili2.com/1/graphql"} = process.env
 
-const [, , root = "dist", ] = process.argv;
+const [, , root = "dist", apiKey=$apiKey,token=$token,updates=$updates,api=$api] = process.argv;
 const folder = `${root}/${version}/${toDateTimeInt(new Date())}`;
 
 const { exp } = ExpoConfig.getConfig(".", {

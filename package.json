@@ -38,6 +38,8 @@
     "subscriptions-transport-ws": "^0.11.0"
   },
   "bin": {
-    "qili-export-updates": "./scripts/export-updates.js"
+    "qili-export-updates": "./scripts/export-updates.js",
+    "qili-get-session-token":"./scripts/get-session-token.js",
+    "qili-get-access-token":"./scripts/get-access-token.js"
   }
 }

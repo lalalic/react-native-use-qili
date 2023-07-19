@@ -9,7 +9,7 @@ const cwd = process.cwd();
 
 const { version } = require(`${cwd}/package.json`);
 let platform = "ios";
-const {['QILI_TOKEN']:token, ['QILI_APP']: apiKey, ["QILI_UPDATES"]:updates} = process.env
+const {['QILI_TOKEN']:token, ['QILI_APP']: apiKey, ["QILI_UPDATES"]:updates, api="https://api.qili2.com/1/graphql"} = process.env
 
 const [, , root = "dist", ] = process.argv;
 const folder = `${root}/${version}/${toDateTimeInt(new Date())}`;
@@ -18,6 +18,8 @@ const { exp } = ExpoConfig.getConfig(".", {
 	skipSDKVersionRequirement: true,
 	isPublicConfig: true,
 });
+
+//console.log({api, apiKey, token, updates, platform, version, root})
 
 function toDateTimeInt(d) {
 	const pad = (i) => String(i).padStart(2, "0");
@@ -90,17 +92,21 @@ async function createManifest({ downloadURL }) {
 }
 
 async function fetchQili(request) {
-	const res = await fetch("https://api.qili2.com/1/graphql", {
-		method: "post",
-		headers: {
-			"Content-Type": "application/json",
-			"x-application-id": apiKey,
-			"x-session-token": token,
-		},
-		body: JSON.stringify(request),
-	});
-	const { data } = await res.json();
-	return data;
+	try{
+		const res = await fetch(api, {
+			method: "post",
+			headers: {
+				"Content-Type": "application/json",
+				"x-application-id": apiKey,
+				"x-session-token": token,
+			},
+			body: JSON.stringify(request),
+		});
+		const { data } = await res.json();
+		return data;
+	}catch(e){
+		console.error(e)
+	}
 }
 
 async function upload(assets) {
@@ -121,7 +127,7 @@ async function upload(assets) {
 		{ keys: [], querys: [], variables: {} }
 	);
 
-	const query = `query a(${keys.map((k) => `$${k}:String`).join(",")}){
+	const query = `query(${keys.map((k) => `$${k}:String!`).join(",")}){
 		${querys.join("\n")}
 	}`;
 

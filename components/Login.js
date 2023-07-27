@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, Button, Text } from "react-native";
-import { useDispatch, useStore } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
 import { isUserLogin, Qili } from "../store";
 import FlyMessage from "./FlyMessage";
 import Loading from "./Loading"
@@ -138,6 +138,7 @@ Login.updateToken=async function updateToken(admin, dispatch) {
 
 Login.Required=({children, onLogin, ...props})=>{
     const store=useStore()
+    const hasSession=useSelector(state=>isUserLogin(state))
     const [logined, setLogined]=React.useState()
     React.useEffect(()=>{
         (async()=>{
@@ -152,7 +153,8 @@ Login.Required=({children, onLogin, ...props})=>{
                 setLogined(false)
             }
         })();
-    },[])
+    },[hasSession])
+    
     if(logined===true){
         return children
     } else if(logined===false){

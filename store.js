@@ -1,7 +1,7 @@
 import React from "react"
 import uuid from 'react-native-uuid';
 import { combineReducers } from "redux"
-import { configureStore, isPlain } from "@reduxjs/toolkit";
+import { configureStore, isPlain, createListenerMiddleware } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import ExpoFileSystemStorage from "redux-persist-expo-filesystem"
 
@@ -44,7 +44,7 @@ export function isAlreadyFamiliar(state){
 	return state.my.i>1000
 }
 
-export function hasChatGPTAccount(state){
+export function hasChatGPTAccount(state=globalThis.store.getState()){
 	return !!state.my.widgets?.chatgpt
 }
 
@@ -64,12 +64,14 @@ export function getSession(){
 export const Qili=makeQiliService(getSession)
 
 
-export function createStore({reducers:extendReducers,storage}){
+export function createStore({reducers:extendReducers,storage, listeners=[]}){
 	const reducers={
 		my:myReducer,
 		...extendReducers,
 	}
 
+	const listener=createListenerMiddleware()
+	listeners.forEach(fx=>listener.startListening(fx))
 	const store = globalThis.store=configureStore({
 		/** reducer can't directly change any object in state, instead shallow copy and change */
 		reducer:
@@ -88,18 +90,19 @@ export function createStore({reducers:extendReducers,storage}){
 				immutableCheck:{
 					warnAfter:100,
 				},
-			}),
+			}).prepend([listener.middleware]),
 	})
 
 	setupListeners(store.dispatch)
 	return {store, persistor:persistStore(store)}
 }
 
-export const Provider=({children, onReady, loading=<Loading/>, reducers, storage=ExpoFileSystemStorage})=>{
+export const Provider=({children, onReady, loading=<Loading/>, init, reducers, storage=ExpoFileSystemStorage})=>{
 	const {store, persistor}=React.useMemo(()=>{
 		const data=createStore({reducers, storage})
 		const unsub=data.store.subscribe(async ()=>{
 			unsub()
+			await init?.(data.store)
 			onReady?.()
 		})
 

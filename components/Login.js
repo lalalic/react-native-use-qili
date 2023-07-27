@@ -5,7 +5,7 @@ import { isUserLogin, Qili } from "../store";
 import FlyMessage from "./FlyMessage";
 import Loading from "./Loading"
 
-export default function Login({onLogin}) {
+export default function Login({onLogin, l10n=new Proxy({},{get:(_, key)=>key})}) {
     const dispatch = useDispatch();
     const [contact, setContact] = React.useState("");
     const [authReady, setAuthReady] = React.useState(false);
@@ -81,7 +81,7 @@ export default function Login({onLogin}) {
                     <TextInput style={textStyle}
                         editable={!tick}
                         value={contact}
-                        placeholder="Phone Number"
+                        placeholder={l10n["Phone Number"]}
                         placeholderTextColor="gray"
                         onChangeText={text => setContact(text)} />
                 </View>
@@ -89,23 +89,23 @@ export default function Login({onLogin}) {
                     <Button
                         disabled={!!tick}
                         onPress={e => requestCode(contact)}
-                        title={tick ? tick + "" : (tick === 0 ? "Re-Request" : "Request Code")} />
+                        title={tick ? tick + "" : (tick === 0 ? l10n["Re-Request"] : l10n["Request Code"])} />
                 </View>
             </View>
 
             <TextInput value={code} style={{ ...textStyle, marginTop: 20, marginBottom: 20 }}
                 editable={!!authReady}
-                placeholder="Verification Code"
+                placeholder={l10n["Verification Code"]}
                 placeholderTextColor="gray"
                 onChangeText={text => setCode(text)} />
 
             <View style={{ flex:1, flexDirection: "row", height: 50 }}>
                 <View style={{ flex: 1, alignItems:"center" }}>
-                    <Button title="Cancel"
+                    <Button title={l10n["Cancel"]}
                         onPress={e => dispatch({ type: "my", payload: { requireLogin: false } })} />
                 </View>
                 <View style={{ flex: 1, alignItems:"center" }}>
-                    <Button title="Login"
+                    <Button title={l10n["Login"]}
                         disabled={!authReady}
                         onPress={e => login({ contact, code })} />
                 </View>
@@ -133,7 +133,7 @@ Login.updateToken=async function updateToken(admin, dispatch) {
     }
 }
 
-Login.Required=({children})=>{
+Login.Required=({children, onLogin, ...props})=>{
     const store=useStore()
     const [logined, setLogined]=React.useState()
     React.useEffect(()=>{
@@ -141,6 +141,9 @@ Login.Required=({children})=>{
             const state=store.getState()
             if(isUserLogin(state)){
                 const done=await Login.updateToken(state.my.admin, store.dispatch)
+                if(!!done){
+                    await onLogin?.()
+                }
                 setLogined(!!done)
             }else{
                 setLogined(false)
@@ -150,7 +153,11 @@ Login.Required=({children})=>{
     if(logined===true){
         return children
     } else if(logined===false){
-        return <Login onLogin={e=>setLogined(true)}/>
+        return <Login {...props} 
+            onLogin={async e=>{
+                await onLogin?.()
+                setLogined(true)
+            }} />
     }
 
     return <Loading/>

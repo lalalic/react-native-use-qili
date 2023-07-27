@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-iaphub-ui/src/paywall/index.js b/node_modules/react-native-iaphub-ui/src/paywall/index.js
+index 5240867..6f0efa1 100644
+--- a/node_modules/react-native-iaphub-ui/src/paywall/index.js
++++ b/node_modules/react-native-iaphub-ui/src/paywall/index.js
+@@ -89,7 +89,7 @@ export default class PaywallWrapper extends React.Component {
+ 				IntroPhase={(IntroPhase === undefined) ? DefaultIntroPhase : IntroPhase}
+ 				SubscriptionTerms={(SubscriptionTerms === undefined) ? DefaultSubscriptionTerms : SubscriptionTerms}
+ 				Restore={(Restore === undefined) ? DefaultRestore : Restore}
+-				Buy={(Restore === undefined) ? DefaultBuy: Buy}
++				Buy={(Buy === undefined) ? DefaultBuy: Buy}
+ 				Loading={(Loading === undefined) ? DefaultLoading: Loading}
+ 			/>
+     );

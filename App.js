@@ -8,7 +8,7 @@ import setDefaultStyle, {ColorScheme} from "./components/default-style"
 LogBox.ignoreAllLogs()
 ExpoSplashScreen.preventAutoHideAsync()
 
-export default function App({children, reducers, storage, colorScheme:scheme="black"}){
+export default function App({children, colorScheme:scheme="black", ...props}){
     const [style, setStyle]=React.useState({})
     const [dataReady, setDataReady]=React.useState(false)
 
@@ -47,7 +47,7 @@ export default function App({children, reducers, storage, colorScheme:scheme="bl
     },[dataReady, scheme])
 
     return  (
-        <Provider onReady={e=>setDataReady(true)} {...{storage, reducers}}>
+        <Provider onReady={e=>setDataReady(true)} {...props}>
             {content}
             <StatusBar style="light"/>
         </Provider>

@@ -1,12 +1,15 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.0.22",
+  "version": "1.0.29",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
   "author": "lalalic@139.com",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": { },
+  "scripts": { 
+    
+  },
   "peerDependencies": {
     "expo": "~46.0.16",
     "react": "18.0.0",
@@ -18,7 +21,9 @@
     "expo-updates-server": "^1.0.2",
     "form-data": "^4.0.0",
     "node-fetch2": "^1.6.3",
-    "prompts": "^2.4.2"
+    "prompts": "^2.4.2",
+    "patch-package": "^7.0.0",
+    "postinstall-postinstall": "^2.1.0"
   },
   "optionalDependencies": {
     "@reduxjs/toolkit": "^1.8.6",
@@ -28,14 +33,17 @@
     "expo-updates": "~0.14.7",
     "graphql-subscriptions": "^1.1.0",
     "react-native-chatgpt": "^0.9.0",
-    "react-native-iap": "~11.0.0",
     "react-native-webview": "11.23.0",
+    "react-native-iap": "~10.0.0",
+    "react-native-iaphub": "^8.4.2",
+    "react-native-iaphub-ui": "^1.2.3",
     "react-redux": "^8.0.4",
     "react-router-native": "^6.4.2",
     "redux": "^4.2.0",
     "redux-persist": "^6.0.0",
     "redux-persist-expo-filesystem": "^2.0.0",
-    "subscriptions-transport-ws": "^0.11.0"
+    "subscriptions-transport-ws": "^0.11.0",
+    "patch-package": "^7.0.0"
   },
   "bin": {
     "qili-export-updates": "./scripts/export-updates.js",

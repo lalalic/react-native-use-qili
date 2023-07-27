@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, TextInput, Button } from "react-native";
+import { View, TextInput, Button, Text } from "react-native";
 import { useDispatch, useStore } from "react-redux";
 import { isUserLogin, Qili } from "../store";
 import FlyMessage from "./FlyMessage";
 import Loading from "./Loading"
 
-export default function Login({onLogin, l10n=new Proxy({},{get:(_, key)=>key})}) {
+export default function Login({onLogin,style, l10n=new Proxy({},{get:(_, key)=>key})}) {
     const dispatch = useDispatch();
     const [contact, setContact] = React.useState("");
     const [authReady, setAuthReady] = React.useState(false);
@@ -75,7 +75,10 @@ export default function Login({onLogin, l10n=new Proxy({},{get:(_, key)=>key})})
     const textStyle = { height: 40, fontSize: 20, borderWidth: 1, borderColor: "gray", padding: 4 };
 
     return (
-        <View style={{ flex:1, backgroundColor: "white", padding: 10}}>
+        <View style={[{ flex:1, padding: 10, justifyContent:"center"},style]}>
+            <View style={{height:50, justifyContent:"center", alignItems:"center"}}>
+                <Text style={{fontSize:16}}>{l10n["Sign Up / Sign In"]}</Text>
+            </View>
             <View style={{ flexDirection: "row", height: 40 }}>
                 <View style={{flexGrow:1, marginRight:10}}>
                     <TextInput style={textStyle}
@@ -85,7 +88,7 @@ export default function Login({onLogin, l10n=new Proxy({},{get:(_, key)=>key})})
                         placeholderTextColor="gray"
                         onChangeText={text => setContact(text)} />
                 </View>
-                <View style={{ width: 150, justifyContent:"center" }}>
+                <View style={{ width: 100, justifyContent:"center" }}>
                     <Button
                         disabled={!!tick}
                         onPress={e => requestCode(contact)}
@@ -99,7 +102,7 @@ export default function Login({onLogin, l10n=new Proxy({},{get:(_, key)=>key})})
                 placeholderTextColor="gray"
                 onChangeText={text => setCode(text)} />
 
-            <View style={{ flex:1, flexDirection: "row", height: 50 }}>
+            <View style={{ flexDirection: "row", height: 50 }}>
                 <View style={{ flex: 1, alignItems:"center" }}>
                     <Button title={l10n["Cancel"]}
                         onPress={e => dispatch({ type: "my", payload: { requireLogin: false } })} />

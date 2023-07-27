@@ -97,9 +97,9 @@ export function createStore({reducers:extendReducers,storage, listeners=[]}){
 	return {store, persistor:persistStore(store)}
 }
 
-export const Provider=({children, onReady, loading=<Loading/>, init, reducers, storage=ExpoFileSystemStorage})=>{
+export const Provider=({children, onReady, loading=<Loading/>, init, listeners, reducers, storage=ExpoFileSystemStorage})=>{
 	const {store, persistor}=React.useMemo(()=>{
-		const data=createStore({reducers, storage})
+		const data=createStore({reducers, storage, listeners})
 		const unsub=data.store.subscribe(async ()=>{
 			unsub()
 			await init?.(data.store)

@@ -46,7 +46,26 @@ export default new Proxy(new class extends EventEmitter{
     }
 
     async buy(sku){
-        return await IAP.requestSubscription(sku)
+        if(skus.consumables.indexOf(sku)!=-1){
+            return await IAP.requestPurchase({sku})
+        }else if(skus.subscriptions.indexOf(sku)!=-1){
+            return await IAP.requestSubscription(sku)
+        }
+    }
+
+    async getProducts(){
+      const consumables=(await IAP.getProducts({skus:skus.consumables})).map(ios2IapProduct)
+        
+      const subscriptions=(await IAP.getSubscriptions({skus:skus.subscriptions})).map(ios2IapProduct)
+      
+        return Promise.resolve({
+            activeProducts:null,
+            productsForSale:[...consumables, ...subscriptions]
+        })
+    }
+
+    set products(v){
+      Object.assign(skus, v)
     }
 
     setUserTags(){
@@ -71,21 +90,6 @@ export default new Proxy(new class extends EventEmitter{
 
     restore(){
 
-    }
-
-    async getProducts(){
-      const consumables=(await IAP.getProducts({skus:skus.consumables})).map(ios2IapProduct)
-        
-      const subscriptions=(await IAP.getSubscriptions({skus:skus.subscriptions})).map(ios2IapProduct)
-      
-        return Promise.resolve({
-            activeProducts:null,
-            productsForSale:[...consumables, ...subscriptions]
-        })
-    }
-
-    set products(v){
-      Object.assign(skus, v)
     }
 },{
     get(target, key){

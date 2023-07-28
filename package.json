@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.0.32",
+  "version": "1.0.34",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
@@ -13,7 +13,8 @@
   "peerDependencies": {
     "expo": "~46.0.16",
     "react": "18.0.0",
-    "react-native": "0.69.9"
+    "react-native": "0.69.9",
+    "react-native-iap": "~10.0.0"
   },
   "devDependencies": {
     "@expo/config": "^8.0.2",
@@ -34,7 +35,6 @@
     "graphql-subscriptions": "^1.1.0",
     "react-native-chatgpt": "^0.9.0",
     "react-native-webview": "11.23.0",
-    "react-native-iap": "~10.0.0",
     "react-native-iaphub": "^8.4.2",
     "react-native-iaphub-ui": "^1.2.3",
     "react-redux": "^8.0.4",

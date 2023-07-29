@@ -74,7 +74,18 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
                 }
                 
                 const { status,  latest_receipt_info }=data
-                const purchase=latest_receipt_info.find(a=>a.transaction_id==transactionId)
+                const i=latest_receipt_info.findIndex(a=>a.transaction_id==transactionId)
+                const purchase=latest_receipt_info[i]
+                if(purchase.subscription_group_identifier){
+                    const last=latest_receipt_info.find((a,k)=>k>i && 
+                            a.subscription_group_identifier==purchase.subscription_group_identifier &&
+                            a.original_transaction_id==purchase.original_transaction_id && 
+                            a.expires_date_ms==purchase.expires_date_ms)
+                    if(last){
+                        purchase.upgradeFrom=last.product_id
+                    }
+                }
+
                 purchase.sku=purchase.product_id
                 purchase._id=purchase.transaction_id
                 ctx.app.emit('purchase', purchase)

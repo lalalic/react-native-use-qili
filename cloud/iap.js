@@ -1,4 +1,4 @@
-module.exports=({path='/verifyReceipt', password, onVerified}={})=>({
+module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=>({
     name:"iap",
     typeDefs:`
         type Product{
@@ -24,6 +24,7 @@ module.exports=({path='/verifyReceipt', password, onVerified}={})=>({
 
         extend type Mutation{
             buy(sku: String!):Boolean
+            verifyIapReceipt(receipt:String!, transactionId:String!):JSON
         }
     `,
 
@@ -48,35 +49,53 @@ module.exports=({path='/verifyReceipt', password, onVerified}={})=>({
 
         Mutation:{
             async buy(_,info,{app,user}){
-                await app.createEntity("Purchase",{...info,author:user._id, createdAt:new Date()})
-                return true
+                try{
+                    await app.createEntity("Purchase",{...info,author:user._id, createdAt:new Date()})
+                    return true
+                }catch(e){
+                    return false
+                }
             },
+            async verifyIapReceipt(_,{receipt, transactionId},ctx){
+                debugger
+                const request={
+                    method:"post",
+                    body: JSON.stringify({
+                        password,
+                        'receipt-data':receipt,
+                        'exclude-old-transations':true
+                    })
+                }
+                let done=await fetch("https://buy.itunes.apple.com/verifyReceipt",request)
+                let data=await done.json()
+                if(data.status==21007){
+                    done=await fetch("https://sandbox.itunes.apple.com/verifyReceipt",request)
+                    data=await done.json()
+                }
+                
+                const { status,  latest_receipt_info }=data
+                const purchase=latest_receipt_info.find(a=>a.transaction_id==transactionId)
+                purchase.sku=purchase.product_id
+                purchase._id=purchase.transaction_id
+                ctx.app.emit('purchase', purchase)
+                if(status===0){
+                    const purchased=await ctx.app.resolver.Mutation.buy(_, purchase, ctx )
+                    if(purchased){
+                        const result=await onVerified?.(_,purchase,ctx)
+                        return result==undefined ? data : result
+                    }
+                    return {}
+                }
+                throw new Error(status)
+            }
         }
     },
     static(service){
-        service.on(path,async (req, res)=>{
-            const data={
-                method:"post",
-                body: JSON.stringify({
-                    password,
-                    'receipt-data':req.body,
-                    'exclue-old-transations':true
-                })
+        service.on(path,(req, res)=>{
+            if(req.method!=="post"){
+                res.reply(404)
+                return 
             }
-            let done=await fetch("https://buy.itunes.apple.com/verifyReceipt",data)
-            if(done.status==21007){
-                done=await fetch("https://sandbox.itunes.apple.com/verifyReceipt",data)
-            }
-
-            const {data:{
-                environment, 
-                status, 
-                latest_receipt_info:[receipt],
-                pending_renewal_info:{sku}
-            }}=await done.json()
-            
-            await onVerified?.({},{sku},{app:req.app, user:req.user})
-            res.send({expired:Date.now()>receipt.expires_date_ms})
         })
     }
 })

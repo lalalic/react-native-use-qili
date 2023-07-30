@@ -26,6 +26,9 @@ export default function makeLocalized(data,lang){
         if(!localized){
             localized=key
         }
+        if(typeof(localized)=="function"){
+            return localized(...numbers.map(a=>strings.localizeNumber(a)))
+        }
         return localized.replace(new RegExp(`%d`,'g'),()=>strings.localizeNumber(numbers.shift()))
     }
     

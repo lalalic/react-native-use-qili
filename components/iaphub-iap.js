@@ -42,7 +42,7 @@ export default new Proxy(
 						}
 						await IAP.finishTransaction({purchase})
 						console.debug(`purchase ${purchase.productId}[${purchase.transactionId}] done`)
-						this.emit("onPurchase",result)
+						this.emit("onPurchase",result,purchase.sku)
 					} catch (error) {
 						this.emit("onError", error);
 					}

@@ -3,6 +3,7 @@ import {View, Text, Pressable, SectionList} from "react-native"
 import { Link } from "react-router-native"
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from "react-redux";
+import * as Updates from "expo-updates"
 import { isUserLogin } from "../store"
 
 export default function Account({settings, information, l10n}){
@@ -16,7 +17,10 @@ export default function Account({settings, information, l10n}){
             ...settings,
         ].filter(a=>!!a)},
 
-        {title:"Information", data:information}
+        {title:"Information", data:[
+            ...information,
+            {name:`${l10n['Version']}: ${Updates.runtimeVersion} ${Updates.createdAt ? ` - ${Updates.createdAt}` : ''}`, icon:"bolt", href:false}
+        ]}
     ]
     
     return (
@@ -33,7 +37,7 @@ export default function Account({settings, information, l10n}){
                         <View style={{flexDirection:"row",width:"100%",height:50, paddingTop:5,paddingBottom:5, borderBottomWidth:1,borderColor:"gray"}}>
                             <MaterialIcons style={{paddingTop:5}} name={icon} size={30} />
                             <Text style={{flexGrow:1,marginLeft:4,paddingTop:12}}>{l10n[name]}</Text>
-                            {children || <MaterialIcons style={{paddingTop:8}} name="keyboard-arrow-right"   />}
+                            {children || href!==false && <MaterialIcons style={{paddingTop:8}} name="keyboard-arrow-right"   />}
                         </View>
                     )
                     return onPress ? 

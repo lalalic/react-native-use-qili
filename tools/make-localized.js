@@ -7,7 +7,8 @@ const default_zh={
     "Privacy Policy":"隐私政策",
     "About":"产品介绍",
     "Phone Number":"电话",
-    "Request Code":"发送",
+    "Request Code":"申请验证码",
+    "Re-Request":"重新申请",
     "Verification Code":"验证码",
     "Cancel":"取消",
     "Login":"登录",
@@ -70,7 +71,10 @@ export default function makeLocalized({zh,...data}={},lang){
     
     return new Proxy(strings,{
         get(targets, key){
-            return targets[key]||printf(key)
+            if(typeof(key)=="string"){
+                return targets[key]||printf(key)
+            }
+            return targets[key]
         }
     })
 }

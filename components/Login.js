@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, TextInput, Button, Text } from "react-native";
+import { View, Button } from "react-native";
 import { useDispatch, useSelector, useStore } from "react-redux";
+import { View as ThemeView, TextInput, Text} from "./colored-native"
 import { isUserLogin, Qili } from "../store";
 import FlyMessage from "./FlyMessage";
 import Loading from "./Loading"
@@ -75,7 +76,7 @@ export default function Login({onLogin,style, l10n=new Proxy({},{get:(_, key)=>k
     const textStyle = { height: 40, fontSize: 20, borderWidth: 1, borderColor: "gray", padding: 4 };
 
     return (
-        <View style={[{ flex:1, padding: 10, justifyContent:"center"},style]}>
+        <ThemeView style={[{ flex:1, padding: 10, justifyContent:"center"},style]}>
             <View style={{height:50, justifyContent:"center", alignItems:"center"}}>
                 <Text style={{fontSize:16}}>{l10n["Sign Up / Sign In"]}</Text>
             </View>
@@ -113,7 +114,7 @@ export default function Login({onLogin,style, l10n=new Proxy({},{get:(_, key)=>k
                         onPress={e => login({ contact, code })} />
                 </View>
             </View>
-        </View>
+        </ThemeView>
     );
 }
 

@@ -16,7 +16,7 @@ export default function MyIaphubDataProvider({products,onPurchase, l10n, ...prop
     },[])
 
     React.useEffect(() =>{
-        onPurchase && Iaphub.addEventListener('onPurchase', onPurchase);
+        onPurchase && Iaphub.addEventListener('onPurchase', onPurchase)
         return () => Iaphub.end?.()
     },[]);
     return <IaphubDataProvider {...{ appId: "A", apiKey: "A", userId: "A", lang:l10n.getLanguage()}} {...props} />;
@@ -30,3 +30,18 @@ export default function MyIaphubDataProvider({products,onPurchase, l10n, ...prop
         return _get.call(this)
     })(IntroPhase.prototype.getPhaseText)
 })(require("react-native-iaphub-ui/src/paywall/intro-phase").default({}));
+
+
+;(function({type:Buy}){
+    Buy.prototype.render=(_render=>function(){
+        const {selectedProduct, selectedActiveProductIndex}=this.props
+        if(selectedActiveProductIndex==null && 
+            selectedProduct.type=="renewable_subscription" && 
+            selectedProduct.isActive){
+            return null
+        }
+        return _render.call(this)
+    })(Buy.prototype.render)
+})(require("react-native-iaphub-ui/src/paywall/buy").default({}));
+
+

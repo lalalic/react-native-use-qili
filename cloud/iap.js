@@ -18,7 +18,7 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
         }
 
         extend type User{
-            activeProducts: [Product]
+            activeProducts: [String]
             productsForSale: [Product]
         }
 
@@ -30,17 +30,14 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
 
     indexes:{
         Product:[{sku:1}, {status:1}],
-        Purchase:[{sku:1, author:1}]
+        Purchase:[{author:1, expires_date_ms:1}]
     },
 
     resolver:{
         User:{
             async activeProducts(_, {}, {app, user}){
-                const actives=await app.findEntity("Purchase",{author:user._id,expires:{$gt:Date.now()}})
-                return actives.map(({sku, expires})=>{
-                    const product=app.findEntity("Product", {sku})
-                    return {...product, expires: expires-Date.now()}
-                })
+                const actives=await app.findEntity("Purchase",{author:user._id,expires_date_ms:{$gt:Date.now()}})
+                return [actives.sort((a,b)=>a.expires_date_ms-b.expires_date_ms).map(({sku})=>sku).pop()]
             },
             async productsForSale(_,{},{app,user}){
                 return await app.findEntity("Product", {status:{$ne:"active"}})
@@ -87,7 +84,9 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
                 }
 
                 purchase.sku=purchase.product_id
-                purchase._id=purchase.transaction_id
+                purchase._id=purchase.transaction_id;
+                ["expires_date_ms","purchase_date_ms","original_purchase_date_ms"]
+                    .forEach(k=>purchase[k]=parseInt(purchase[k]))
                 ctx.app.emit('purchase', purchase)
                 if(status===0){
                     const purchased=await ctx.app.resolver.Mutation.buy(_, purchase, ctx )
@@ -103,10 +102,11 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
     },
     static(service){
         service.on(path,(req, res)=>{
-            if(req.method!=="post"){
+            if(req.method!=="POST"){
                 res.reply(404)
                 return 
             }
+            console.debug(req.body)
         })
     }
 })

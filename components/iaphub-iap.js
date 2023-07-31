@@ -2,7 +2,7 @@ import * as IAP from "react-native-iap";
 import EventEmitter from "eventemitter3";
 import { Qili } from "../store";
 
-const skus = {};
+const skus = {subscriptions:[], consumables:[]};
 export default new Proxy(
 	new (class extends EventEmitter {
 		constructor() {
@@ -43,6 +43,9 @@ export default new Proxy(
 						await IAP.finishTransaction({purchase})
 						console.debug(`purchase ${purchase.productId}[${purchase.transactionId}] done`)
 						this.emit("onPurchase",result,purchase.sku)
+						if(skus.subscriptions.indexOf(purchase.sku)!=-1){
+							this.emit("onUserUpdate", purchase.sku)
+						}
 					} catch (error) {
 						this.emit("onError", error);
 					}
@@ -54,6 +57,10 @@ export default new Proxy(
 					this.emit("onError", error);
 				})
 			);
+
+			this.consumables = (await IAP.getProducts({ skus: skus.consumables })).map(ios2IapProduct);
+
+			this.subscriptions = (await IAP.getSubscriptions({ skus: skus.subscriptions })).map(ios2IapProduct);
 		}
 
 		async buy(sku) {
@@ -65,18 +72,20 @@ export default new Proxy(
 		}
 
 		async getProducts() {
-			const consumables = (
-				await IAP.getProducts({ skus: skus.consumables })
-			).map(ios2IapProduct);
-
-			const subscriptions = (
-				await IAP.getSubscriptions({ skus: skus.subscriptions })
-			).map(ios2IapProduct);
+			const {me:{activeProducts}}= await Qili.fetch({
+				query:`query{
+					me{
+						activeProducts
+					}
+				}`
+			})
 
 			return Promise.resolve({
-				activeProducts: null,
-				productsForSale: [...consumables, ...subscriptions],
-			});
+				activeProducts: activeProducts.map(sku=>this.subscriptions.find(a=>a.sku==sku))
+					.filter(a=>!!a)
+					.map(a=>(a.isActive=true, a)),
+				productsForSale: [...this.consumables, ...this.subscriptions],
+			})
 		}
 
 		set products(v) {

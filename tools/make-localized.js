@@ -13,6 +13,13 @@ const default_zh={
     "Cancel":"取消",
     "Login":"登录",
     "Sign Up / Sign In":"注册登录",
+    "Version":"运行版本",
+    
+    "Update":"更新检查",
+    "There's an update, do you want to update?":"又一个更新版本，需要跟新吗？",
+    "Yes":"是的",
+    "No":"不",
+    "There's no update.":"没有跟新的版本",
     
     "Get Membership":"加入会员更优惠",
     "Recurring billing. Cancel anytime.":`循环计费。随时取消。`,

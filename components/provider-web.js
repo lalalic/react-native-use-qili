@@ -27,20 +27,21 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
         broName = broName || `HelloMyBro`;
         let uuid = 0;
         const resultPs = {};
+        const eventsHandlers={}
         const events = {
             on(type, fn) {
-                (events[type] = events[type] || []).push(fn);
+                (eventsHandlers[type] = eventsHandlers[type] || []).push(fn);
                 return proxy;
             },
             fire(type, data) {
                 console.debug({ event: type, data });
-                (events[type] || []).forEach(fn => fn(data));
+                (eventsHandlers[type] || []).forEach(fn => fn(data));
                 return proxy;
             },
             un(type, fn){
-                const i=events[type]?.indexOf(fn)
+                const i=eventsHandlers[type]?.indexOf(fn)
                 if(i>-1){
-                    events[type].splice(i,1)
+                    eventsHandlers[type].splice(i,1)
                 }
                 return proxy
             }

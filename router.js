@@ -3,7 +3,7 @@ import { NativeRouter, Route, Routes} from "react-router-native"
 import Navigator from "react-native-use-qili/components/Navigator"
 import WithBackButton from "react-native-use-qili/components/WithBackButton"
 
-export default function Router({initialEntries, navs}){
+export default function Router({initialEntries, navs, children}){
     return (
         <NativeRouter initialEntries={initialEntries}>
             <Routes>

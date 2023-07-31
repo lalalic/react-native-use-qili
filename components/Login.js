@@ -89,7 +89,7 @@ export default function Login({onLogin,style, l10n=new Proxy({},{get:(_, key)=>k
                         placeholderTextColor="gray"
                         onChangeText={text => setContact(text)} />
                 </View>
-                <View style={{ width: 100, justifyContent:"center" }}>
+                <View style={{ width: 150, justifyContent:"center" }}>
                     <Button
                         disabled={!!tick}
                         onPress={e => requestCode(contact)}

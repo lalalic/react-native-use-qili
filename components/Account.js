@@ -1,14 +1,16 @@
-import React from "react"
-import {View, Text, Pressable, SectionList} from "react-native"
+import React, { useState } from "react"
+import {View, Text, Pressable, SectionList, Alert} from "react-native"
 import { Link } from "react-router-native"
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from "react-redux";
 import * as Updates from "expo-updates"
 import { isUserLogin } from "../store"
+import Loading from "./Loading";
 
 export default function Account({settings, information, l10n}){
     const dispatch=useDispatch()
     const signedIn=useSelector(state=>isUserLogin(state))
+    const [loading, setLoading]=useState(false)
     const sections=[
         {title:"Settings", data:[
             signedIn ? {name:"Sign Out", icon:"account-circle", 
@@ -19,9 +21,39 @@ export default function Account({settings, information, l10n}){
 
         {title:"Information", data:[
             ...information,
-            {name:`${l10n['Version']}: ${Updates.runtimeVersion} ${Updates.createdAt ? ` - ${Updates.createdAt}` : ''}`, icon:"bolt", href:false}
+            {
+                name:`${l10n['Version']}: ${Updates.runtimeVersion} ${Updates.createdAt ? ` - ${Updates.createdAt.asDateTimeString()}` : ''}`, 
+                icon:"bolt", 
+                href:false,
+                async onPress(){
+                    setLoading(true)
+                    const {isAvailable} = await Updates.checkForUpdateAsync()
+                    setLoading(false)
+                    if(isAvailable){
+                        Alert.alert(
+                            l10n["Update"], 
+                            l10n[`There's an update, do you want to update?`],
+                            [
+                                {text:l10n["No"]},
+                                {   text:l10n["Yes"], 
+                                    onPress:async ()=>{
+                                        setLoading(true)
+                                        await Updates.fetchUpdateAsync()
+                                        await Updates.reloadAsync()
+                                        setLoading(false)
+                                    }
+                                }
+                            ]
+                        )
+                    }else{
+                        Alert.alert(l10n["Update"], l10n["There's no update."])
+                    }
+                }
+            }
         ]}
     ]
+
+
     
     return (
         <View style={{flex: 1,padding:4, paddingTop:20}}>
@@ -45,6 +77,7 @@ export default function Account({settings, information, l10n}){
                         :(!!!children ? <Link to={href} children={content}/> : content)
                 }} 
                 sections={sections} /> 
+                {loading && <Loading style={{position:"absolute",width:"100%",flex:1}}/>}
         </View>
     )
 }

@@ -7,8 +7,7 @@ export default function Router({initialEntries, navs, children}){
     return (
         <NativeRouter initialEntries={initialEntries}>
             <Routes>
-                <Route path="/" element={
-                    <Navigator navs={navs}/>}>
+                <Route path="/" element={<Navigator navs={navs}/>}>
                     {children}
                 </Route>
                 <Route element={React.createElement(()=><WithBackButton><Text>{l10n["oops!"]}</Text></WithBackButton>)}/>

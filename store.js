@@ -64,7 +64,7 @@ export function getSession(){
 export const Qili=makeQiliService(getSession)
 
 
-export function createStore({reducers:extendReducers,storage, listeners=[]}){
+export function createStore({reducers:extendReducers,storage, middlewares=[], listeners=[]}){
 	const reducers={
 		my:myReducer,
 		...extendReducers,
@@ -90,16 +90,17 @@ export function createStore({reducers:extendReducers,storage, listeners=[]}){
 				immutableCheck:{
 					warnAfter:100,
 				},
-			}).prepend([listener.middleware]),
+			}).prepend([...middlewares, listener.middleware]),
 	})
 
 	setupListeners(store.dispatch)
 	return {store, persistor:persistStore(store)}
 }
 
-export const Provider=({children, onReady, loading=<Loading/>, init, listeners, reducers, storage=ExpoFileSystemStorage})=>{
+export const Provider=({children, onReady, loading=<Loading/>, init, 
+	middlewares, listeners, reducers, storage=ExpoFileSystemStorage})=>{
 	const {store, persistor}=React.useMemo(()=>{
-		const data=createStore({reducers, storage, listeners})
+		const data=createStore({reducers, storage, listeners, middlewares})
 		const unsub=data.store.subscribe(async ()=>{
 			unsub()
 			await init?.(data.store)

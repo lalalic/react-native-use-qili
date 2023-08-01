@@ -29,3 +29,10 @@ api
 scripts
 =====
 * chrome-extension-to-service.js : merge content_scripts, services, and background into a js for react web/native 
+
+bin
+===
+* qili-export-updates: create updates manifest and upload
+* qili-get-session-token
+* qili-get-access-token
+* screenshots: convert all images in a folder for devices, default 4 ios devices, [folderPath] [outputFolder] [devicesFilePath: a json file : [{name, width, height}]]

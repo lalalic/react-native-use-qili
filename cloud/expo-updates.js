@@ -3,7 +3,9 @@ module.exports=(updates="updates")=>({
     appUpdates:{
         context:updates,
         fromManifestURI({runtimeVersion, platform}, app){
-           return `https://cdn.qili2.com/${app.app.apiKey}/${updates}/${runtimeVersion}/${platform}-manifest.json`
+           return `https://cdn.qili2.com/${app.app.apiKey}/${updates}/${runtimeVersion}/${platform}-manifest.json?${++uuid}`
         }
     }
 })
+
+let uuid=Date.now()

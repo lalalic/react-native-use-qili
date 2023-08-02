@@ -400,8 +400,11 @@ class Chatgpt extends Service{
 			items.forEach(({id:conversationId})=>deleteConversation({conversationId}))
 		}
 
-		this.try=async function(ask){
+		this.try=async(ask, openai)=>{
 			try{
+				if(openai){
+					await getOpenaiResponse(ask)
+				}
 				await deleteConversation(await getResponse(ask))
 			}catch(error){
 				console.error(error)

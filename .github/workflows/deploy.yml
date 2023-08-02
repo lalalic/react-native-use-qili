@@ -48,4 +48,20 @@ jobs:
     needs: publish
     runs-on: ubuntu-latest
     steps:
-      - run: ls
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14.x
+    - uses: actions/checkout@v3
+      with:
+        repository: lalalic/qili-web-bridge
+    - name: Use Lastest use-qili
+      run: |
+        yarn add react-native-use-qili
+        cd www
+        yarn add react-native-use-qili
+    - name: Push
+      run: |
+        git status
+        git commit -a -m "auto sync use-qili"
+        git push

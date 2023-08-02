@@ -47,6 +47,5 @@ jobs:
   sync-bridge:
     needs: publish
     runs-on: ubuntu-latest
-    if: ${{ needs.versions.outputs.LastVersion != needs.versions.outputs.CurrentVersion }}
     steps:
       - run: ls

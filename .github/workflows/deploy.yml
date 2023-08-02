@@ -8,8 +8,8 @@ jobs:
   versions:
     runs-on: ubuntu-latest
     outputs:
-      last: ${{ steps.versions.outputs.last }}
-      current: ${{ steps.versions.outputs.current }}
+      LastVersion: $ {{ steps.versions.outputs.LastVersion }}
+      CurrentVersion: $ {{ steps.versions.outputs.CurrentVersion }}
     steps:
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -20,26 +20,32 @@ jobs:
           fetch-depth: 2
       - run: |
           git checkout HEAD^
-          echo "::set-output name=last::$(node -p 'require(`./package.json`).version')"
+          echo "LastVersion=$(node -p 'require(`./package.json`).version')" >> "$GITHUB_OUTPUT"
           git checkout master
-          echo "::set-output name=current::$(node -p 'require(`./package.json`).version')" 
+          echo "CurrentVersion=$(node -p 'require(`./package.json`).version')" >> "$GITHUB_OUTPUT"
         id: versions
-      - run: echo "${{steps.versions.outputs.last}},${{steps.versions.outputs.current}} "
   
   publish:
     needs: versions
     runs-on: ubuntu-latest
-    if: ${{ needs.versions.outputs.last !=  needs.versions.outputs.current}}
+    if: ${{ needs.versions.outputs.LastVersion != needs.versions.outputs.CurrentVersion }}
 
     steps:
-    - name: publish to npm
-      uses: JS-DevTools/npm-publish@v1
+    - name: Use Node.js
+      uses: actions/setup-node@v3
       with:
-        package: package.json
-        token: ${{ secrets.NPM_TOKEN }}
+        node-version: 14.x
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - name: publish to npm
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: npm publish
 
   sync-bridge:
     needs: publish
     runs-on: ubuntu-latest
+    if: ${{ needs.versions.outputs.LastVersion != needs.versions.outputs.CurrentVersion }}
     steps:
       - run: ls

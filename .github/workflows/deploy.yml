@@ -37,3 +37,7 @@ jobs:
       with:
         package: package.json
         token: ${{ secrets.NPM_TOKEN }}
+
+  sync-bridge:
+    needs: publish
+    runs-on: ubuntu-latest

@@ -185,7 +185,6 @@ class Chatgpt extends Service{
 				return generate()
 		};
 		
-		let Model=null
 		this.getToken=(()=>{
 			let accessToken=null
 			return async function getToken(){
@@ -204,7 +203,7 @@ class Chatgpt extends Service{
 								return 
 							}
 
-							/*
+							/*setTimeout doesn't work here
 							const expires=new Date(data.expires);
 							setTimeout(()=>{
 								setTimeout(()=>{
@@ -213,8 +212,8 @@ class Chatgpt extends Service{
 								},expires.getTime()-Date.now());
 								notifyExpiration?.(expires)
 							}, expires.getTime()-Date.now()-10*60*1000);
-							*/
-
+							
+							//different model has issues
 							fetch("https://chat.openai.com/backend-api/models?history_and_training_disabled=false",{
 								headers: {
 									"Content-Type": "application/json",
@@ -224,7 +223,8 @@ class Chatgpt extends Service{
 								const data=await res.json()
 								Model=data.models[0].slug
 							}).finally(()=>resolve(accessToken=data.accessToken))
-							
+							*/
+							resolve(accessToken=data.accessToken)
 						} catch (err) {
 							console.error(err)
 							reject('ERROR')
@@ -232,37 +232,61 @@ class Chatgpt extends Service{
 				})
 			}
 		})();
-		
-		async function getResponse(question, {messageId=uid(), conversationId}={}){
-			const res = await fetch("https://chat.openai.com/backend-api/conversation", {
-					method: "POST",
-					headers: {
-							"Content-Type": "application/json",
-							"Authorization": "Bearer " + (await me.getToken()),
-					},
-					body: JSON.stringify({
-							action: "next",
-							messages: [
-								{
-									id: uid(),
-									role: "user",
-									content: {
-										content_type: "text",
-										parts: [question]
-									}
-								}
-							],
-							model: "text-davinci-002-render",
-							...(conversationId? {conversation_id: conversationId} : {}),
-							parent_message_id: messageId,
-							/*text-davinci-002-render-sha
-							history_and_training_disabled:false,
-							timezone_offset_min:20,
-							suggestions:[],
-							*/
-					})
+
+
+		async function getOpenaiResponse(question){
+			if(typeof(OPENAI_API_KEY)=="undefined"){
+				new Error("Unknow Error")
+			}
+			const res=await fetch("https://api.openai.com/v1/chat/completions",{
+				method:"POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Authorization": "Bearer " + OPENAI_API_KEY,
+				},
+				body:JSON.stringify({
+					model:"gpt-3.5-turbo",
+					messages:[{role:"user", content:question}]
+				})
 			})
-			return await read(res.body)
+			const {choices:[{message:{content}}], usage:{total_tokens}} = await res.json()
+			return {message:content, tokens: total_tokens}
+		}
+
+		async function getResponse(question, {messageId=uid(), conversationId}={}){
+			try{
+				const res = await fetch("https://chat.openai.com/backend-api/conversation", {
+						method: "POST",
+						headers: {
+								"Content-Type": "application/json",
+								"Authorization": "Bearer " + (await me.getToken()),
+						},
+						body: JSON.stringify({
+								action: "next",
+								messages: [
+									{
+										id: uid(),
+										role: "user",
+										content: {
+											content_type: "text",
+											parts: [question]
+										}
+									}
+								],
+								model: "text-davinci-002-render",
+								...(conversationId? {conversation_id: conversationId} : {}),
+								parent_message_id: messageId,
+								/*text-davinci-002-render-sha
+								history_and_training_disabled:false,
+								timezone_offset_min:20,
+								suggestions:[],
+								*/
+						})
+				})
+				return await read(res.body)
+			}catch(e){
+				return await getOpenaiResponse(question)
+			}
 		}
 
 		async function read1(answer){
@@ -323,7 +347,7 @@ class Chatgpt extends Service{
 				}
 			}
 			
-			return {error:`unknown error`}
+			throw new Error("Unknow Error")
 		}
 		
 		async function deleteConversation({conversationId}){

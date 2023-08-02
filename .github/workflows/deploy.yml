@@ -14,14 +14,10 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: 16.x
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
       - run: |
-          git checkout HEAD^
-          echo "::set-output name=last::$(node -p 'require(`./package.json`).version')"
-          git checkout master
+          echo "::set-output name=last::$(npm show react-native-use-qili version)')"
           echo "::set-output name=current::$(node -p 'require(`./package.json`).version')" 
         id: versions
       - run: echo "${{steps.versions.outputs.last}},${{steps.versions.outputs.current}} "
@@ -35,7 +31,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 14.x
+        node-version: 16.x
     - uses: actions/checkout@v3
       with:
         fetch-depth: 1
@@ -51,7 +47,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 14.x
+        node-version: 16.x
     - uses: actions/checkout@v3
       with:
         repository: lalalic/qili-web-bridge

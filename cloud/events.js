@@ -34,6 +34,27 @@ module.exports={
         },
         ["static.no"](path){
             console.debug(`>> !${path}`)
-        }
+        },
+        ["bridge.helper.registered"](helper){
+            console.debug(`helper[${$(helper)}] registered`)
+        },
+        ["bridge.helper.pick1"](helper){
+            console.debug(`helper[${$(helper)}] pick 1`)
+        },
+        ["bridge.helper.answered"](helper, ask, response){
+            console.debug(`helper[${$(helper)}] answer 1`)
+        },
+        ["bridge.helper.left"](helper){
+            console.debug(`helper[${$(helper)}] left`)
+        },
+        ["bridge.helper.no"](){
+            console.error(`No Helper`)
+        },
+        ["bridge.asker.asked"](asker){
+            console.debug(`asker[${$(asker)}] ask 1`)
+        },
+        ["bridge.asker.answered"](asker){
+            console.debug(`asker[${$(asker)}] got 1`)
+        },
     }
 }

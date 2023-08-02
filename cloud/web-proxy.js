@@ -15,7 +15,7 @@ module.exports=(pubsub,topic="default")=>({
     `,
     resolver:{
         Query:{
-            answerHelp(_,{session, response}, {app}){
+            answerHelp(_,{session, response}, {app,user}){
                 app.pubsub.publish(`${app.app.apiKey}.${topic}.answer`, {session, response})
                 return true
             },
@@ -24,17 +24,18 @@ module.exports=(pubsub,topic="default")=>({
             askThenWaitAnswer:{
                 subscribe(_,{message}, {app, user}){
                     if(Helpers.no){
-                        app.logger.info('No helper, discard an ask')
+                        app.emit('bridge.helper.no')
                         throw new Error("Your request can't be processed now!")
                     }
                     const ask={session:`${++uuid}`,message}
                     app.pubsub.publish(`${app.app.apiKey}.${topic}.ask`, ask)
+                    app.emit('bridge.asker.asked',user)
                     return withFilter(
                         ()=>app.pubsub.asyncIterator([`${app.app.apiKey}.${topic}.answer`]),
                         answer=>{
                             const answered=answer.session==ask.session
                             if(answered){
-                                app.logger.info(`ask[${answer.session}] is answered and returned to asker`)
+                                app.emit('bridge.asker.answered',user)
                             }
                             return answered
                         },
@@ -47,20 +48,25 @@ module.exports=(pubsub,topic="default")=>({
 
             helpQueue:{
                 subscribe(_,{helper}, {app,user}){
-                    Helpers.add(helper=user._id||helper)
+                    const helperUID=Helpers.add(helper=`${user.phone||user.email||user._id}_${helper||""}`)
+                    if(helperUID){
+                        app.emit('bridge.helper.registered',user)
+                    }
                     return withFilter(
                         ()=>app.pubsub.asyncIterator([`${app.app.apiKey}.${topic}.ask`]),
                         ask=>{
-                            const picked=Helpers.pick1(ask)===helper
+                            const picked=Helpers.pick1(ask)===helperUID
                             if(picked){
-                                app.logger.info(`ask[${ask.session}] is send to helper[${helper}]`)
+                                app.emit('bridge.helper.pick1', user)
+                                app.logger.debug(`ask[${ask.session}] is send to helper[${helperUID}]`)
                             }
                             return picked
                         }
                     )(...arguments)
                 },
-                resolve(ask,{},{app,user}){
+                resolve(ask,{response},{app,user}){
                     Helpers.done1(ask)
+                    app.emit('bridge.helper.answered',user, ask, response)
                     return ask
                 }
             }
@@ -75,6 +81,7 @@ module.exports=(pubsub,topic="default")=>({
                 case "helpQueue":
                     Helpers.remove(user._id)
                     Helpers.remove(request.variables.helper)
+                    app.emit('bridge.helper.left', user)
                 break
             }
         }
@@ -98,16 +105,16 @@ class Helpers{
             const id=helper
             if(!helpers.find(a=>a.id==id)){
                 helpers.push({id,sessions:[]})
-                console.info(`helper[${helper}] join`)
+                console.debug(`helper[${helper}] join`)
+                return id
             }
-            return id
         }
 
         Helpers.remove=this.remove=function(helper){
             const i=helpers.findIndex(a=>a.id==helper)
             if(i!=-1){
                 helpers.splice(i,1)
-                console.info(`helper[${helper}] left!`)
+                console.debug(`helper[${helper}] left!`)
                 return helper
             }
         }
@@ -134,7 +141,7 @@ class Helpers{
 
             picker.sessions.push(session)
             sessions[session]=picker.id
-            console.info(`pick helper[${picker.id}] for ask[${session}]`)
+            console.debug(`pick helper[${picker.id}] for ask[${session}]`)
             return picker.id
         }
         Helpers.done1=this.done1=function({session}){
@@ -149,7 +156,7 @@ class Helpers{
                 return 
             helper.sessions.splice(i,1)
             delete sessions[session]
-            console.info(`ask[${session}] picked and removed from queue`)
+            console.debug(`ask[${session}] picked and removed from queue`)
         }
 
         Object.defineProperty(Helpers,"no",{

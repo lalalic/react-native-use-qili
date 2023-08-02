@@ -41,3 +41,5 @@ jobs:
   sync-bridge:
     needs: publish
     runs-on: ubuntu-latest
+    steps:
+      - run: ls

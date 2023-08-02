@@ -62,11 +62,14 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.GIT_SSH_KEY }}
 
-    - name: Push
+    - name: commit
       run: |
         git config --global user.email "lalalic@gmail.com"
         git config --global user.name "Li Cheng"
-        git add . 
-        git status
         git commit -a -m "auto sync use-qili"
-        git push
+
+    - name: push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GIT_SSH_KEY }}
+        repository: lalalic/qili-web-bridge

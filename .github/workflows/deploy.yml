@@ -8,8 +8,8 @@ jobs:
   versions:
     runs-on: ubuntu-latest
     outputs:
-      LastVersion: $ {{ steps.versions.outputs.LastVersion }}
-      CurrentVersion: $ {{ steps.versions.outputs.CurrentVersion }}
+      last: ${{ steps.versions.outputs.last }}
+      current: ${{ steps.versions.outputs.current }}
     steps:
       - name: Use Node.js
         uses: actions/setup-node@v3
@@ -20,15 +20,16 @@ jobs:
           fetch-depth: 2
       - run: |
           git checkout HEAD^
-          echo "LastVersion=$(node -p 'require(`./package.json`).version')" >> "$GITHUB_OUTPUT"
+          echo "::set-output name=last::$(node -p 'require(`./package.json`).version')"
           git checkout master
-          echo "CurrentVersion=$(node -p 'require(`./package.json`).version')" >> "$GITHUB_OUTPUT"
+          echo "::set-output name=current::$(node -p 'require(`./package.json`).version')" 
         id: versions
+      - run: echo "${{steps.versions.outputs.last}},${{steps.versions.outputs.current}} "
   
   publish:
     needs: versions
     runs-on: ubuntu-latest
-    if: ${{ needs.versions.outputs.LastVersion != needs.versions.outputs.CurrentVersion }}
+    if: ${{ needs.versions.outputs.last !=  needs.versions.outputs.current}}
 
     steps:
     - name: Use Node.js

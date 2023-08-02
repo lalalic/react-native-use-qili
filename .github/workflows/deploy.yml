@@ -10,7 +10,6 @@ permissions:
 jobs:
   versions:
     runs-on: ubuntu-latest
-    if: ${{ false }}
     outputs:
       last: ${{ steps.versions.outputs.last }}
       current: ${{ steps.versions.outputs.current }}
@@ -45,7 +44,7 @@ jobs:
         token: ${{ secrets.NPM_TOKEN }}
 
   sync-bridge:
-    #needs: publish
+    needs: publish
     runs-on: ubuntu-latest
     steps:
     - name: Use Node.js

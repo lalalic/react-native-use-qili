@@ -1,11 +1,15 @@
 const { withFilter }=require("graphql-subscriptions")
 let uuid=Date.now()
 
+function getHelperID(user,helper){
+    return `${user._id}_${helper}`
+}
+
 module.exports=(pubsub,topic="default")=>({
     name:"qili-web-proxy",
     typeDefs:`
         extend type Query{
-            answerHelp(session:String!, response:JSON!):JSON
+            answerHelp(session:String!, response:JSON!, helper:String):JSON
         }
 
         extend type Subscription{
@@ -15,8 +19,9 @@ module.exports=(pubsub,topic="default")=>({
     `,
     resolver:{
         Query:{
-            answerHelp(_,{session, response}, {app,user}){
+            answerHelp(_,{session, response, helper}, {app,user}){
                 app.pubsub.publish(`${app.app.apiKey}.${topic}.answer`, {session, response})
+                app.emit("bridge.helper.answered", user, getHelperID(user, helper))
                 return true
             },
         },
@@ -48,25 +53,23 @@ module.exports=(pubsub,topic="default")=>({
 
             helpQueue:{
                 subscribe(_,{helper}, {app,user}){
-                    const helperUID=Helpers.add(helper=`${user.phone||user.email||user._id}_${helper||""}`)
+                    const helperUID=Helpers.add(getHelperID(user,helper))
                     if(helperUID){
-                        app.emit('bridge.helper.registered',user)
+                        app.emit('bridge.helper.registered',user, helperUID)
                     }
                     return withFilter(
                         ()=>app.pubsub.asyncIterator([`${app.app.apiKey}.${topic}.ask`]),
                         ask=>{
                             const picked=Helpers.pick1(ask)===helperUID
                             if(picked){
-                                app.emit('bridge.helper.pick1', user)
-                                app.logger.debug(`ask[${ask.session}] is send to helper[${helperUID}]`)
+                                app.emit('bridge.helper.pick1', user, helperUID)
                             }
                             return picked
                         }
                     )(...arguments)
                 },
-                resolve(ask,{response},{app,user}){
+                resolve(ask,{},{app,user}){
                     Helpers.done1(ask)
-                    app.emit('bridge.helper.answered',user, ask, response)
                     return ask
                 }
             }
@@ -79,9 +82,9 @@ module.exports=(pubsub,topic="default")=>({
         onDisconnect({app,user, request}){
             switch(request?.id){
                 case "helpQueue":
-                    Helpers.remove(user._id)
-                    Helpers.remove(request.variables.helper)
-                    app.emit('bridge.helper.left', user)
+                    const helperUID=getHelperID(user, request.variables.helper)
+                    Helpers.remove(helperUID)
+                    app.emit('bridge.helper.left', user, helperUID)
                 break
             }
         }
@@ -105,7 +108,6 @@ class Helpers{
             const id=helper
             if(!helpers.find(a=>a.id==id)){
                 helpers.push({id,sessions:[]})
-                console.debug(`helper[${helper}] join`)
                 return id
             }
         }
@@ -114,7 +116,6 @@ class Helpers{
             const i=helpers.findIndex(a=>a.id==helper)
             if(i!=-1){
                 helpers.splice(i,1)
-                console.debug(`helper[${helper}] left!`)
                 return helper
             }
         }
@@ -141,7 +142,6 @@ class Helpers{
 
             picker.sessions.push(session)
             sessions[session]=picker.id
-            console.debug(`pick helper[${picker.id}] for ask[${session}]`)
             return picker.id
         }
         Helpers.done1=this.done1=function({session}){
@@ -156,7 +156,6 @@ class Helpers{
                 return 
             helper.sessions.splice(i,1)
             delete sessions[session]
-            console.debug(`ask[${session}] picked and removed from queue`)
         }
 
         Object.defineProperty(Helpers,"no",{

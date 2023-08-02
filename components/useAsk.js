@@ -22,6 +22,9 @@ export default function useAsk(xid = "random", defaultQuestion, timeout0 = 60000
 
         const { message, ...newSession } = await sendMessage(prompt, session, id, timeout);
 
+        if(!message)
+            throw new Error('No message returned')
+            
         if (id && Object.keys(newSession).length > 0 && (!session
             || session.conversationId != newSession.conversationId
             || session.messageId != newSession.messageId)) {

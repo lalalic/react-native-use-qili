@@ -35,23 +35,23 @@ module.exports={
         ["static.no"](path){
             console.debug(`>> !${path}`)
         },
-        ["bridge.helper.registered"](helper){
-            console.debug(`helper[${$(helper)}] registered`)
+        ["bridge.helper.registered"](helper,helperUID){
+            console.debug(`helper[${helperUID}] registered`)
         },
-        ["bridge.helper.pick1"](helper){
-            console.debug(`helper[${$(helper)}] pick 1`)
+        ["bridge.helper.pick1"](helper, helperUID){
+            console.debug(`helper[${helperUID}] pick 1`)
         },
-        ["bridge.helper.answered"](helper, ask, response){
-            console.debug(`helper[${$(helper)}] answer 1`)
+        ["bridge.helper.answered"](helper, helperUID){
+            console.debug(`helper[${helperUID}] answer 1`)
         },
-        ["bridge.helper.left"](helper){
-            console.debug(`helper[${$(helper)}] left`)
+        ["bridge.helper.left"](helper, helperUID){
+            console.debug(`helper[${helperUID}] left`)
         },
         ["bridge.helper.no"](){
             console.error(`No Helper`)
         },
         ["bridge.asker.asked"](asker){
-            console.debug(`asker[${$(asker)}] ask 1`)
+            console.debug(`asker[${$(asker)}] asked 1`)
         },
         ["bridge.asker.answered"](asker){
             console.debug(`asker[${$(asker)}] got 1`)

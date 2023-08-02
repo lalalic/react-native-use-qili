@@ -1,4 +1,5 @@
 
+let unsubscribe=null
 class MultithreadQueue{
 	then(task){
 		task();
@@ -42,6 +43,10 @@ class Service{
 
 	async handleResponse(response, ask){
 		return response
+	}
+
+	available(){
+		return true
 	}
 
 	enqueue(ask, done){
@@ -145,7 +150,7 @@ class WorkService extends Service{
 
 /** session need be kept if message.options */
 class Chatgpt extends Service{
-	run({helper}){
+	run({helper, notifyExpiration}){
 		const me=this
 		const uid = () => {
 			const generateNumber = (limit) => {
@@ -180,8 +185,9 @@ class Chatgpt extends Service{
 				return generate()
 		};
 		
+		let Model=null
 		this.getToken=(()=>{
-			let accessToken
+			let accessToken=null
 			return async function getToken(){
 				if(accessToken){
 					return Promise.resolve(accessToken)
@@ -189,16 +195,39 @@ class Chatgpt extends Service{
 				return new Promise(async (resolve, reject) => {
 						const resp = await fetch("https://chat.openai.com/api/auth/session")
 						if (resp.status === 403) {
-								reject('CLOUDFLARE')
+							reject('CLOUDFLARE')
 						}
 						try {
-								const data = await resp.json()
-								if (!data.accessToken) {
-										reject('ERROR')
-								}
-								resolve(accessToken=data.accessToken)
-						} catch (err) {
+							const data = await resp.json()
+							if (!data.accessToken) {
 								reject('ERROR')
+								return 
+							}
+
+							/*
+							const expires=new Date(data.expires);
+							setTimeout(()=>{
+								setTimeout(()=>{
+									accessToken=null
+									unsubscribe?.()
+								},expires.getTime()-Date.now());
+								notifyExpiration?.(expires)
+							}, expires.getTime()-Date.now()-10*60*1000);
+							*/
+
+							fetch("https://chat.openai.com/backend-api/models?history_and_training_disabled=false",{
+								headers: {
+									"Content-Type": "application/json",
+									"Authorization": "Bearer " + data.accessToken,
+								},
+							}).then(async res=>{
+								const data=await res.json()
+								Model=data.models[0].slug
+							}).finally(()=>resolve(accessToken=data.accessToken))
+							
+						} catch (err) {
+							console.error(err)
+							reject('ERROR')
 						}
 				})
 			}
@@ -226,6 +255,11 @@ class Chatgpt extends Service{
 							model: "text-davinci-002-render",
 							...(conversationId? {conversation_id: conversationId} : {}),
 							parent_message_id: messageId,
+							/*text-davinci-002-render-sha
+							history_and_training_disabled:false,
+							timezone_offset_min:20,
+							suggestions:[],
+							*/
 					})
 			})
 			return await read(res.body)
@@ -293,7 +327,6 @@ class Chatgpt extends Service{
 		}
 		
 		async function deleteConversation({conversationId}){
-
 			const res=await fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`,{
 				method:"PATCH",
 				headers: {
@@ -330,20 +363,49 @@ class Chatgpt extends Service{
 			}
 			return response
 		}
+
+		this.clearAllConversations=async function(){
+			const options={
+				method:"GET",
+				headers: {
+						"Content-Type": "application/json",
+						"Authorization": "Bearer " + (await me.getToken()),
+				},
+			}
+			const {items}=await (await fetch("https://chat.openai.com/backend-api/conversations?offset=0&limit=28&order=updated",options)).json();
+			items.forEach(({id:conversationId})=>deleteConversation({conversationId}))
+		}
+
+		this.try=async function(ask){
+			try{
+				await deleteConversation(await getResponse(ask))
+			}catch(error){
+				console.error(error)
+			}
+		}
+
+		this.available=async()=>{
+			try{
+				return !!(await this.getToken())
+			}catch(error){
+				notifyExpiration(new Date())
+			}
+		}
 	}
 }
 
 async function subscribe({helper}, services){
+	await Promise.all(Object.values(services).map(a=>a?.available()))
 	let helps=await new Promise((resolve)=>chrome.storage.sync.get('helps',data=>resolve(data ? data.helps||0 : 0)))
 	await chrome.browserAction.setBadgeText({text:helps+""})
 	await chrome.browserAction.setBadgeBackgroundColor({color:"#00FF00"})
 
 	const answer=(ask, response)=>Qili.fetch({
 		id:"answerHelp",
-		query:`query($session:String!, $response:JSON!){
-			answerHelp(session:$session, response:$response)
+		query:`query($session:String!, $response:JSON!, $helper:String){
+			answerHelp(session:$session, response:$response, helper:$helper)
 		}`,
-		variables:{session:ask.session, response}
+		variables:{session:ask.session, response, helper}
 	})
 
 	const unsub=Qili.subscribe({
@@ -370,12 +432,16 @@ async function subscribe({helper}, services){
 	chrome.runtime.onSuspend.addListener(unsub)
 
 	console.log(`subscribed to ${Qili.apiKey} at ${Qili.service} as ${helper}\nlistening ....`)
+	return unsub
 }
 
-subscribe({helper},window.bros={
+unsubscribe=subscribe({helper},window.bros={
 	chatgpt:	new Chatgpt({
 					helper,
 					name:"chatgpt",
+					notifyExpiration(expireTime){
+						alert(`Chatgpt need login before ${expireTime}, otherwise bridge service is `)
+					}
 				}),
 	diffusion:	new (class extends WorkService{
 					run({}){

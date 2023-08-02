@@ -56,8 +56,15 @@ jobs:
         yarn add react-native-use-qili
         cd www
         yarn add react-native-use-qili
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.0
+      with:
+        ssh-private-key: ${{ secrets.GIT_SSH_KEY }}
+
     - name: Push
       run: |
+        git config --global user.email "lalalic@gmail.com"
+        git config --global user.name "Li Cheng"
         git status
         git commit -a -m "auto sync use-qili"
         git push

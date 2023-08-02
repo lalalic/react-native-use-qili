@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.0.68",
+  "version": "1.0.69",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",

@@ -17,7 +17,7 @@ jobs:
           node-version: 16.x
       - uses: actions/checkout@v3
       - run: |
-          echo "::set-output name=last::$(npm show react-native-use-qili version)')"
+          echo "::set-output name=last::$(npm show react-native-use-qili version)"
           echo "::set-output name=current::$(node -p 'require(`./package.json`).version')" 
         id: versions
       - run: echo "${{steps.versions.outputs.last}},${{steps.versions.outputs.current}} "

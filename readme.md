@@ -36,3 +36,7 @@ bin
 * qili-get-session-token
 * qili-get-access-token
 * screenshots: convert all images in a folder for devices, default 4 ios devices, [folderPath] [outputFolder] [devicesFilePath: a json file : [{name, width, height}]]
+
+bridge-chrome-extension
+=====
+helper to provide service for chatgpt from desktop

@@ -66,9 +66,4 @@ jobs:
         git config --global user.email "lalalic@gmail.com"
         git config --global user.name "Li Cheng"
         git commit -a -m "auto sync use-qili"
-
-    - name: push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GIT_PAT_KEY }}
-        repository: lalalic/qili-web-bridge
+        git push

@@ -18,8 +18,7 @@ export default function App({ContainerView=SafeAreaView, children, colorScheme:s
         const backgroundColor=scheme=="light" ? "white" : "black"
         const active=scheme=="light" ? "black" : "white"
         const primary=scheme=="light" ? "blue" : "yellow"
-        const inactive="gray"
-        
+        const inactive="#333333"        
         setDefaultStyle({
             Text:{color},
             MaterialIcons:{

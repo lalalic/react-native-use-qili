@@ -6,9 +6,14 @@
   "repository": "https://github.com/lalalic/use-qili",
   "author": "lalalic@139.com",
   "license": "MIT",
-  "dependencies": { },
-  "scripts": { 
-    "prepublish":"node scripts/chrome-extension-to-service.js"
+  "dependencies": {},
+  "scripts": {
+    "prepublish": "node scripts/chrome-extension-to-service.js",
+    "wechat-bot": "yarn add react-native-use-qili --cwd ../wechat-bot && sudo yarn add react-native-use-qili --cwd ../wechat-bot/cloud",
+    "parrot": "yarn add react-native-use-qili --cwd ../parrot && sudo yarn add react-native-use-qili --cwd ../parrot/cloud",
+    "bridge": "sudo yarn add react-native-use-qili --cwd ../qili-web-bridge && yarn add react-native-use-qili --cwd ../qili-web-bridge/www",
+    "upgrade-all": "yarn wechat-bot && yarn parrot && yarn bridge",
+    "test": ""
   },
   "peerDependencies": {
     "expo": "~46.0.16",
@@ -22,9 +27,9 @@
     "expo-updates-server": "^1.0.2",
     "form-data": "^4.0.0",
     "node-fetch2": "^1.6.3",
-    "prompts": "^2.4.2",
     "patch-package": "^7.0.0",
-    "postinstall-postinstall": "^2.1.0"
+    "postinstall-postinstall": "^2.1.0",
+    "prompts": "^2.4.2"
   },
   "optionalDependencies": {
     "@reduxjs/toolkit": "^1.8.6",
@@ -33,22 +38,22 @@
     "expo-status-bar": "~1.4.0",
     "expo-updates": "~0.14.7",
     "graphql-subscriptions": "^1.1.0",
+    "patch-package": "^7.0.0",
     "react-native-chatgpt": "^0.9.0",
-    "react-native-webview": "11.23.0",
     "react-native-iaphub": "^8.4.2",
     "react-native-iaphub-ui": "^1.2.3",
+    "react-native-webview": "11.23.0",
     "react-redux": "^8.0.4",
     "react-router-native": "^6.4.2",
     "redux": "^4.2.0",
     "redux-persist": "^6.0.0",
     "redux-persist-expo-filesystem": "^2.0.0",
-    "subscriptions-transport-ws": "^0.11.0",
-    "patch-package": "^7.0.0"
+    "subscriptions-transport-ws": "^0.11.0"
   },
   "bin": {
     "qili-export-updates": "./scripts/export-updates.js",
-    "qili-get-session-token":"./scripts/get-session-token.js",
-    "qili-get-access-token":"./scripts/get-access-token.js",
-    "qili-screenshots":"./scripts/screenshots.js"
+    "qili-get-session-token": "./scripts/get-session-token.js",
+    "qili-get-access-token": "./scripts/get-access-token.js",
+    "qili-screenshots": "./scripts/screenshots.js"
   }
 }

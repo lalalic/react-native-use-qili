@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "npx package.json"
+    "start": "yarn && node index.js"
   },
   "dependencies": {
     "graphql": "^16.0.0",

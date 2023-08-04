@@ -9,6 +9,7 @@ const path = require("path");
 		executablePath:"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 		userDataDir:"./userData",
 		headless: false,
+		args:['--app']
 	});
 	
 
@@ -53,8 +54,9 @@ const path = require("path");
 		}
 		await chat.evaluate(()=>{
 			const div=document.createElement('div')
-			div.style="position:absolute;width:50px;height:50px;background:green;top:10;right:10"
+			div.style="position:absolute;width:50px;height:50px;background:green;top:10px;right:10px"
 			document.body.appendChild(div)
+			div.innerHTML="Qili2"
 		})
 	})();
 	console.log(`${globalThis.helper} is running in browser with openai web and fallback to API`)

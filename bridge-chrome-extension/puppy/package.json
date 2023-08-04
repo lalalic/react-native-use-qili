@@ -1,0 +1,18 @@
+{
+  "name": "puppy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "graphql": "^16.0.0",
+    "node-fetch2": "^1.6.3",
+    "puppeteer": "^21.0.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-repl": "^2.3.3",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "subscriptions-transport-ws": "^0.11.0"
+  }
+}

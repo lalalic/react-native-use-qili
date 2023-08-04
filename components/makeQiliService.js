@@ -95,7 +95,16 @@ export default function makeQiliService(getSession) {
 				console.log(`subscription for ${request.id} closed`)
 			};
 		},
-
+		schedule(fx, when, alert, ahead=500, aday=24*60*60*1000){
+			if((when-Date.now()) < aday){
+				return setTimeout(()=>{
+					setTimeout(fx, when-Date.now())
+					alert?.()
+				}, when-Date.now()-ahead)
+			}else{
+				return setTimeout(()=>schedule(...arguments),aday)
+			}
+		}
 	})
 
 	const Qili=factory(QiliConf)

@@ -29,6 +29,10 @@ class Service{
 		}
 	}
 
+	set multithread(v){
+		this.sequence=v ? new MultithreadQueue() : Promise.resolve()
+	}
+
 	clear(){
 		this.sequence=Promise.resolve()
 	}
@@ -187,7 +191,7 @@ class Chatgpt extends Service{
 		
 		this.getToken=(()=>{
 			let accessToken=null
-			return async function getToken(){
+			return async()=>{
 				if(accessToken){
 					return Promise.resolve(accessToken)
 				}
@@ -203,16 +207,14 @@ class Chatgpt extends Service{
 								return 
 							}
 
+							Qili.schedule(
+								()=>accessToken=null,
+								data.expires, 
+								()=>notifyExpiration?.(data.expires),
+								10*60*1000
+							)
+
 							/*setTimeout doesn't work here
-							const expires=new Date(data.expires);
-							setTimeout(()=>{
-								setTimeout(()=>{
-									accessToken=null
-									unsubscribe?.()
-								},expires.getTime()-Date.now());
-								notifyExpiration?.(expires)
-							}, expires.getTime()-Date.now()-10*60*1000);
-							
 							//different model has issues
 							fetch("https://chat.openai.com/backend-api/models?history_and_training_disabled=false",{
 								headers: {
@@ -224,6 +226,8 @@ class Chatgpt extends Service{
 								Model=data.models[0].slug
 							}).finally(()=>resolve(accessToken=data.accessToken))
 							*/
+							
+							this.session={token: data.accessToken, expires: data.expires}
 							resolve(accessToken=data.accessToken)
 						} catch (err) {
 							console.error(err)
@@ -232,7 +236,6 @@ class Chatgpt extends Service{
 				})
 			}
 		})();
-
 
 		async function getOpenaiResponse(question){
 			if(typeof(OPENAI_API_KEY)=="undefined"){
@@ -253,7 +256,7 @@ class Chatgpt extends Service{
 			return {message:content, tokens: total_tokens}
 		}
 
-		async function getResponse(question, {messageId=uid(), conversationId}={}){
+		this._getLocalResponse=async function getLocalResponse(question, {messageId=uid(), conversationId}={}){
 			try{
 				const res = await fetch("https://chat.openai.com/backend-api/conversation", {
 						method: "POST",
@@ -286,6 +289,14 @@ class Chatgpt extends Service{
 				return await read(res.body)
 			}catch(e){
 				return await getOpenaiResponse(question)
+			}
+		}
+
+		this.getResponse=async function(prompt){
+			try{
+				return await this._getLocalResponse(...arguments)
+			}catch(e){
+				return await getOpenaiResponse(prompt)
 			}
 		}
 
@@ -374,7 +385,7 @@ class Chatgpt extends Service{
 		}
 
 		this.consume1=async function consume1({message}) {
-			const response = await getResponse( message.message || message, getOption(message))
+			const response = await this.getResponse( message.message || message, getOption(message))
 			
 			if (!message.options) {
 				if(response.conversationId){
@@ -415,7 +426,7 @@ class Chatgpt extends Service{
 			try{
 				return !!(await this.getToken())
 			}catch(error){
-				notifyExpiration(new Date())
+				throw error
 			}
 		}
 	}
@@ -437,10 +448,10 @@ async function subscribe({helper}, services){
 
 	const unsub=Qili.subscribe({
 		id:"helpQueue",
-		query:`subscription($helper:String!){
+		query:`subscription($helper:String){
 				ask:helpQueue(helper:$helper)
 		}`,
-		variables:{helper}
+		variables:{helper, gpt: services.chatgpt?.session}
 	}, function onNext({data:{error, ask}}){//ask: {session, message}
 		console.debug({...ask})
 		const service=services[ask.message.$service||"chatgpt"]

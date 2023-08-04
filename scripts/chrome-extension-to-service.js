@@ -7,8 +7,7 @@ module.exports=function mergeServices(dirChromeExtension=`${process.cwd()}/chrom
 			const name = a.js[0].replace(".js", "").split("/").pop();
 			uris.push(`${name} : "${a.matches[0]}"`);
 			const code = fs.readFileSync(`${dirChromeExtension}/${a.js[0]}`, { encoding: "utf8" })
-				.replace("function", "export function")
-				.replace("injectBro", name);
+				.replace("function", `exports.${name}=function`)
 			codes.push(code);
 			return uris;
 		}, []);
@@ -24,14 +23,14 @@ module.exports=function mergeServices(dirChromeExtension=`${process.cwd()}/chrom
 
 	fs.writeFileSync(`${dirChromeExtension}/index.js`, `
 			${codes.join("\n")}
-			export const uris={
+			exports.uris={
 				${uris.join(",\n")}
 			}
-			export const services={
+			exports.services={
 				${services.join(",\n")}
 			}
 
-			export function subscriptAsHelper({helper, chrome, window, Qili}){
+			exports.subscriptAsHelper=function({helper, chrome, window, Qili}){
 				${fs.readFileSync(`${dirChromeExtension}/background.js`)}
 			}
 		`);

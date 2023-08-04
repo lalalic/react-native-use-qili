@@ -1,4 +1,4 @@
-module.exports=function mergeServices(dirChromeExtension=`${process.cwd()}/chrome-extension`) {
+function mergeServices(dirChromeExtension=`${process.cwd()}/chrome-extension`) {
 	const fs = require('fs');
 	const codes = [];
 	const uris = require(`${dirChromeExtension}/manifest.json`)
@@ -34,4 +34,13 @@ module.exports=function mergeServices(dirChromeExtension=`${process.cwd()}/chrom
 				${fs.readFileSync(`${dirChromeExtension}/background.js`)}
 			}
 		`);
+	console.log(`done: ${dirChromeExtension}/index.js`)
 }
+
+if(require.main){
+	let [,,target="../bridge-chrome-extension"]=process.argv
+	target=require('path').resolve(__dirname, target)
+	mergeServices(target)
+}
+
+module.exports=mergeServices

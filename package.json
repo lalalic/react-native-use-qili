@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.0.71",
+  "version": "1.0.72",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
@@ -8,7 +8,7 @@
   "license": "MIT",
   "dependencies": { },
   "scripts": { 
-    
+    "prepublish":"node scripts/chrome-extension-to-service.js"
   },
   "peerDependencies": {
     "expo": "~46.0.16",

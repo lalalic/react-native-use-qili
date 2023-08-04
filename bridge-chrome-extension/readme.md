@@ -37,3 +37,7 @@ export function subscriptAsHelper({helper, chrome, window, Qili}){
 
 
 ```
+
+puppy
+===
+a service based on puppeteer puppy:> yarn start

@@ -8,10 +8,11 @@ function getHelperID(user,helper){
 module.exports=(pubsub,topic="default")=>({
     name:"qili-web-proxy",
     typeDefs:`
+        extend type User{
+            helpers:[String]
+        }
+
         extend type Query{
-            me {
-                helpers
-            }
             answerHelp(session:String!, response:JSON!, helper:String):JSON
         }
 
@@ -21,17 +22,18 @@ module.exports=(pubsub,topic="default")=>({
         }
     `,
     resolver:{
+        User: {
+            helpers(_, {}, {app, user}){
+                return Helpers.of(user)
+            }
+        },
+
         Query:{
             answerHelp(_,{session, response, helper}, {app,user}){
                 app.pubsub.publish(`${app.app.apiKey}.${topic}.answer`, {session, response})
                 app.emit("bridge.helper.answered", user, getHelperID(user, helper))
                 return true
             },
-            me: {
-                helpers(_, {}, {app, user}){
-                    return Helpers.of(user)
-                }
-            }
         },
         Subscription:{
             askThenWaitAnswer:{

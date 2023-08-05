@@ -9,6 +9,9 @@ module.exports=(pubsub,topic="default")=>({
     name:"qili-web-proxy",
     typeDefs:`
         extend type Query{
+            me {
+                helpers
+            }
             answerHelp(session:String!, response:JSON!, helper:String):JSON
         }
 
@@ -24,6 +27,11 @@ module.exports=(pubsub,topic="default")=>({
                 app.emit("bridge.helper.answered", user, getHelperID(user, helper))
                 return true
             },
+            me: {
+                helpers(_, {}, {app, user}){
+                    return Helpers.of(user)
+                }
+            }
         },
         Subscription:{
             askThenWaitAnswer:{
@@ -163,6 +171,11 @@ class Helpers{
                 return helpers.length==0
             }
         })
+
+        Helpers.of=({_id})=>{
+            return helpers.filter(a=>a.id.startsWith(_id)).map(a=>a.id.replace(_id, "")||"default")
+        }
+
     }
     
     static instance=new Helpers()

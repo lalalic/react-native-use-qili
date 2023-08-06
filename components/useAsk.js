@@ -19,18 +19,33 @@ export default function useAsk(xid = "random", defaultQuestion, timeout0 = 60000
     const ask = React.useCallback(async (prompt = defaultQuestion, id = xid, timeout = timeout0) => {
         const session = $sessions.current[id];
         console.debug({ event: "ask", prompt, session, id });
+        try{
+            const { message, ...newSession } = await sendMessage(prompt, session, id, timeout);
 
-        const { message, ...newSession } = await sendMessage(prompt, session, id, timeout);
+            if(!message)
+                throw new Error('No message returned')
+                
+            if (id && Object.keys(newSession).length > 0 && (!session
+                || session.conversationId != newSession.conversationId
+                || session.messageId != newSession.messageId)) {
+                dispatch({ type: "my/session", payload: { [id]: newSession } });
+            }
 
-        if(!message)
-            throw new Error('No message returned')
-            
-        if (id && Object.keys(newSession).length > 0 && (!session
-            || session.conversationId != newSession.conversationId
-            || session.messageId != newSession.messageId)) {
-            dispatch({ type: "my/session", payload: { [id]: newSession } });
+            return message;
+        }catch(e){
+            if(e.message=="Not Found" && session){
+                const { message, ...newSession } = await sendMessage(prompt, null, id, timeout);
+
+                if(!message)
+                    throw new Error('No message returned')
+                    
+                if (id) {
+                    dispatch({ type: "my/session", payload: { [id]: newSession } });
+                }
+
+                return message;
+            }
         }
-        return message;
     }, [sendMessage]);
 
     if (status == "logged-out") {

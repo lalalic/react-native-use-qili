@@ -1,0 +1,22 @@
+{
+   "background": {
+      "service_worker": "background.js"
+   },
+   "content_scripts": [ {
+      "js": [ "script.js" ],
+      "matches": [ "https://*.bing.com/*" ]
+   } ],
+   "description": "Allows using Bing AI chatbot with Google Chrome and other Chromium browsers.",
+   "host_permissions": [ "https://*.bing.com/*" ],
+   "icons": {
+      "128": "icon-128.png",
+      "16": "icon-16.png",
+      "48": "icon-48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApwY6Ja8oCvtCLBKSVRqhEgLiVsYVdOkdjpZiOPyikpkTlid1v/XoAoE87mIU/2yRWC0M3hfA+iREcrEW85xcQfBbv7+3vmrpKtBbxaNUcjxZYY+7IkN+tan5BRgS/rqrUClcRm1vInwzS0fsnijBRsDKvB/vwjnEIy1evIEozwryP6nvZDW8lZoDkhGYTJSd4UsNCO2FRXc1YzBcWFDNfaSROkUKD1BYImm19RmLyDmLVzDSDme9LtPqc+fo5PkIlrOFnlMo22hdjFXlqN3t5edqcBPxJEBj4Y5JxHPbbvo55ifa00eAJBf0GIJXYX2R8TTPK/gzHi0OXmSBxYJkgQIDAQAB",
+   "manifest_version": 3,
+   "name": "Bing AI for Chrome",
+   "permissions": [ "declarativeNetRequest" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.0.1"
+}

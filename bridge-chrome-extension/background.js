@@ -256,47 +256,47 @@ class Chatgpt extends Service{
 			return {message:content, tokens: total_tokens}
 		}
 
-		this._getLocalResponse=async function getLocalResponse(question, {messageId=uid(), conversationId}={}){
-			try{
-				const res = await fetch("https://chat.openai.com/backend-api/conversation", {
-						method: "POST",
-						headers: {
-								"Content-Type": "application/json",
-								"Authorization": "Bearer " + (await me.getToken()),
-						},
-						body: JSON.stringify({
-								action: "next",
-								messages: [
-									{
-										id: uid(),
-										role: "user",
-										content: {
-											content_type: "text",
-											parts: [question]
-										}
+		this._getLocalResponse=async function(question, {messageId=uid(), conversationId}={}){
+			const res = await fetch("https://chat.openai.com/backend-api/conversation", {
+					method: "POST",
+					headers: {
+							"Content-Type": "application/json",
+							"Authorization": "Bearer " + (await me.getToken()),
+					},
+					body: JSON.stringify({
+							action: "next",
+							messages: [
+								{
+									id: uid(),
+									role: "user",
+									content: {
+										content_type: "text",
+										parts: [question]
 									}
-								],
-								model: "text-davinci-002-render",
-								...(conversationId? {conversation_id: conversationId} : {}),
-								parent_message_id: messageId,
-								/*text-davinci-002-render-sha
-								history_and_training_disabled:false,
-								timezone_offset_min:20,
-								suggestions:[],
-								*/
-						})
-				})
-				return await read(res.body)
-			}catch(e){
-				return await getOpenaiResponse(question)
-			}
+								}
+							],
+							model: "text-davinci-002-render",
+							...(conversationId? {conversation_id: conversationId} : {}),
+							parent_message_id: messageId,
+							/*text-davinci-002-render-sha
+							history_and_training_disabled:false,
+							timezone_offset_min:20,
+							suggestions:[],
+							*/
+					})
+			})
+			return await read(res.body)
 		}
 
-		this.getResponse=async function(prompt){
+		this.getResponse=async function(question){
 			try{
-				return await this._getLocalResponse(...arguments)
+				try{
+					return await bros.bingAI.consume1(...arguments)
+				}catch(e){
+					return await this._getLocalResponse(...arguments)
+				}
 			}catch(e){
-				return await getOpenaiResponse(prompt)
+				return await getOpenaiResponse(...arguments)
 			}
 		}
 
@@ -421,13 +421,28 @@ class Chatgpt extends Service{
 				console.error(error)
 			}
 		}
-
-		this.available=async()=>{
-			try{
-				return !!(await this.getToken())
-			}catch(error){
-				throw error
+		this.test=async (question)=>{
+			const test=async (type, fx)=>{
+				try{
+					await fx()
+					return type
+				}catch(e){
+					console.error(`${type}: ${e.message}`)
+				}
 			}
+			const supported=[
+				await test("BingAI", async()=>await bros.bingAI.consume1(question)),
+				await test("ChatGPT", async()=>{
+					const response=await this._getLocalResponse(question)
+					if(response.conversationId){
+						deleteConversation(response)
+					}
+					return response
+				}),
+				await test("OpenAI", async()=>await getOpenaiResponse(question))
+			].filter(a=>!!a)
+
+			console.info(`[${supported.join(" --> ")}] `)
 		}
 	}
 }
@@ -469,9 +484,11 @@ async function subscribe({helper}, services){
 
 	chrome.runtime.onSuspend.addListener(unsub)
 
-	console.log(`subscribed to ${Qili.apiKey} at ${Qili.service} as ${helper}\nlistening ....`)
+	console.log(`subscribed to ${Qili.apiKey} at ${Qili.service} as ${helper}`)
 	return unsub
 }
+
+// background_script.js
 
 unsubscribe=subscribe({helper},window.bros={
 	chatgpt:	new Chatgpt({
@@ -480,6 +497,31 @@ unsubscribe=subscribe({helper},window.bros={
 					notifyExpiration(expireTime){
 						alert(`Chatgpt need login before ${expireTime}, otherwise bridge service is `)
 					}
+				}),
+	bingAI: 	new (class extends WorkService{
+					async run({}){
+						const BingAI=bingAI()
+						this.getCookie=async ()=>{
+							function getCookiesForURL(url) {
+								return new Promise((resolve)=>{
+									chrome.cookies.getAll({ url }, (cookies) => {
+										resolve(cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; '))
+									})
+								})
+							}
+							return await getCookiesForURL("https://www.bing.com")
+						}
+						
+						this.consume1=async (question)=>{
+							const cookie=await this.getCookie()
+							const api=new BingAI({cookie})
+							const {text}=await api.sendMessage(question,{variant:"Precise"})
+							return {message:text}
+						}
+					}
+				})({
+					helper,
+					name:"bingAI"
 				}),
 	diffusion:	new (class extends WorkService{
 					run({}){
@@ -505,5 +547,5 @@ unsubscribe=subscribe({helper},window.bros={
 						super.run(...arguments)
 						this.consume1=async ({message:{args:[url]}})=>this.upload(url)
 					}
-				})({multithread:true})
+				})({multithread:true, name:"upload"})
 })

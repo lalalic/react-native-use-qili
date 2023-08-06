@@ -26,9 +26,11 @@ const Qili={
 	},
 	subscribe(request, callback){
 		const {SubscriptionClient} = SubscriptionsTransportWs
+		let first=true
 		//@Why: a shared client can't work, is it because close method is changed ???
 		const client=new SubscriptionClient(this.service.replace(/^http/, "ws"),{
 			reconnect:true,
+			timeout: 0.5*60*1000,
 			connectionParams:{
 				...headers,
 				request:{
@@ -38,8 +40,11 @@ const Qili={
 			},
 			connectionCallback(error){
 				if(error){
-					console.error(`subscription failed: ${error.message}`)
-					client.close()
+					console.error(`helper[subscription] failed: ${error.message}`)
+					first=true
+				}else{
+					console.info(first ? 'helper[subscription] success!' : 'helper[subscription] health checked!')
+					first=false
 				}
 			}
 		})

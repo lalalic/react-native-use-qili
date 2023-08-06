@@ -14,6 +14,7 @@ const {helper, accessToken, OPENAI_API_KEY, api, apiKey}=requireLocal("../env.js
 Object.assign(globalThis,{helper, accessToken, OPENAI_API_KEY, api, apiKey,fetch, WebSocket:require('ws')})
 globalThis.SubscriptionsTransportWs= require("subscriptions-transport-ws")
 globalThis.alert=(message)=>console.warn(message)
+const HelperName=`${helper}-${process.env.helperSister||"sister"}`
 
 
 //fake
@@ -59,10 +60,14 @@ const {chrome, window}=(()=>{
                 value.chatgpt.available=()=>true
                 value.chatgpt.getToken=()=>""
                 value.chatgpt._getLocalResponse=async function(question){
-                    throw new Error("not supported local")
+                    throw new Error(`helper[${HelperName}] not supported ChatGPT`)
                 }
 
-                value.chatgpt.multithread=true
+                value.bingAI.getCookie=async ()=>{
+                    return await globalThis.getBingAICookie()
+                }
+
+                value.chatgpt.multithread=false//BingAI -> OpenAI
             }
             target[key]=value
         }
@@ -75,13 +80,15 @@ const {chrome, window}=(()=>{
 const {subscriptAsHelper} = require("../index.js")
 
 const Qili=requireLocal("../qili.js", "Qili")
+subscriptAsHelper({helper:HelperName, chrome, window, Qili})
+window.bros.chatgpt.test("hello")
 
-subscriptAsHelper({helper:`${helper}-sister`, chrome, window, Qili})
+if(require.main){
+    const http = require('http');
 
-const http = require('http');
+    http.createServer((req, res) => {
+    res.end(`Hello, ${helper}: ${JSON.stringify(chrome.storage.sync)}`);
+    }).listen(3001); // Keep the server running to listen for incoming requests
+}
 
-http.createServer((req, res) => {
-  res.end(`Hello, ${helper}: ${JSON.stringify(chrome.storage.sync)}`);
-}).listen(3000); // Keep the server running to listen for incoming requests
-
-module.exports={data:chrome.storage.sync, url:'http://localhost:3000'}
+module.exports={data:chrome.storage.sync}

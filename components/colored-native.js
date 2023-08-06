@@ -18,25 +18,36 @@ export function TextInput({style, ...props}){
     return <Native.TextInput style={[{color:text}, style]} {...props}/>
 }
 
-export function Button({onPress, disabled, color, ...props}){
-    const [running, setRunning]=React.useState(false)
-    if(running)
-        return <Loading size="small"/>
-    return (
-        <Native.Button {...props} disabled={disabled}
-            onPress={e=>{
-                (async()=>{
-                    try{
-                        setRunning(true)
-                        await onPress(e)
-                    }catch(e){
-                        FlyMessage.error(e.message)
-                    }finally{
-                        setRunning(false)
-                    }
-                })();
-            }} 
-            />
-    )
+export const asyncComponentFactory=({name,size="small",loading=<Loading size={size}/>,onError=e=>FlyMessage.error(e.message), ...ons})=>{
+    const SyncComp=Native[name]
+    return props=>{
+        const [running, setRunning]=React.useState(false)
+        const asyncOn=React.useCallback(onPress=>(...args)=>{
+            (async()=>{
+                try{
+                    setRunning(true)
+                    await onPress(...args)
+                }catch(e){
+                    onError?.(e)
+                }finally{
+                    setRunning(false)
+                }
+            })();
+        },[setRunning])
+
+        const handlers=Object.keys(ons).reduce((handlers, on)=>{
+            const handler=props[on]
+            if(handler){
+                handlers[on]=React.useCallback(asyncOn(handler),[handler])
+            }
+            return handlers
+        },{})
+
+        if(running)
+            return loading
+        return (<SyncComp {...props} {...handlers}/>)
+    }
 }
 
+export const Button=asyncComponentFactory({name:"Button", onPress:true})
+export const Pressable=asyncComponentFactory({name:"Pressable", onPress:true, onLongPress:true})

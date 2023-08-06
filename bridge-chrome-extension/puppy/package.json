@@ -4,15 +4,22 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "yarn && node index.js"
+    "start": "yarn --ignore-engines && node index.js",
+    "dev": "yarn --ignore-engines && node --inspect-brk=9228 index.js"
   },
+  "bin": "index.js",
   "dependencies": {
+    "bing-chat": "^0.2.3",
+    "chalk": "^5.3.0",
     "graphql": "^16.0.0",
     "node-fetch2": "^1.6.3",
-    "puppeteer": "^21.0.1",
+    "puppeteer-core": "^21.0.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-repl": "^2.3.3",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "subscriptions-transport-ws": "^0.11.0"
+  },
+  "resolutions": {
+    "ws": "^7.0.0"
   }
 }

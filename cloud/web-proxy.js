@@ -175,7 +175,7 @@ class Helpers{
         })
 
         Helpers.of=({_id})=>{
-            return helpers.filter(a=>a.id.startsWith(_id)).map(a=>a.id.replace(_id, "")||"default")
+            return helpers.filter(a=>a.id.startsWith(_id)).map(a=>a.id.replace(_id+"_", "")||"default")
         }
 
     }

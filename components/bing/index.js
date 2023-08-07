@@ -1,5 +1,5 @@
 import React from "react"
-import ProvideWeb from "../components/provider-web"
+import ProvideWeb from "../provider-web"
 import BingAIBro from "./bro"
 
 export const BingContext=React.createContext({})

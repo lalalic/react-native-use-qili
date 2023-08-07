@@ -3,7 +3,7 @@ import { View, Linking, Text } from "react-native"
 import {IaphubDataConsumer, Paywall, PaywallSubscriptionGroup} from 'react-native-iaphub-ui'
 import ActiveProductsWrapper from "react-native-iaphub-ui/src/paywall/active-products-wrapper"
 
-export default function MyPaywall({l10n={}, consumable=true, subscriptable=true, formatProduct=a=>a, children}){
+export default function MyPaywall({consumable=true, subscriptable=true, formatProduct=a=>a, children}){
     return (
         <View style={{flex:1}}>
             <IaphubDataConsumer>
@@ -15,7 +15,7 @@ export default function MyPaywall({l10n={}, consumable=true, subscriptable=true,
                             {children}
                             <Paywall style={{flex:1}}
                                 {...iaphubData} Restore={null} 
-                                ProductTitle={props=><ProductTitle {...props} l10n={l10n}/>}
+                                ProductTitle={props=><ProductTitle {...props}/>}
                                 selectedActiveProductIndex={null}
                                 showBuySuccessAlert={false}
                                 productsForSale={productsForSale?.filter(a=>!a.subscriptionDuration).sort((a,b)=>parseFloat(a.price)-parseFloat(b.price))}
@@ -25,11 +25,11 @@ export default function MyPaywall({l10n={}, consumable=true, subscriptable=true,
                             {...iaphubData}
                             Restore={null} 
                             ProductPrice={()=>null}
-                            ProductTitle={props=><ProductTitle {...props} l10n={l10n}/>}
+                            ProductTitle={props=><ProductTitle {...props}/>}
                             showBuySuccessAlert={false}
                             activeProducts={activeProducts?.filter(a=>!!a.subscriptionDuration)}
                             productsForSale={productsForSale?.filter(a=>!!a.subscriptionDuration)}
-                            ActiveProductsWrapper={props=><MyActiveProductsWrapper l10n={l10n} {...props}/>}
+                            ActiveProductsWrapper={props=><MyActiveProductsWrapper {...props}/>}
                             onShowManageSubscriptions={async e=>{
                                 const url="itms-apps://apps.apple.com/account/subscriptions"
                                 if(await Linking.canOpenURL(url)){
@@ -45,7 +45,7 @@ export default function MyPaywall({l10n={}, consumable=true, subscriptable=true,
     )
 }
 
-function ProductTitle({product, isSelected, l10n}){
+function ProductTitle({product, isSelected}){
     return (
         <View style={{flex:1, alignItems:"center",marginBottom:10}}>
             <Text style={{textAlign:"center", fontWeight:"bold", color:isSelected ? "white" : "black"}}>
@@ -55,7 +55,7 @@ function ProductTitle({product, isSelected, l10n}){
     )
 }
 
-function MyActiveProductsWrapper({l10n, ...props}){
+function MyActiveProductsWrapper(props){
     return (
         <View style={{flew:1, height:100, justifyContent:"center"}}>
             {!props.activeProducts && <View style={{alignItems:"center"}}>

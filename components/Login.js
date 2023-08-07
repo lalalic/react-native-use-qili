@@ -6,7 +6,7 @@ import { TextInput, Text, Button } from "./colored-native"
 import FlyMessage from "./FlyMessage";
 import Loading from "./Loading"
 
-export default function Login({onLogin,style, l10n=new Proxy({},{get:(_, key)=>key})}) {
+export default function Login({onLogin,style}) {
     const dispatch = useDispatch();
     const [contact, setContact] = React.useState("");
     const [authReady, setAuthReady] = React.useState(false);

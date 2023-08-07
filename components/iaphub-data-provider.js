@@ -3,7 +3,7 @@ import Iaphub from "react-native-iaphub"
 import { IaphubDataProvider } from 'react-native-iaphub-ui';
 import iap from "react-native-iaphub-ui/src/i18n/en"
 
-export default function MyIaphubDataProvider({products,onPurchase, l10n, ...props}) {
+export default function MyIaphubDataProvider({products,onPurchase, ...props}) {
     Iaphub.products=products
 
     React.useMemo(()=>{

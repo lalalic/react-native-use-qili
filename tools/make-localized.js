@@ -36,7 +36,7 @@ const default_zh={
     "Replace subscription":"更换订阅"
 }
 
-export default function makeLocalized({zh,...data}={},lang){
+export default function makeLocalized({zh,en,...data}={},lang){
     const strings=new LocalizedStrings({
         en:{
             localizeNumber(d){
@@ -47,7 +47,8 @@ export default function makeLocalized({zh,...data}={},lang){
                     return `${d/1000}K`
                 }
                 return d 
-            }
+            },
+            ...en,
         },
         ...data,
         zh:{
@@ -76,7 +77,7 @@ export default function makeLocalized({zh,...data}={},lang){
         strings.setLanguage(lang)
     }
     
-    return new Proxy(strings,{
+    return globalThis.l10n=new Proxy(strings,{
         get(targets, key){
             if(typeof(key)=="string"){
                 return targets[key]||printf(key)

@@ -2,21 +2,16 @@
 //import crypto from "node:crypto";
 //import WebSocket from "ws";
 
-function bingAI(){
+module.exports=function bingAI(){
   
   //node:crypto
   const crypto={
     randomBytes(size){
 			const randomBytes = new Uint8Array(size);
-			if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
-				window.crypto.getRandomValues(randomBytes);
-			} else if (typeof require !== 'undefined' && typeof require('crypto').randomFillSync === 'function') {
-				require('crypto').randomFillSync(randomBytes);
-			} else {
+			
 				for (let i = 0; i < size; i++) {
 					randomBytes[i] = Math.floor(Math.random() * 256);
 				}
-			}
 			return {
 				toString(){
 					return Array.from(randomBytes, byte => ('0' + byte.toString(16)).slice(-2)).join('');
@@ -36,7 +31,7 @@ function bingAI(){
   }
   //ws
 
-  const WebSocket=(()=>{
+  var WebSocket=(()=>{
     if(globalThis.WebSocket.on){
       return globalThis.WebSocket
     }

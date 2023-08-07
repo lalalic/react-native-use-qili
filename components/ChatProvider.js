@@ -3,18 +3,37 @@ import { useSelector } from "react-redux";
 import { hasChatGPTAccount } from "../store";
 import { ChatGptProvider } from 'react-native-chatgpt';
 import SubscribeHelpQueue from './SubscribeHelpQueue';
+import { BingProvider } from './bing';
 
-export default function ChatProvider({ children, services }) {
+export default function ChatProvider({ children, services , api="bing"}) {
     const enableChatGPT = useSelector(state => hasChatGPTAccount(state));
+    const [content, realApi]=React.useMemo(()=>{
+        if (enableChatGPT && api=="chatgpt") {
+            return [(
+                <ChatGptProvider>
+                    {children}
+                    {services && <SubscribeHelpQueue services={services}/>}
+                </ChatGptProvider>
+            ), api]
+        }
+    
+        if(api=="bing"){
+            return [(
+                <BingProvider>
+                    {children}
+                </BingProvider>
+            ), api]
+        }
+    
+        return [children,]
+    },[children, services, api, enableChatGPT])
 
-    if (enableChatGPT) {
-        return (
-            <ChatGptProvider>
-                {children}
-                {services && <SubscribeHelpQueue services={services}/>}
-            </ChatGptProvider>
-        );
-    }
-
-    return children;
+    return (
+        <ChatContext.Provider value={{api:realApi}}>
+            {content}
+        </ChatContext.Provider>
+    )
 }
+
+export const ChatContext=React.createContext({api:"bing"})
+

@@ -2,6 +2,8 @@ import React from 'react';
 import { useSelector, useDispatch } from "react-redux";
 import { Qili, hasChatGPTAccount } from "../store";
 import { useChatGpt } from 'react-native-chatgpt';
+import { ChatContext } from './ChatProvider'
+import { useBing } from './bing';
 
 /**
  * local: use id to avoid massive session
@@ -56,15 +58,17 @@ export default function useAsk(xid = "random", defaultQuestion, timeout0 = 60000
     return ask;
 }
 
+
 function useChat() {
-    const enableChatGPT = useSelector(state => hasChatGPTAccount(state));
-    if (enableChatGPT){
+    const {api}=React.useContext(ChatContext)
+
+    if (api=="chatgpt"){
         const {sendMessage, ...status}=useChatGpt()
         return {
             ...status,
-            sendMessage:React.useCallback(function(ask){
+            sendMessage:React.useCallback(async function(ask){
                 if(ask.onAccumulatedResponse){
-                    return new Promise((resolve,reject)=>{
+                    return await new Promise((resolve,reject)=>{
                         sendMessage({
                             ...ask,
                             onAccumulatedResponse({isDone, ...response}){
@@ -79,14 +83,45 @@ function useChat() {
                             }
                         })
                     })
-                }else{
-                    return sendMessage(...arguments)
                 }
+                
+                return await sendMessage(...arguments)
+                
             },[sendMessage])
         }
     }
+    
+    if(api=="bing"){
+        const {service, status}=useBing()
+        return React.useMemo(()=>{
+            return {
+                status,
+                async sendMessage(message, session){
+                    const options={...session, variant:"Precise"}
+                    if(typeof(message)=="object"){
+                        const {message:prompt, onAccumulatedResponse, onError}=message
+                        try{
+                            if(onAccumulatedResponse){
+                                options.onProgress=({text, conversationId})=>{
+                                    onAccumulatedResponse({message:text, conversationId, isDone:false})
+                                }
+                            }
+                            
+                            const {conversationId, text} = await service.sendMessage(prompt, options)
+                            onAccumulatedResponse?.({message:text, conversationId, isDone:true})
+                            return {message:text, conversationId}
+                        }catch(e){
+                            onError?.(e)
+                        }
+                    }
+                    const {conversationId, text}=await service.sendMessage(message, options)
+                    return {conversationId, message:text}
+                }
+            }
+        },[service])
+    }
 
-    return React.useMemo(()=>({ 
+    return React.useMemo(()=>({
         status: "authenticated", 
         sendMessage:async (message, options, id, timeout)=>{
             const [request, processData = a => a, onError = a => a] = (() => {

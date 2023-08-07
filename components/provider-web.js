@@ -118,13 +118,13 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
                 context.drawImage(image, 0, 0)
                 return canvas.toDataURL()
             };
-            window.emit('emit.imgToDataURI');
+            window.emit('emit.ready','${broName}');
 
             ;let $$bro$$=(${broCode})();
             if($$bro$$ && !('${broName}' in window)){
                 window.${broName}=$$bro$$
             };
-            window.emit('bro', !! window.${broName});
+            window.emit('bro', '${broName}');
             true;
         `;
 

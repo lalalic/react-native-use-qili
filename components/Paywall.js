@@ -2,6 +2,7 @@ import React from "react"
 import { View, Linking, Text } from "react-native"
 import {IaphubDataConsumer, Paywall, PaywallSubscriptionGroup} from 'react-native-iaphub-ui'
 import ActiveProductsWrapper from "react-native-iaphub-ui/src/paywall/active-products-wrapper"
+const l10n=globalThis.l10n
 
 export default function MyPaywall({consumable=true, subscriptable=true, formatProduct=a=>a, children}){
     return (

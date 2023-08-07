@@ -5,6 +5,8 @@ import { isUserLogin, Qili } from "../store";
 import { TextInput, Text, Button } from "./colored-native"
 import FlyMessage from "./FlyMessage";
 import Loading from "./Loading"
+const l10n=globalThis.l10n
+
 
 export default function Login({onLogin,style}) {
     const dispatch = useDispatch();

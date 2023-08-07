@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import * as Updates from "expo-updates"
 import { isUserLogin } from "../store"
 import Loading from "./Loading";
-
+const l10n=globalThis.l10n
 export default function Account({settings, information}){
     const dispatch=useDispatch()
     const signedIn=useSelector(state=>isUserLogin(state))

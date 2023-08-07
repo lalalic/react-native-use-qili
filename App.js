@@ -9,7 +9,7 @@ import setDefaultStyle, {ColorScheme} from "./components/default-style"
 LogBox.ignoreAllLogs()
 ExpoSplashScreen.preventAutoHideAsync()
 
-export default function App({ContainerView=SafeAreaView, children, colorScheme:scheme="light", onCrash, ...props}){
+export default function App({ContainerView=SafeAreaView, children, colorScheme:scheme="light", onCrash, recreateWhenCrash, ...props}){
     const [style, setStyle]=React.useState({})
     const [dataReady, setDataReady]=React.useState(false)
 
@@ -36,7 +36,7 @@ export default function App({ContainerView=SafeAreaView, children, colorScheme:s
         if(dataReady){
             const containerStyle={flex:1, backgroundColor:style.backgroundColor}
             return (
-                <CrashReport onCrash={onCrash}>
+                <CrashReport {...{recreateWhenCrash, onCrash}}>
                     <ContainerView onLayout={e=>ExpoSplashScreen.hideAsync()} style={containerStyle}>
                         <ColorScheme.Provider key={scheme} value={style}>
                             {children}

@@ -2,6 +2,7 @@ import React from "react";
 import Iaphub from "react-native-iaphub"
 import { IaphubDataProvider } from 'react-native-iaphub-ui';
 import iap from "react-native-iaphub-ui/src/i18n/en"
+const l10n=globalThis.l10n
 
 export default function MyIaphubDataProvider({products,onPurchase, ...props}) {
     Iaphub.products=products

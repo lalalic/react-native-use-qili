@@ -37,7 +37,7 @@ function bingAI(){
   }
   //ws
 
-  var WebSocket=(()=>{
+  const WebSocket=(()=>{
     if(globalThis.WebSocket.on){
       return globalThis.WebSocket
     }
@@ -47,8 +47,8 @@ function bingAI(){
           super(url)
           this._listeners=[]
         }
-        on(eventName, fx){
-          const fn=this.addEventListener(eventName,event=>{
+        on(eventName, fx, fn){
+          this.addEventListener(eventName,fn=event=>{
             switch(eventName){
               case 'error':
                 return fx(event.error)
@@ -58,10 +58,10 @@ function bingAI(){
                 return fx(event)
             }
           })
-          this._listeners.push(fn)
+          this._listeners.push([eventName, fn])
         }
         removeAllListeners(){
-          this._listeners.forEach(a=>this.removeEventListener(a))
+          this._listeners.forEach(a=>this.removeEventListener(...a))
           this._listeners=[]
         }
       }
@@ -322,7 +322,7 @@ function bingAI(){
       });
     }
   };
-  return BingChat
+  return globalThis.BingChat=BingChat
 }
 
 function diffusion(){
@@ -372,7 +372,39 @@ diffusion
 
 			exports.subscriptAsHelper=function({helper, chrome, window, Qili}){
 				
-let unsubscribe=null
+function uid(){
+	const generateNumber = (limit) => {
+		const value = limit * Math.random();
+		return value | 0;
+	}
+	const generateX = () => {
+		const value = generateNumber(16);
+		return value.toString(16);
+	}
+	const generateXes = (count) => {
+		let result = '';
+		for(let i = 0; i < count; ++i) {
+			result += generateX();
+		}
+		return result;
+	}
+	const generateconstant = () => {
+		const value = generateNumber(16);
+		const constant =  (value & 0x3) | 0x8;
+		return constant.toString(16);
+	}
+		
+	const generate = () => {
+				const result = generateXes(8)
+						+ '-' + generateXes(4)
+						+ '-' + '4' + generateXes(3)
+						+ '-' + generateconstant() + generateXes(3)
+						+ '-' + generateXes(12)
+				return result;
+	};
+	return generate()
+}
+
 class MultithreadQueue{
 	then(task){
 		task();
@@ -387,19 +419,6 @@ class Service{
 		this.stat={helps:0, errors:0}
 		this.run(props)
 		console.log(`service[${props.name}] started...`)
-		if(props.url){
-			const {url}=props
-			function startTab() {
-				chrome.tabs.query({url}, (tabs)=>{
-					if(!tabs || !tabs[0]){
-						chrome.tabs.create({ url});
-					}
-				})
-				
-			}
-			chrome.runtime.onStartup.addListener(startTab)
-			chrome.runtime.onInstalled.addListener(startTab)
-		}
 	}
 
 	set multithread(v){
@@ -488,80 +507,10 @@ class Service{
 	}
 }
 
-class WorkService extends Service{
-	run({name, url, handleResponse}){
-		const resultPs = {};
-		this.consume1=function({message:{fnKey, args}, session}){
-			resultPs[session] = (p => Object.assign(new Promise((resolve, reject) => Object.assign(p, { resolve, reject })), p))({});
-			chrome.tabs.query({url}, function([activeTab]){
-				if(activeTab){
-					chrome.tabs.sendMessage(activeTab.id, {type:"fnCall", fnKey, args, session})
-				}else{
-					resultP.reject(new Error(`No tab for ${url}`))
-				}
-			})
-			return resultPs[session]
-		}
-
-		this.bro=new Proxy(this,{
-			get(target, fnKey){
-				return (...args)=>target.consume1({fnKey, args})
-			}
-		})
-
-		chrome.runtime.onMessage.addListener(function({event, data}, {tab}){
-			if(tab.url!==url)
-				return 
-			if(event=="fnCall"){
-				const { id, result }=data
-				const p = resultPs[id];
-                delete resultPs[id]
-                p.resolve(result)
-				return 
-			}
-			this[`on${event}`]?.(data)
-			console.log({event, data, url, })
-		})
-	}
-}
-
 /** session need be kept if message.options */
 class Chatgpt extends Service{
 	run({helper, notifyExpiration}){
 		const me=this
-		const uid = () => {
-			const generateNumber = (limit) => {
-				const value = limit * Math.random();
-				return value | 0;
-			}
-			const generateX = () => {
-				const value = generateNumber(16);
-				return value.toString(16);
-			}
-			const generateXes = (count) => {
-				let result = '';
-				for(let i = 0; i < count; ++i) {
-					result += generateX();
-				}
-				return result;
-			}
-			const generateconstant = () => {
-				const value = generateNumber(16);
-				const constant =  (value & 0x3) | 0x8;
-				return constant.toString(16);
-			}
-				
-			const generate = () => {
-						const result = generateXes(8)
-								+ '-' + generateXes(4)
-								+ '-' + '4' + generateXes(3)
-								+ '-' + generateconstant() + generateXes(3)
-								+ '-' + generateXes(12)
-						return result;
-			};
-				return generate()
-		};
-		
 		this.getToken=(()=>{
 			let accessToken=null
 			return async()=>{
@@ -586,19 +535,6 @@ class Chatgpt extends Service{
 								()=>notifyExpiration?.(data.expires),
 								10*60*1000
 							)
-
-							/*setTimeout doesn't work here
-							//different model has issues
-							fetch("https://chat.openai.com/backend-api/models?history_and_training_disabled=false",{
-								headers: {
-									"Content-Type": "application/json",
-									"Authorization": "Bearer " + data.accessToken,
-								},
-							}).then(async res=>{
-								const data=await res.json()
-								Model=data.models[0].slug
-							}).finally(()=>resolve(accessToken=data.accessToken))
-							*/
 							
 							this.session={token: data.accessToken, expires: data.expires}
 							resolve(accessToken=data.accessToken)
@@ -609,101 +545,6 @@ class Chatgpt extends Service{
 				})
 			}
 		})();
-
-		async function getOpenaiResponse(question){
-			if(typeof(OPENAI_API_KEY)=="undefined"){
-				new Error("Unknow Error")
-			}
-			const res=await fetch("https://api.openai.com/v1/chat/completions",{
-				method:"POST",
-				headers: {
-					"Content-Type": "application/json",
-					"Authorization": "Bearer " + OPENAI_API_KEY,
-				},
-				body:JSON.stringify({
-					model:"gpt-3.5-turbo",
-					messages:[{role:"user", content:question}]
-				})
-			})
-			const {choices:[{message:{content}}], usage:{total_tokens}} = await res.json()
-			return {message:content, tokens: total_tokens}
-		}
-
-		this._getLocalResponse=async function(question, {messageId=uid(), conversationId}={}){
-			const res = await fetch("https://chat.openai.com/backend-api/conversation", {
-					method: "POST",
-					headers: {
-							"Content-Type": "application/json",
-							"Authorization": "Bearer " + (await me.getToken()),
-					},
-					body: JSON.stringify({
-							action: "next",
-							messages: [
-								{
-									id: uid(),
-									role: "user",
-									content: {
-										content_type: "text",
-										parts: [question]
-									}
-								}
-							],
-							model: "text-davinci-002-render",
-							...(conversationId? {conversation_id: conversationId} : {}),
-							parent_message_id: messageId,
-							/*text-davinci-002-render-sha
-							history_and_training_disabled:false,
-							timezone_offset_min:20,
-							suggestions:[],
-							*/
-					})
-			})
-			return await read(res.body)
-		}
-
-		this.getResponse=async function(question){
-			try{
-				try{
-					return await bros.bingAI.consume1(...arguments)
-				}catch(e){
-					return await this._getLocalResponse(...arguments)
-				}
-			}catch(e){
-				return await getOpenaiResponse(...arguments)
-			}
-		}
-
-		async function read1(answer){
-			const resRead = answer.getReader()
-			let datas=[]
-			while (true) {
-				const {done, value} = await resRead.read()
-				if(done)
-				if(value && value.length>20){//exclude 'data: [DONE]'
-					datas.unshift(value)
-					datas.splice(3)
-				}
-
-				if (done && datas.length){
-					for(let data of datas){
-						const raw=new TextDecoder().decode(data).split("data:").map(a=>a.trim()).filter(a=>!!a && a!='[DONE]')
-						try{
-							const piece=JSON.parse(raw[raw.length-1])
-							if(piece.message?.content){
-								return {
-									message:piece.message.content.parts?.join(""), 
-									messageId:piece.message.id, 
-									conversationId:piece.conversation_id,
-									error: piece.error||undefined
-								}
-							}
-						}catch(error){
-							console.error(`${error.message}\n${raw[raw.length-1]}`)
-						}
-					}
-				}
-			}
-		}
 		
 		async function read(answer){
 			const resRead = answer.getReader()
@@ -733,36 +574,56 @@ class Chatgpt extends Service{
 			
 			throw new Error("Unknow Error")
 		}
-		
-		async function deleteConversation({conversationId}){
-			const res=await fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`,{
-				method:"PATCH",
-				headers: {
-						"Content-Type": "application/json",
-						"Authorization": "Bearer " + (await me.getToken()),
-				},
-				body: JSON.stringify({
-					is_visible:false
-				})
-			})
-			await res.json()
-		}
-
-		function getOption(message){
-			if(typeof(message)=="string" || !message.options)
-				return 
-			if(message.options.helper==helper){
-				const {conversationId, messageId}=message.options
-				return {conversationId, messageId}
-			}
-		}
 
 		this.consume1=async function consume1({message}) {
-			const response = await this.getResponse( message.message || message, getOption(message))
+			const {messageId=uid(), conversationId}=(msg=>{
+				if(typeof(msg)=="string" || !msg.options)
+					return {}
+				if(msg.options.helper==helper){
+					const {conversationId, messageId}=msg.options
+					return {conversationId, messageId}
+				}
+				return {}
+			})(message);
+
+			const question=message.message||message
+			const res = await fetch("https://chat.openai.com/backend-api/conversation", {
+					method: "POST",
+					headers: {
+							"Content-Type": "application/json",
+							"Authorization": "Bearer " + (await me.getToken()),
+					},
+					body: JSON.stringify({
+							action: "next",
+							messages: [
+								{
+									id: uid(),
+									role: "user",
+									content: {
+										content_type: "text",
+										parts: [question]
+									}
+								}
+							],
+							model: "text-davinci-002-render",
+							...(conversationId? {conversation_id: conversationId} : {}),
+							parent_message_id: messageId,
+					})
+			})
+			const response=await read(res.body)
 			
 			if (!message.options) {
 				if(response.conversationId){
-					deleteConversation(response)
+					fetch(`https://chat.openai.com/backend-api/conversation/${response.conversationId}`,{
+						method:"PATCH",
+						headers: {
+								"Content-Type": "application/json",
+								"Authorization": "Bearer " + (await me.getToken()),
+						},
+						body: JSON.stringify({
+							is_visible:false
+						})
+					})
 				}
 				delete response.messageId;
 				delete response.conversationId;
@@ -771,56 +632,99 @@ class Chatgpt extends Service{
 			}
 			return response
 		}
-
-		this.clearAllConversations=async function(){
-			const options={
-				method:"GET",
-				headers: {
-						"Content-Type": "application/json",
-						"Authorization": "Bearer " + (await me.getToken()),
-				},
-			}
-			const {items}=await (await fetch("https://chat.openai.com/backend-api/conversations?offset=0&limit=28&order=updated",options)).json();
-			items.forEach(({id:conversationId})=>deleteConversation({conversationId}))
-		}
-
-		this.try=async(ask, openai)=>{
-			try{
-				if(openai){
-					await getOpenaiResponse(ask)
-				}
-				await deleteConversation(await getResponse(ask))
-			}catch(error){
-				console.error(error)
-			}
-		}
-		this.test=async (question)=>{
-			const test=async (type, fx)=>{
-				try{
-					await fx()
-					return type
-				}catch(e){
-					console.error(`${type}: ${e.message}`)
-				}
-			}
-			const supported=[
-				await test("BingAI", async()=>await bros.bingAI.consume1(question)),
-				await test("ChatGPT", async()=>{
-					const response=await this._getLocalResponse(question)
-					if(response.conversationId){
-						deleteConversation(response)
-					}
-					return response
-				}),
-				await test("OpenAI", async()=>await getOpenaiResponse(question))
-			].filter(a=>!!a)
-
-			console.info(`[${supported.join(" --> ")}] `)
-		}
 	}
 }
 
-async function subscribe({helper}, services){
+class PageService extends Service{
+	run({url}){
+		function startTab() {
+			chrome.tabs.query({url}, (tabs)=>{
+				if(!tabs || !tabs[0]){
+					chrome.tabs.create({ url});
+				}
+			})
+		}
+		if(url){
+			chrome.runtime.onStartup.addListener(startTab)
+			chrome.runtime.onInstalled.addListener(startTab)
+		}
+		const resultPs = {};
+		this.consume1=function({message:{fnKey, args}, session}){
+			resultPs[session] = (p => Object.assign(new Promise((resolve, reject) => Object.assign(p, { resolve, reject })), p))({});
+			
+			function try1(tried){
+				chrome.tabs.query({url}, function([activeTab]){
+					if(activeTab){
+						chrome.tabs.sendMessage(activeTab.id, {type:"fnCall", fnKey, args, session})
+					}else if(!tried){
+						startTab()
+						try1(true)
+					}else{
+						resultP.reject(new Error(`No tab for ${url}`))
+					}
+				})
+			}
+
+			try1()
+
+			return resultPs[session]
+		}
+
+		this.bro=new Proxy(this,{
+			get(target, fnKey){
+				return (...args)=>target.consume1({fnKey, args})
+			}
+		})
+
+		chrome.runtime.onMessage.addListener(function({event, data}, {tab}){
+			if(tab.url!==url)
+				return 
+			if(event=="fnCall"){
+				const { id, result }=data
+				const p = resultPs[id];
+                delete resultPs[id]
+                p.resolve(result)
+				return 
+			}
+			this[`on${event}`]?.(data)
+			console.log({event, data, url, })
+		})
+	}
+}
+
+function parseEnvOpts(){
+	if(process?.argv?.length>2){
+		const [,,...argv]=process.argv
+		return argv.reduce((opts, a)=>{
+			const [key,value]=a.replace("--","").split("=").map(a=>a.trim())
+			switch(key){
+				case "chatgpt":
+				case "openAI":
+				case "bingAI":
+					opts[key]=value.toLowerCase()!=="false"
+					break
+				case "autoAI":
+					opts[key]=value.split(",")
+			}
+			return opts
+		},{})
+	}
+	return {}
+}
+
+async function subscribe({helper, defaultChatService=DefaultChatService, ...opts}, services){
+	opts={...opts, ...parseEnvOpts()}
+	Object.keys(services).forEach(key=>opts[key]===false && (delete services[key], console.log(`${key} closed`)))
+
+	if(Array.isArray(opts.autoAI)){
+		services.autoAI.apis=opts.autoAI
+	}
+
+	if(services.autoAI){
+		services.autoAI.apis=services.autoAI.apis.filter(a=>!!services[a])
+		services.autoAI.printAPI()
+	}
+
 	await Promise.all(Object.values(services).map(a=>a?.available()))
 	let helps=await new Promise((resolve)=>chrome.storage.sync.get('helps',data=>resolve(data ? data.helps||0 : 0)))
 	await chrome.browserAction.setBadgeText({text:helps+""})
@@ -839,10 +743,10 @@ async function subscribe({helper}, services){
 		query:`subscription($helper:String){
 				ask:helpQueue(helper:$helper)
 		}`,
-		variables:{helper, gpt: services.chatgpt?.session}
+		variables:{helper}
 	}, function onNext({data:{error, ask}}){//ask: {session, message}
 		console.debug({...ask})
-		const service=services[ask.message.$service||"chatgpt"]
+		const service=services[ask.message.$service]||(!ask.message.$service&&services[defaultChatService]||(service.autoAI||services.chatgpt||services.bingAI||services.openAI))
 		if(!service){
 			console.error({ask, error:"No Service"})
 			answer(ask, {})
@@ -863,7 +767,26 @@ async function subscribe({helper}, services){
 
 // background_script.js
 
-unsubscribe=subscribe({helper},window.bros={
+subscribe({helper},window.bros={
+	autoAI: 	new (class extends Service{
+					run(){
+						this.apis=["chatgpt", "bingAI", "openAI"]
+						this.printAPI=()=>console.info(`AutoAI: ${this.apis.join(" -> ")}`)
+						this.consume1=async function(){
+							for(let service of this.apis){
+								try{
+									const res=await window.bros[service]?.consume1(...arguments)
+									if(!res?.message){
+										continue
+									}
+									return {...res, service}
+								}catch(e){
+									continue
+								}
+							}
+						}
+					}
+				})({helper, name:"autoAI"}),
 	chatgpt:	new Chatgpt({
 					helper,
 					name:"chatgpt",
@@ -871,7 +794,7 @@ unsubscribe=subscribe({helper},window.bros={
 						alert(`Chatgpt need login before ${expireTime}, otherwise bridge service is `)
 					}
 				}),
-	bingAI: 	new (class extends WorkService{
+	bingAI: 	new (class extends Service{
 					async run({}){
 						const BingAI=bingAI()
 						this.getCookie=async ()=>{
@@ -885,18 +808,37 @@ unsubscribe=subscribe({helper},window.bros={
 							return await getCookiesForURL("https://www.bing.com")
 						}
 						
-						this.consume1=async (question)=>{
+						this.consume1=async ({message:question})=>{
 							const cookie=await this.getCookie()
 							const api=new BingAI({cookie})
 							const {text}=await api.sendMessage(question,{variant:"Precise"})
 							return {message:text}
 						}
 					}
-				})({
-					helper,
-					name:"bingAI"
-				}),
-	diffusion:	new (class extends WorkService{
+				})({helper,name:"bingAI"}),
+	openAI:		new (class extends Service{
+					async run({openApiKey=OPENAI_API_KEY}){
+						this.consume1=async ({message:question})=>{
+							if(typeof(openApiKey)=="undefined"){
+								new Error("Unknow Error")
+							}
+							const res=await fetch("https://api.openai.com/v1/chat/completions",{
+								method:"POST",
+								headers: {
+									"Content-Type": "application/json",
+									"Authorization": "Bearer " + openApiKey,
+								},
+								body:JSON.stringify({
+									model:"gpt-3.5-turbo",
+									messages:[{role:"user", content:question}]
+								})
+							})
+							const {choices:[{message:{content}}], usage:{total_tokens}} = await res.json()
+							return {message:content, tokens: total_tokens}
+						}
+					}
+				})({helper, name:"openAI", multithread:true}),
+	diffusion:	new (class extends PageService{
 					run({}){
 						super.run(...arguments)
 						const service=diffusion()
@@ -914,13 +856,7 @@ unsubscribe=subscribe({helper},window.bros={
 						}
 						return await this.batchUpload(images, `temp/diffusion/${ask.session}`)
 					}
-				}),
-	download: 	new (class extends WorkService{
-					run({}){
-						super.run(...arguments)
-						this.consume1=async ({message:{args:[url]}})=>this.upload(url)
-					}
-				})({multithread:true, name:"upload"})
+				})
 })
 			}
 		

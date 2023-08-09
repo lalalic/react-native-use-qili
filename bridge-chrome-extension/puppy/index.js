@@ -77,6 +77,7 @@ function inspect(obj, indent = 0, tab=0) {
 	
 	const BingAIExtension=path.resolve(__dirname, "../bingAI-extension/1.0.1_0")
 	const pathToExtension = path.resolve(__dirname, "..");
+
 	const browser = await puppeteer.launch({
 		executablePath:"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 		userDataDir:"./userData",
@@ -114,7 +115,6 @@ function inspect(obj, indent = 0, tab=0) {
 	
 	await (async function injectBro(){
 		await chat.evaluate(()=>{
-			let unsubscribe
 			const empty=()=>({})
 			const proxy=new Proxy({},{get:(_,key)=>empty})
 			return Object.assign(chrome,{
@@ -157,7 +157,6 @@ function inspect(obj, indent = 0, tab=0) {
 			bros.bingAI.getCookie=async ()=>{
 				throw new Error(`helper[${helper}] not supported BingAI`)
 			}
-			bros.chatgpt.test("hello")
 		})
 
 		await chat.evaluate(()=>{
@@ -183,6 +182,7 @@ function inspect(obj, indent = 0, tab=0) {
 			server.id="server"
 			server.innerHTML="Server Info: "
 		})
+		
 		console.info('indicator is ready')
 	})();
 

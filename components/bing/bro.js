@@ -41,8 +41,8 @@ module.exports=function bingAI(){
           super(url)
           this._listeners=[]
         }
-        on(eventName, fx){
-          const fn=this.addEventListener(eventName,event=>{
+        on(eventName, fx, fn){
+          this.addEventListener(eventName,fn=event=>{
             switch(eventName){
               case 'error':
                 return fx(event.error)

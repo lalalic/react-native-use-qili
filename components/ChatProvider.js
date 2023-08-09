@@ -5,7 +5,7 @@ import { ChatGptProvider } from 'react-native-chatgpt';
 import SubscribeHelpQueue from './SubscribeHelpQueue';
 import { BingProvider } from './bing';
 
-export default function ChatProvider({ children, services , api="bing"}) {
+export default function ChatProvider({ children, services , debug,  api="chatgpt"}) {
     const enableChatGPT = useSelector(state => hasChatGPTAccount(state));
     const [content, realApi]=React.useMemo(()=>{
         if (enableChatGPT && api=="chatgpt") {
@@ -19,7 +19,7 @@ export default function ChatProvider({ children, services , api="bing"}) {
     
         if(api=="bing"){
             return [(
-                <BingProvider>
+                <BingProvider debug={debug}>
                     {children}
                 </BingProvider>
             ), api]
@@ -35,5 +35,5 @@ export default function ChatProvider({ children, services , api="bing"}) {
     )
 }
 
-export const ChatContext=React.createContext({api:"bing"})
+export const ChatContext=React.createContext({})
 

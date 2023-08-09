@@ -46,8 +46,8 @@ function bingAI(){
           super(url)
           this._listeners=[]
         }
-        on(eventName, fx){
-          const fn=this.addEventListener(eventName,event=>{
+        on(eventName, fx, fn){
+          this.addEventListener(eventName,fn=event=>{
             switch(eventName){
               case 'error':
                 return fx(event.error)
@@ -57,10 +57,10 @@ function bingAI(){
                 return fx(event)
             }
           })
-          this._listeners.push(fn)
+          this._listeners.push([eventName, fn])
         }
         removeAllListeners(){
-          this._listeners.forEach(a=>this.removeEventListener(a))
+          this._listeners.forEach(a=>this.removeEventListener(...a))
           this._listeners=[]
         }
       }

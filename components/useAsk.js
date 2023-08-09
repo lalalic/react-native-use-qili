@@ -11,8 +11,8 @@ import { useBing } from './bing';
  * @returns
  */
 
-export default function useAsk(xid = "random", defaultQuestion, timeout0 = 60000) {
-    const { sendMessage, status, login } = useChat();
+export default function useAsk({id:xid = "random", prompt:defaultQuestion,  timeout:timeout0 = 60000, api}={}) {
+    const { sendMessage, status, login } = useChat(api);
 
     const dispatch = useDispatch();
     const $sessions= React.useRef(null)
@@ -21,33 +21,18 @@ export default function useAsk(xid = "random", defaultQuestion, timeout0 = 60000
     const ask = React.useCallback(async (prompt = defaultQuestion, id = xid, timeout = timeout0) => {
         const session = $sessions.current[id];
         console.debug({ event: "ask", prompt, session, id });
-        try{
-            const { message, ...newSession } = await sendMessage(prompt, session, id, timeout);
+        const { message, ...newSession } = await sendMessage(prompt, session, id, timeout);
 
-            if(!message)
-                throw new Error('No message returned')
-                
-            if (id && Object.keys(newSession).length > 0 && (!session
-                || session.conversationId != newSession.conversationId
-                || session.messageId != newSession.messageId)) {
-                dispatch({ type: "my/session", payload: { [id]: newSession } });
-            }
-
-            return message;
-        }catch(e){
-            if(e.message=="Not Found" && session){
-                const { message, ...newSession } = await sendMessage(prompt, null, id, timeout);
-
-                if(!message)
-                    throw new Error('No message returned')
-                    
-                if (id) {
-                    dispatch({ type: "my/session", payload: { [id]: newSession } });
-                }
-
-                return message;
-            }
+        if(!message)
+            throw new Error('No message returned')
+            
+        if (id && Object.keys(newSession).length > 0 && (!session
+            || session.conversationId != newSession.conversationId
+            || session.messageId != newSession.messageId)) {
+            dispatch({ type: "my/session", payload: { [id]: newSession } });
         }
+
+        return message;
     }, [sendMessage]);
 
     if (status == "logged-out") {
@@ -61,66 +46,99 @@ export default function useAsk(xid = "random", defaultQuestion, timeout0 = 60000
 
 function useChat() {
     const {api}=React.useContext(ChatContext)
-
-    if (api=="chatgpt"){
-        const {sendMessage, ...status}=useChatGpt()
+    const bridge= useBridgeChat()
+    const service=api=="chatgpt" ? useChatGPTChat() : (api=="bing" && useBingChat())
+    if(service){
+        const {sendMessage, ...info}=service
         return {
-            ...status,
-            sendMessage:React.useCallback(async function(ask){
-                if(ask.onAccumulatedResponse){
-                    return await new Promise((resolve,reject)=>{
-                        sendMessage({
-                            ...ask,
-                            onAccumulatedResponse({isDone, ...response}){
-                                ask.onAccumulatedResponse(...arguments)
-                                if(isDone){
-                                    resolve(response)
-                                }
-                            },
-                            onError(error){
-                                ask.onError?.(error)
-                                reject(error)
-                            }
-                        })
-                    })
-                }
-                
-                return await sendMessage(...arguments)
-                
-            },[sendMessage])
-        }
-    }
-    
-    if(api=="bing"){
-        const {service, status}=useBing()
-        return React.useMemo(()=>{
-            return {
-                status,
-                async sendMessage(message, session){
-                    const options={...session, variant:"Precise"}
-                    if(typeof(message)=="object"){
-                        const {message:prompt, onAccumulatedResponse, onError}=message
-                        try{
-                            if(onAccumulatedResponse){
-                                options.onProgress=({text, conversationId})=>{
-                                    onAccumulatedResponse({message:text, conversationId, isDone:false})
-                                }
-                            }
-                            
-                            const {conversationId, text} = await service.sendMessage(prompt, options)
-                            onAccumulatedResponse?.({message:text, conversationId, isDone:true})
-                            return {message:text, conversationId}
-                        }catch(e){
-                            onError?.(e)
-                        }
-                    }
-                    const {conversationId, text}=await service.sendMessage(message, options)
-                    return {conversationId, message:text}
+            ...info,
+            async sendMessage(){
+                try{
+                    return await service.sendMessage(...arguments)
+                }catch(e){
+                    return await bridge.sendMessage(...arguments)
                 }
             }
-        },[service])
+        }
     }
+    return bridge
+}
 
+function useChatGPTChat(){
+    const {sendMessage, ...status}=useChatGpt()
+    const doSend=React.useCallback(async function(ask){
+        if(ask.onAccumulatedResponse){
+            return await new Promise((resolve,reject)=>{
+                sendMessage({
+                    ...ask,
+                    onAccumulatedResponse({isDone, ...response}){
+                        ask.onAccumulatedResponse(...arguments)
+                        if(isDone){
+                            resolve(response)
+                        }
+                    },
+                    onError(error){
+                        ask.onError?.(error)
+                        reject(error)
+                    }
+                })
+            })
+        }
+        
+        return await sendMessage(...arguments)
+        
+    },[sendMessage])
+
+    return {
+        ...status,
+        async sendMessage(ask, session, id, ...args){
+            try{
+                return doSend(...arguments)
+            }catch(e){
+                if(e.message=="Not Found" && session){
+                    if (id) {
+                        dispatch({ type: "my/session", payload: { [id]: null } });
+                    }
+                    return await doSend(ask, null, id, ...args)
+                }else{
+                    throw e;
+                }
+            }
+        }
+    }
+}
+
+function useBingChat(){
+    const {service, status}=useBing()
+    return React.useMemo(()=>{
+        return {
+            status,
+            async sendMessage(message, session){
+                const options={...session, variant:"Precise"}
+                if(typeof(message)=="object"){
+                    const {message:prompt, onAccumulatedResponse, onError}=message
+                    try{
+                        if(onAccumulatedResponse){
+                            options.onProgress=({text, conversationId})=>{
+                                onAccumulatedResponse({message:text, conversationId, isDone:false})
+                            }
+                        }
+                        
+                        const {conversationId, text} = await service.sendMessage(prompt, options)
+                        onAccumulatedResponse?.({message:text, conversationId, isDone:true})
+                        return {message:text, conversationId}
+                    }catch(e){
+                        onError?.(e)
+                    }
+                }
+                const {conversationId, text}=await service.sendMessage(message, options)
+                return {conversationId, message:text}
+            }
+        }
+    },[service])
+}
+
+function useBridgeChat(){
     return React.useMemo(()=>({
         status: "authenticated", 
         sendMessage:async (message, options, id, timeout)=>{

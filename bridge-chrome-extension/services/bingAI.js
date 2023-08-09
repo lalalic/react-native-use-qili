@@ -8,15 +8,9 @@ function bingAI(){
   const crypto={
     randomBytes(size){
 			const randomBytes = new Uint8Array(size);
-			if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
-				window.crypto.getRandomValues(randomBytes);
-			} else if (typeof require !== 'undefined' && typeof require('crypto').randomFillSync === 'function') {
-				require('crypto').randomFillSync(randomBytes);
-			} else {
-				for (let i = 0; i < size; i++) {
-					randomBytes[i] = Math.floor(Math.random() * 256);
-				}
-			}
+			for (let i = 0; i < size; i++) {
+        randomBytes[i] = Math.floor(Math.random() * 256);
+      }
 			return {
 				toString(){
 					return Array.from(randomBytes, byte => ('0' + byte.toString(16)).slice(-2)).join('');
@@ -132,7 +126,8 @@ function bingAI(){
             headers: {
               'accept-language': 'en-US,en;q=0.9',
               'cache-control': 'no-cache',
-              pragma: 'no-cache'
+              pragma: 'no-cache',
+              origin: "https://www.bing.com",
             }
           })
           let isFulfilled = false;

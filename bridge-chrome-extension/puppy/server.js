@@ -14,12 +14,11 @@ const {helper, accessToken, OPENAI_API_KEY, api, apiKey, DefaultChatService}=req
 Object.assign(globalThis,{helper, accessToken, OPENAI_API_KEY, api, apiKey,fetch, DefaultChatService, WebSocket:require('ws')})
 globalThis.SubscriptionsTransportWs= require("subscriptions-transport-ws")
 globalThis.alert=(message)=>console.warn(message)
-const HelperName=`${helper}-${process.env.helperSister||"sister"}`
+const HelperName=`${helper}-console`
 
 
 //fake
 const {chrome, window}=(()=>{
-    let unsubscribe
     const empty=()=>({})
     const proxy=new Proxy({},{get:(_,key)=>empty})
     const chrome={
@@ -56,26 +55,36 @@ const {chrome, window}=(()=>{
         },
         set(target, key, value){
             if(key=="bros"){
-                (async()=>{
-                    const services=value
-                    try{
-                        const token=await services.chatgpt?.getToken()
-                        if(!token){
-                            delete services.chatgpt
-                        }
-                    }catch(e){
-                        delete services.chatgpt
-                    }
+                const services=value
+                if(process.env.chatgptToken && services.chatgpt){
+                    services.chatgpt.getToken=()=>process.env.chatgptToken
+                    services.chatgpt.read=async function(stream){
+                        for await (let value of stream){
+                            const raw=new TextDecoder().decode(value).split("data:").filter(a=>!!a)
+                            for(let i=raw.length-1; i>-1; i--){
+                                try{
+                                    const piece=JSON.parse(raw[i])
+                                    if(piece.message.author.role=="assistant"){
+                                        if(piece.message.status=="finished_successfully"){
+                                            return {
+                                                message:piece.message.content.parts.join(""), 
+                                                messageId:piece.message.id, 
+                                                conversationId:piece.conversation_id,
+                                                error: piece.error||undefined
+                                            }
+                                        }
+                                        break
+                                    }
+                                }catch(e){
 
-                    try{
-                        const cookie=await services.bingAI?.getCookie()
-                        if(!cookie){
-                            delete services.bingAI
+                                }
+                            }
                         }
-                    }catch(e){
-                        delete services.bingAI
                     }
-                })();
+                }
+                if(process.env.bingAICookie && services.bingAI){
+                    services.bingAI.getCookie=()=>process.env.bingAICookie
+                }
             }
             target[key]=value
         }
@@ -90,9 +99,6 @@ const {subscriptAsHelper} = require("../index.js")
 const Qili=requireLocal("../qili.js", "Qili")
 
 if(require.main){
-    process.argv.push("--chatgpt=false")
-    process.argv.push("--bingAI=false")
-
     const http = require('http');
 
     http.createServer((req, res) => {
@@ -102,4 +108,4 @@ if(require.main){
 
 subscriptAsHelper({helper:HelperName, chrome, window, Qili})
 
-module.exports={data:chrome.storage.sync}
+module.exports={chrome:chrome.storage.sync, Qili}

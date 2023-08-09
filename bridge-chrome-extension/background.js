@@ -72,6 +72,14 @@ class Service{
 		return true
 	}
 
+	async try1(){
+		try{
+			return await this.consume1(...arguments)
+		}catch(e){
+			console.error(e.message)
+		}
+	}
+
 	enqueue(ask, done){
 		const task=async ()=>{
 			let timer
@@ -138,6 +146,7 @@ class Service{
 class Chatgpt extends Service{
 	run({helper, notifyExpiration}){
 		const me=this
+		this.notifyExpiration=notifyExpiration
 		this.getToken=(()=>{
 			let accessToken=null
 			return async()=>{
@@ -159,7 +168,7 @@ class Chatgpt extends Service{
 							Qili.schedule(
 								()=>accessToken=null,
 								data.expires, 
-								()=>notifyExpiration?.(data.expires),
+								()=>this.notifyExpiration?.(data.expires),
 								10*60*1000
 							)
 							
@@ -173,7 +182,7 @@ class Chatgpt extends Service{
 			}
 		})();
 		
-		async function read(answer){
+		this.read=async function read(answer){
 			const resRead = answer.getReader()
 			while (true) {
 				const {done, value} = await resRead.read()
@@ -237,7 +246,7 @@ class Chatgpt extends Service{
 							parent_message_id: messageId,
 					})
 			})
-			const response=await read(res.body)
+			const response=await this.read(res.body)
 			
 			if (!message.options) {
 				if(response.conversationId){
@@ -320,7 +329,7 @@ class PageService extends Service{
 }
 
 function parseEnvOpts(){
-	if(process?.argv?.length>2){
+	if(typeof(process)!='undefined' && process.argv?.length>2){
 		const [,,...argv]=process.argv
 		return argv.reduce((opts, a)=>{
 			const [key,value]=a.replace("--","").split("=").map(a=>a.trim())
@@ -340,7 +349,7 @@ function parseEnvOpts(){
 }
 
 async function subscribe({helper, defaultChatService=DefaultChatService, ...opts}, services){
-	opts={...opts, ...parseEnvOpts()}
+	opts={autoAI:globalThis.autoAI, ...opts, ...parseEnvOpts()}
 	Object.keys(services).forEach(key=>opts[key]===false && (delete services[key], console.log(`${key} closed`)))
 
 	if(Array.isArray(opts.autoAI)){
@@ -352,7 +361,13 @@ async function subscribe({helper, defaultChatService=DefaultChatService, ...opts
 		services.autoAI.printAPI()
 	}
 
-	await Promise.all(Object.values(services).map(a=>a?.available()))
+	Object.defineProperty(services, "helper", {
+		value: helper,
+		enumerable:false,
+		configurable:false,
+	})
+
+	//await Promise.all(Object.values(services).map(a=>a?.available()))
 	let helps=await new Promise((resolve)=>chrome.storage.sync.get('helps',data=>resolve(data ? data.helps||0 : 0)))
 	await chrome.browserAction.setBadgeText({text:helps+""})
 	await chrome.browserAction.setBadgeBackgroundColor({color:"#00FF00"})
@@ -398,7 +413,7 @@ subscribe({helper},window.bros={
 	autoAI: 	new (class extends Service{
 					run(){
 						this.apis=["chatgpt", "bingAI", "openAI"]
-						this.printAPI=()=>console.info(`AutoAI: ${this.apis.join(" -> ")}`)
+						this.printAPI=()=>console.log(`AutoAI: ${this.apis.join(" -> ")}`)
 						this.consume1=async function(){
 							for(let service of this.apis){
 								try{
@@ -435,10 +450,13 @@ subscribe({helper},window.bros={
 							return await getCookiesForURL("https://www.bing.com")
 						}
 						
+						let service=null
 						this.consume1=async ({message:question})=>{
-							const cookie=await this.getCookie()
-							const api=new BingAI({cookie})
-							const {text}=await api.sendMessage(question,{variant:"Precise"})
+							if(!service){
+								const cookie=await this.getCookie()
+								service=new BingAI({cookie})
+							}
+							const {text}=await service.sendMessage(question,{variant:"Precise"})
 							return {message:text}
 						}
 					}

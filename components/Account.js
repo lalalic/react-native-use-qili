@@ -1,21 +1,69 @@
-import React, { useState } from "react"
+import React, { } from "react"
 import {View, Text, Pressable, SectionList, Alert} from "react-native"
 import { Link } from "react-router-native"
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from "react-redux";
 import * as Updates from "expo-updates"
-import { isUserLogin } from "../store"
+import { isUserLogin, Qili, Reset } from "../store"
 import Loading from "./Loading";
 const l10n=globalThis.l10n
-export default function Account({settings, information}){
+export default function Account({settings, information, onDeleteAccount}){
     const dispatch=useDispatch()
+    const [loading, setLoading]=React.useState(false)
     const signedIn=useSelector(state=>isUserLogin(state))
-    const [loading, setLoading]=useState(false)
+    const deleteAccount=React.useCallback(async ()=>{
+        setLoading(true)
+        const yes=await new Promise(resolve=>{
+            Alert.alert(
+                l10n["Delete Account"],
+                l10n[`Are you sure you want to delete everything of your account?`],
+                [
+                    {text:l10n["Cancel"],onPress:()=>resolve(false)},
+                    {text:l10n["Yes"], onPress: ()=>resolve(true)}
+                ]
+            )
+        })
+        if(!yes){
+            return 
+        }
+        await Qili.fetch({
+            query:`mutation{ done:deleteAccount }`
+        })
+        onDeleteAccount?.()
+        dispatch(Reset)
+        setLoading(false)
+        return true
+    },[])
+    const checkUpdate=React.useCallback(async()=>{
+        setLoading(true)
+        await new Promise(async resolv=>{
+            const {isAvailable} = await Updates.checkForUpdateAsync()
+            if(isAvailable){
+                Alert.alert(
+                    l10n["Update"], 
+                    l10n[`There's an update, do you want to update?`],
+                    [
+                        {text:l10n["No"]},
+                        {text:l10n["Yes"], 
+                            onPress:async ()=>{
+                                await Updates.fetchUpdateAsync()
+                                await Updates.reloadAsync()
+                                resolve()
+                            }
+                        }
+                    ]
+                )
+            }else{
+                Alert.alert(l10n["Update"], l10n["There's no update."])
+                resolve()
+            }
+        })
+        setLoading(false)
+    },[])
     const sections=[
         {title:"Settings", data:[
-            signedIn ? {name:"Sign Out", icon:"account-circle", 
-                onPress:e=>dispatch({type:"my",payload:{admin:{}}})
-            } : null,
+            signedIn && {name:"Sign Out", href:false, icon:"account-circle", onPress:e=>dispatch({type:"my",payload:{admin:{}}}) },
+            signedIn && {name:"Delete Account", href:false, icon:"delete-forever", onPress:deleteAccount},
             ...settings,
         ].filter(a=>!!a)},
 
@@ -25,30 +73,7 @@ export default function Account({settings, information}){
                 name:`${l10n['Version']}: ${Updates.runtimeVersion} ${Updates.createdAt ? ` - ${Updates.createdAt.asDateTimeString()}` : ''}`, 
                 icon:"bolt", 
                 href:false,
-                async onPress(){
-                    setLoading(true)
-                    const {isAvailable} = await Updates.checkForUpdateAsync()
-                    setLoading(false)
-                    if(isAvailable){
-                        Alert.alert(
-                            l10n["Update"], 
-                            l10n[`There's an update, do you want to update?`],
-                            [
-                                {text:l10n["No"]},
-                                {   text:l10n["Yes"], 
-                                    onPress:async ()=>{
-                                        setLoading(true)
-                                        await Updates.fetchUpdateAsync()
-                                        await Updates.reloadAsync()
-                                        setLoading(false)
-                                    }
-                                }
-                            ]
-                        )
-                    }else{
-                        Alert.alert(l10n["Update"], l10n["There's no update."])
-                    }
-                }
+                onPress: checkUpdate
             }
         ]}
     ]

@@ -2,6 +2,7 @@ import React, { useContext } from "react"
 import * as Native from "react-native"
 import Loading from "./Loading"
 import { ColorScheme } from "./default-style"
+import FlyMessage from "./FlyMessage"
 
 export function Text({style, ...props}){
     const {text}=useContext(ColorScheme)

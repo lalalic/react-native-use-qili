@@ -2,6 +2,8 @@ import LocalizedStrings from 'react-native-localization'
 
 const default_zh={
     "Sign Out":"退出账号",
+    "Delete Account":"彻底删除账号",
+    "Cancel":"取消",
     "Settings":"设置",
     "Information":"信息",
     "Privacy Policy":"隐私政策",
@@ -14,6 +16,7 @@ const default_zh={
     "Login":"登录",
     "Sign Up / Sign In":"注册登录",
     "Version":"运行版本",
+    "Are you sure you want to delete everything of your account?":"确认要完全删除你的账号下的所有数据吗？",
     
     "Update":"更新检查",
     "There's an update, do you want to update?":"又一个更新版本，需要跟新吗？",

@@ -5,14 +5,15 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from "react-redux";
 import * as Updates from "expo-updates"
 import { isUserLogin, Qili, Reset } from "../store"
-import Loading from "./Loading";
+import Loading from "./Loading"
+
 const l10n=globalThis.l10n
 export default function Account({settings, information, onDeleteAccount}){
     const dispatch=useDispatch()
     const [loading, setLoading]=React.useState(false)
+    const loadingUseState=React.useMemo(()=>[loading, setLoading],[loading,setLoading])
     const signedIn=useSelector(state=>isUserLogin(state))
     const deleteAccount=React.useCallback(async ()=>{
-        setLoading(true)
         const yes=await new Promise(resolve=>{
             Alert.alert(
                 l10n["Delete Account"],
@@ -26,39 +27,43 @@ export default function Account({settings, information, onDeleteAccount}){
         if(!yes){
             return 
         }
-        await Qili.fetch({
-            query:`mutation{ done:deleteAccount }`
-        })
-        onDeleteAccount?.()
-        dispatch(Reset)
-        setLoading(false)
+        try{
+            setLoading(true)
+            await onDeleteAccount?.()
+            await Qili.fetch({
+                query:`mutation{ done:deleteAccount }`
+            })
+            dispatch(Reset)
+        }finally{
+            setLoading(false)
+        }
         return true
     },[])
     const checkUpdate=React.useCallback(async()=>{
-        setLoading(true)
-        await new Promise(async resolv=>{
-            const {isAvailable} = await Updates.checkForUpdateAsync()
-            if(isAvailable){
-                Alert.alert(
-                    l10n["Update"], 
-                    l10n[`There's an update, do you want to update?`],
-                    [
-                        {text:l10n["No"]},
-                        {text:l10n["Yes"], 
-                            onPress:async ()=>{
+        const {isAvailable} = await Updates.checkForUpdateAsync()
+        if(isAvailable){
+            Alert.alert(
+                l10n["Update"], 
+                l10n[`There's an update, do you want to update?`],
+                [
+                    {text:l10n["No"]},
+                    {text:l10n["Yes"], 
+                        onPress:async ()=>{
+                            try{
+                                setLoading(true)
+                                setTimeout(()=>setLoading(false), 1*60*1000)
                                 await Updates.fetchUpdateAsync()
                                 await Updates.reloadAsync()
-                                resolve()
+                            }finally{
+                                setLoading(false)
                             }
                         }
-                    ]
-                )
-            }else{
-                Alert.alert(l10n["Update"], l10n["There's no update."])
-                resolve()
-            }
-        })
-        setLoading(false)
+                    }
+                ]
+            )
+        }else{
+            Alert.alert(l10n["Update"], l10n["There's no update."])
+        }
     },[])
     const sections=[
         {title:"Settings", data:[
@@ -102,7 +107,7 @@ export default function Account({settings, information, onDeleteAccount}){
                         :(!!!children ? <Link to={href} children={content}/> : content)
                 }} 
                 sections={sections} /> 
-                {loading && <Loading style={{position:"absolute",width:"100%",flex:1}}/>}
+                {loading && <Loading style={{position:"absolute",width:"100%",height:"100%", flex:1}}/>}
         </View>
     )
 }

@@ -8,7 +8,7 @@ import Loading from "./Loading"
 const l10n=globalThis.l10n
 
 
-export default function Login({onLogin,style}) {
+export default function Login({onLogin,style, noCancel}) {
     const dispatch = useDispatch();
     const [contact, setContact] = React.useState("");
     const [authReady, setAuthReady] = React.useState(false);
@@ -92,7 +92,7 @@ export default function Login({onLogin,style}) {
     const textStyle = { height: 40, fontSize: 14, borderWidth: 1, borderColor: "gray", padding: 4 };
 
     return (
-        <View style={[{ flex:1, padding: 10, justifyContent:"center"},style]}>
+        <View style={[{ flex:1, padding: 10},style]}>
             <View style={{marginBottom:40, justifyContent:"center", alignItems:"center"}}>
                 <Text style={{fontSize:20}}>{l10n["Sign Up / Sign In"]}</Text>
             </View>
@@ -132,10 +132,10 @@ export default function Login({onLogin,style}) {
                 </View>
             </View>
 
-            <View style={{ flexDirection: "row", height: 50, marginTop:20, justifyContent:"center" }}>
+            {!noCancel && <View style={{ flexDirection: "row", height: 50, marginTop:20, justifyContent:"center" }}>
                 <Button title={l10n["Cancel"]}
                     onPress={e => dispatch({ type: "my", payload: { requireLogin: false } })} />
-            </View>
+            </View>}
         </View>
     );
 }
@@ -181,7 +181,7 @@ Login.Required=({children, onLogin, ...props})=>{
     if(logined===true){
         return children
     } else if(logined===false){
-        return <Login {...props} 
+        return <Login {...props} noCancel={true}
             onLogin={async e=>{
                 await onLogin?.()
                 setLogined(true)

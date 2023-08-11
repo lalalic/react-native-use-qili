@@ -19,10 +19,17 @@ export function TextInput({style, ...props}){
     return <Native.TextInput style={[{color:text}, style]} {...props}/>
 }
 
-export const asyncComponentFactory=({name,size="small",loading=<Loading size={size}/>,onError=e=>FlyMessage.error(e.message), ...ons})=>{
-    const SyncComp=Native[name]
-    return props=>{
-        const [running, setRunning]=React.useState(false)
+export const asyncComponentFactory=({
+    name,
+    SyncComp=Native[name],
+    loadingUseState:gloadingUseState,
+    loadingAsChild, 
+    size="small",
+    loading=<Loading size={size}/>,
+    onError=e=>FlyMessage.error(e.message), ...ons})=>{
+
+    return ({loadingUseState=gloadingUseState, parentLoading=!!loadingUseState, ...props})=>{
+        const [running, setRunning]=loadingUseState||React.useState(false)
         const asyncOn=React.useCallback(onPress=>(...args)=>{
             (async()=>{
                 try{
@@ -44,11 +51,17 @@ export const asyncComponentFactory=({name,size="small",loading=<Loading size={si
             return handlers
         },{})
 
-        if(running)
-            return loading
+        if(!parentLoading && running){
+            if(loadingAsChild){
+                props.children=loading
+            }else{
+                return loading
+            }
+        }
+
         return (<SyncComp {...props} {...handlers}/>)
     }
 }
 
 export const Button=asyncComponentFactory({name:"Button", onPress:true})
-export const Pressable=asyncComponentFactory({name:"Pressable", onPress:true, onLongPress:true})
+export const Pressable=asyncComponentFactory({name:"Pressable", onPress:true, onLongPress:true, loadingAsChild:true})

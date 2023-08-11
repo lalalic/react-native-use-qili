@@ -6,11 +6,11 @@ import { ColorScheme } from "./default-style";
 
 export default function Navigator({root="", height=50, navs=[]}){
     const {pathname}=useLocation()
-    const {text, primary} = useContext(ColorScheme)
+    const {text, primary, backgroundColor} = useContext(ColorScheme)
     return (
         <View style={{ flex: 1, paddingBottom:height }}>
             <Outlet />
-            <View style={{ flexDirection: "row", justifyContent: "space-around",
+            <View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor,
                     position: "absolute", bottom:0, left: 0, width: "100%",height 
                     }}>
                 {navs.map(([href, name, to=`${root}${href}`], i) => {

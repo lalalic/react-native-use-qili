@@ -51,7 +51,7 @@ export default function App({ContainerView=SafeAreaView, children, colorScheme:s
     return  (
         <Provider onReady={e=>setDataReady(true)} {...props}>
             {content}
-            <StatusBar style={scheme}/>
+            <StatusBar style={scheme=="light" ? "dark" : "light"}/>
         </Provider>
     )
 }

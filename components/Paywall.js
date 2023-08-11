@@ -12,19 +12,20 @@ export default function MyPaywall({consumable=true, subscriptable=true, formatPr
                 productsForSale.forEach(formatProduct)
                 return ( 
                     <View style={{flex:1}}>
-                        {consumable && <View style={{height:200,backgroundColor:"#999999"}}>
+                        {consumable && 
+                        <View style={{height:200,backgroundColor:"#999999"}}>
                             {children}
                             <Paywall style={{flex:1}}
-                                {...iaphubData} Restore={null} 
+                                {...iaphubData} 
                                 ProductTitle={props=><ProductTitle {...props}/>}
                                 selectedActiveProductIndex={null}
                                 showBuySuccessAlert={false}
                                 productsForSale={productsForSale?.filter(a=>!a.subscriptionDuration).sort((a,b)=>parseFloat(a.price)-parseFloat(b.price))}
+                                {...(typeof(consumable)=="object" ? consumable : {})}
                                 />
                         </View>}
                         {subscriptable && <PaywallSubscriptionGroup style={{flexGrow:1}}
                             {...iaphubData}
-                            Restore={null} 
                             ProductPrice={()=>null}
                             ProductTitle={props=><ProductTitle {...props}/>}
                             showBuySuccessAlert={false}
@@ -37,6 +38,7 @@ export default function MyPaywall({consumable=true, subscriptable=true, formatPr
                                     Linking.openURL(url)
                                 }
                             }}
+                            {...(typeof(subscriptable)=="object" ? subscriptable : {})}
                             />}
                     </View>
                     )
@@ -59,7 +61,7 @@ function ProductTitle({product, isSelected}){
 function MyActiveProductsWrapper(props){
     return (
         <View style={{flew:1, height:100, justifyContent:"center"}}>
-            {!props.activeProducts && <View style={{alignItems:"center"}}>
+            {!(props.activeProducts?.length||0) && <View style={{alignItems:"center"}}>
                 <Text style={{fontSize:20}}>{l10n["Get Membership"]}</Text>
             </View>}
             <ActiveProductsWrapper {...props}/>

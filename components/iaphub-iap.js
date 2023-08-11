@@ -104,7 +104,9 @@ export default new Proxy(
 			//link to "itms-apps://apps.apple.com/account/subscriptions"
 		}
 
-		restore() {}
+		restore() {
+			
+		}
 	})(),
 	{
 		get(target, key) {

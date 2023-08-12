@@ -104,8 +104,9 @@ export default new Proxy(
 			//link to "itms-apps://apps.apple.com/account/subscriptions"
 		}
 
-		restore() {
-			
+		async restore() {
+			await IAP.getReceiptIOS?.(true);
+			await IAP.getPendingPurchasesIOS?.();
 		}
 	})(),
 	{

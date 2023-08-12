@@ -1,12 +1,14 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.0.90",
+  "version": "1.0.92",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
   "author": "lalalic@139.com",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "react-native-snap-carousel": "^3.9.1"
+  },
   "scripts": {
     "prepublish": "node scripts/chrome-extension-to-service.js",
     "wechat-bot": "yarn add react-native-use-qili --cwd ../wechat-bot && sudo yarn add react-native-use-qili --cwd ../wechat-bot/cloud",

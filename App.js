@@ -5,11 +5,12 @@ import * as ExpoSplashScreen from 'expo-splash-screen'
 import * as Updates from "expo-updates"
 import { Provider, Qili }  from "./store"
 import setDefaultStyle, {ColorScheme} from "./components/default-style"
+import { FirstTimeTutorial } from "./components/tutorial"
 
 LogBox.ignoreAllLogs()
 ExpoSplashScreen.preventAutoHideAsync()
 
-export default function App({ContainerView=SafeAreaView, children, colorScheme:scheme="light", onCrash, recreateWhenCrash, ...props}){
+export default function App({ContainerView=SafeAreaView, children, colorScheme:scheme="light", onCrash, recreateWhenCrash, tutorials, ...props}){
     const [style, setStyle]=React.useState({})
     const [dataReady, setDataReady]=React.useState(false)
 
@@ -52,6 +53,7 @@ export default function App({ContainerView=SafeAreaView, children, colorScheme:s
         <Provider onReady={e=>setDataReady(true)} {...props}>
             {content}
             <StatusBar style={scheme=="light" ? "dark" : "light"}/>
+            {tutorials && <FirstTimeTutorial data={tutorials}/>}
         </Provider>
     )
 }
@@ -100,4 +102,6 @@ class CrashReport extends React.Component{
         return recreateWhenCrash? React.cloneElement(children,{key:this.state.key}) : children
     }
 }
+
+
 

@@ -1,7 +1,8 @@
 import React from "react"
-import { View, Text, Image, Button, useWindowDimensions } from "react-native"
+import { Text, Image, Button, useWindowDimensions } from "react-native"
 import Carousel, {Pagination} from 'react-native-snap-carousel'
 import { useDispatch, useSelector } from "react-redux"
+import { View } from "./colored-native"
 
 const l10n=globalThis.l10n
 
@@ -11,7 +12,7 @@ export default function Tutorial({data, onDone, children,
         itemWidth=sliderWidth-100, itemHeight=dimensions.height-100,
         cardStyle:{textArea,borderRadius=10, ...cardStyle}={},
         style, ...props}){
-    const renderItem=React.useMemo(({item, index})=>{
+    const renderItem=React.useCallback(({item, index})=>{
         if(React.isValidElement(item))
             return item
         const {title="", image, resizeMode="contain", desc="", description=desc,backgroundColor="#234232"}=item
@@ -51,8 +52,8 @@ export default function Tutorial({data, onDone, children,
                     setActive(index) 
                     if(index==data.length-1){
                         carouselRef.current.stopAutoplay()
+                        onDone && setTimeout(onDone,2000)
                     }
-                    onDone && setTimeout(onDone,1000)
                 }}
                 />
             {children}
@@ -75,15 +76,17 @@ export default function Tutorial({data, onDone, children,
 export function FirstTimeTutorial(props){
     const firstTimeTutorial=useSelector(state=>state.my.firstTimeTutorial)
     const dispatch=useDispatch()
-    const done=React.useCallback(()=>dispatch({type:"my/set", payload:{firstTimeTutorial:true}}))
+    const done=React.useCallback(()=>dispatch({type:"my", payload:{firstTimeTutorial:true}}))
     if(firstTimeTutorial)
         return null
     
     return (
-        <Tutorial {...props} onDone={done}>
-            <View style={{position:"absolute",bottom:50, alignItems:"center"}}>
-                <Button title={l10n["Start expeirence"]} onPress={done}/>
-            </View>
-        </Tutorial>
+        <View style={{position:"absolute",backgroundColor:"black", width:"100%", height:"100%", top:0, left:0,paddingTop:50,paddingBottom:50}}>
+            <Tutorial {...props} onDone={done}>
+                <View style={{position:"absolute",bottom:55, alignItems:"center", width:"100%"}}>
+                    <Button title={l10n["Start expeirence"]} onPress={done}/>
+                </View>
+            </Tutorial>
+        </View>
     )
 }

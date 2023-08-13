@@ -5,7 +5,7 @@ import * as ExpoSplashScreen from 'expo-splash-screen'
 import * as Updates from "expo-updates"
 import { Provider, Qili }  from "./store"
 import setDefaultStyle, {ColorScheme} from "./components/default-style"
-import { FirstTimeTutorial } from "./components/tutorial"
+import { FirstTimeTutorial } from "./components/Tutorial"
 
 LogBox.ignoreAllLogs()
 ExpoSplashScreen.preventAutoHideAsync()
@@ -53,7 +53,7 @@ export default function App({ContainerView=SafeAreaView, children, colorScheme:s
         <Provider onReady={e=>setDataReady(true)} {...props}>
             {content}
             <StatusBar style={scheme=="light" ? "dark" : "light"}/>
-            {tutorials && <FirstTimeTutorial data={tutorials}/>}
+            {tutorials && <FirstTimeTutorial {...(Array.isArray(tutorials) ? {data:tutorials} : tutorials)}/>}
         </Provider>
     )
 }

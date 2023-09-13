@@ -3,6 +3,7 @@ import { SafeAreaView, LogBox} from "react-native"
 import { StatusBar } from "expo-status-bar"
 import * as ExpoSplashScreen from 'expo-splash-screen'
 import * as Updates from "expo-updates"
+import { setJSExceptionHandler, setNativeExceptionHandler } from "react-native-exception-handler"
 import { Provider, Qili }  from "./store"
 import setDefaultStyle, {ColorScheme} from "./components/default-style"
 import { FirstTimeTutorial } from "./components/Tutorial"
@@ -67,39 +68,51 @@ class CrashReport extends React.Component{
     static getDerivedStateFromError(error){
         return {key:Date.now()}
     }
-
-    crashReport(crash){
-        this.props.onCrash?.(crash)
-        const {error:{componentStack, isComponentError, message, stack}, runtimeVersion, updatedId, manifestCreatedAt}=crash
-        try{
-            Qili.fetch({
-                query:`mutation($crash:JSON!){
-                    crashReport(crash:$crash)
-                }`,
-                variables:{
-                    crash:{componentStack, isComponentError, message, stack, runtimeVersion, updatedId, manifestCreatedAt}
-                }
-            })
-        }catch(e){
-            console.warn('System: mutation crashReport(crash:JSON!):Boolean should be implemented in cloud module')
-        }finally{
-            console.warn(crash.error)
-        }
-    }
     
     componentDidCatch(error, info){
-        this.crashReport({
-            error, 
-            info, 
-            runtimeVersion: Updates.runtimeVersion, 
-            manifestCreatedAt: Updates.createdAt, 
-            updatedId: Updates.updatedId
-        })
+        this.props.onCrash?.({error})
+        const {componentStack, isComponentError, message, stack}=error
+        reportCrash({message, stack, componentStack, isComponentError})
     }
 
     render(){
         const {recreateWhenCrash=true, children}=this.props
         return recreateWhenCrash? React.cloneElement(children,{key:this.state.key}) : children
+    }
+}
+
+setJSExceptionHandler(function(error, isFatal){
+    reportCrash({
+        message:error.message,
+        stack: error.stack,
+        isFatal
+    })
+})
+
+setNativeExceptionHandler(function(errorMessage){
+    reportCrash({
+        message:errorMessage
+    })
+})
+
+function reportCrash(crash){
+    try{
+        Qili.fetch({
+            query:`mutation($crash:JSON!){
+                crashReport(crash:$crash)
+            }`,
+            variables:{
+                crash:{
+                    isComponentError:false,
+                    runtimeVersion: Updates.runtimeVersion, 
+                    manifestCreatedAt: Updates.createdAt, 
+                    updatedId: Updates.updatedId,
+                    ...crash,
+                }
+            }
+        })
+    }finally{
+        console.warn(crash.error)
     }
 }
 

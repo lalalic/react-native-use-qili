@@ -242,7 +242,7 @@ async function serverChatGPTAndBingAI(){
 	process.argv.push("--bingAI=false")
 	const {Qili} = require("./server")
 	
-	const {page, browser}=await setupBrowser({appMode:false,headless:true});
+	const {page, browser}=await setupBrowser({appMode:false,headless:false});
 	await setupChatPage({page,
 		url:"https://chat.openai.com", 
 		helper:`${globalThis.helper}-chatgpt`, 

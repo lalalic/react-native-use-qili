@@ -90,7 +90,7 @@ export default function Account({settings, information, onDeleteAccount}){
             <SectionList 
                 keyExtractor={a=>a.name}
                 renderSectionHeader={({ section: { title } }) => (
-                    <Pressable style={{flex:1}} onLongPress={e=>setMagic(true)}>
+                    <Pressable style={{flex:1}}>
                         <Text style={{flex:1, fontSize:16, paddingTop:20, paddingLeft: 10}}>{l10n[title]}</Text>
                     </Pressable>
                 )}

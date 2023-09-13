@@ -1,12 +1,13 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.0.92",
+  "version": "1.0.93",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
   "author": "lalalic@139.com",
   "license": "MIT",
   "dependencies": {
+    "react-native-exception-handler": "^2.10.10",
     "react-native-snap-carousel": "^3.9.1"
   },
   "scripts": {

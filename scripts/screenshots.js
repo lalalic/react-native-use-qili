@@ -5,7 +5,7 @@ const path = require("path");
 const sharp = require("sharp");
 
 // Get folder path and output folder from command-line arguments
-let [, , folderPath, outputFolder = folderPath, devicesFilePath] = process.argv;
+let [, , folderPath, fit="contain", outputFolder = folderPath, devicesFilePath] = process.argv;
 
 if (!folderPath || !outputFolder) {
 	console.error("Usage: node screenshots.js [folderPath] [outputFolder] [devicesFilePath: a json file : [{name, width, height}]]");
@@ -45,7 +45,7 @@ async function resizeImage(imagePath, device, outputFolder) {
 		const resizedImagePath = path.join(deviceFolder, imagePath);
 		try {
 			await sharp(path.join(folderPath, imagePath))
-				.resize(device.width, device.height, {fit:"contain"})
+				.resize(device.width, device.height, {fit})
 				.toFile(resizedImagePath);
 			console.log(`Image resized for ${device.name}: ${resizedImagePath}`);
 		} catch (e) {}

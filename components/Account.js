@@ -4,11 +4,14 @@ import { Link } from "react-router-native"
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from "react-redux";
 import * as Updates from "expo-updates"
+import * as Linking from "expo-linking"
+import Constants from "expo-constants"
+
 import { isUserLogin, Qili, Reset } from "../store"
 import Loading from "./Loading"
 
 const l10n=globalThis.l10n
-export default function Account({settings, information, onDeleteAccount}){
+export default function Account({settings=[], information=[], onDeleteAccount}){
     const dispatch=useDispatch()
     const [loading, setLoading]=React.useState(false)
     const loadingUseState=React.useMemo(()=>[loading, setLoading],[loading,setLoading])
@@ -74,6 +77,9 @@ export default function Account({settings, information, onDeleteAccount}){
 
         {title:"Information", data:[
             ...information,
+            {name:"Privacy Policy", icon:"privacy-tip", onPress:e=>Linking.openURL(Constants.expoConfig.urlPrivacy)},
+            {name:"License Agreement", icon:"privacy-tip", onPress:e=>Linking.openURL(Constants.expoConfig.urlTerms)},
+            {name:"About", icon:"info-outline", onPress:e=>Linking.openURL(Constants.expoConfig.urlAbout)},
             {
                 name:`${l10n['Version']}: ${Updates.runtimeVersion} ${Updates.createdAt ? ` - ${Updates.createdAt.asDateTimeString()}` : ''}`, 
                 icon:"bolt", 

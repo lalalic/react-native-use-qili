@@ -54,7 +54,7 @@ export default function App({ContainerView=SafeAreaView, children, colorScheme:s
         <Provider onReady={e=>setDataReady(true)} {...props}>
             {content}
             <StatusBar style={scheme=="light" ? "dark" : "light"}/>
-            {tutorials && <FirstTimeTutorial {...(Array.isArray(tutorials) ? {data:tutorials} : tutorials)}/>}
+            {tutorials && <FirstTimeTutorial onDone={false} {...(Array.isArray(tutorials) ? {data:tutorials} : tutorials)}/>}
         </Provider>
     )
 }

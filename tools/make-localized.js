@@ -6,7 +6,7 @@ const default_zh={
     "Cancel":"取消",
     "Settings":"设置",
     "Information":"信息",
-    "Privacy Policy":"隐私政策",
+    "By proceeding, you consent to":"继续操作，即表示你同意",
     "About":"产品介绍",
     "Phone Number":"电话",
     "Request Code":"申请验证码",
@@ -17,12 +17,20 @@ const default_zh={
     "Sign Up / Sign In":"注册登录",
     "Version":"运行版本",
     "Are you sure you want to delete everything of your account?":"确认要完全删除你的账号下的所有数据吗？",
+    "oops!":"糟糕！",
     
     "Update":"更新检查",
     "There's an update, do you want to update?":"又一个更新版本，需要跟新吗？",
     "Yes":"是的",
     "No":"不",
     "There's no update.":"没有跟新的版本",
+
+    "Start experience":"开始体验",
+    "By proceeding, you consent to":"继续操作，即表示你同意",
+    "Registration will enable you to access account based features":"注册可以使用基于账号的所有功能",
+    "and":"和",
+    "Privacy Policy":"隐私政策",
+    "License Agreement":"用户许可协议",
     
     "Get Membership":"加入会员更优惠",
     "Recurring billing. Cancel anytime.":`循环计费。随时取消。`,
@@ -36,7 +44,10 @@ const default_zh={
     "Auto-renewal disabled":"自动更新已失效",
     "Auto-renewal active":"自动更新生效中",
     "Manage subscription":"管理订阅",
-    "Replace subscription":"更换订阅"
+    "Replace subscription":"更换订阅",
+    "Restore purchases":"恢复购买",
+    "Restore successful":"恢复成功",
+    "Your purchases have been restored successfully!":"你的购买已经恢复！",  
 }
 
 export default function makeLocalized({zh,en,...data}={},lang){

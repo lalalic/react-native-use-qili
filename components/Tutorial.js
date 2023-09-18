@@ -33,7 +33,7 @@ export default function Tutorial({data, onDone, children,
                         marginBottom:10}}>
                         {l10n[title]}
                     </Text>}
-                    {!!description && <Text>{l10n[description]}</Text>}
+                    {!!description && <Text style={{width:"100%",textAlign:"center"}}>{l10n[description]}</Text>}
                 </View>)}
             </View>
         )
@@ -52,7 +52,7 @@ export default function Tutorial({data, onDone, children,
                     setActive(index) 
                     if(index==data.length-1){
                         carouselRef.current.stopAutoplay()
-                        onDone && setTimeout(onDone,2000)
+                        onDone && setTimeout(onDone,props.autoplayInterval||3000)
                     }
                 }}
                 />
@@ -82,9 +82,9 @@ export function FirstTimeTutorial(props){
     
     return (
         <View style={{position:"absolute",backgroundColor:"black", width:"100%", height:"100%", top:0, left:0,paddingTop:50,paddingBottom:50}}>
-            <Tutorial {...props} onDone={done}>
+            <Tutorial  onDone={done} {...props}>
                 <View style={{position:"absolute",bottom:55, alignItems:"center", width:"100%"}}>
-                    <Button title={l10n["Start expeirence"]} onPress={done}/>
+                    <Button title={l10n["Start experience"]} onPress={done}/>
                 </View>
             </Tutorial>
         </View>

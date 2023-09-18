@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, } from "react-native";
+import { View, Image, TouchableOpacity} from "react-native";
 import { useDispatch, useSelector, useStore } from "react-redux";
+import * as Linking from "expo-linking"
+import Constants from "expo-constants"
+
 import { isUserLogin, Qili } from "../store";
 import { TextInput, Text, Button } from "./colored-native"
 import FlyMessage from "./FlyMessage";
@@ -8,7 +11,7 @@ import Loading from "./Loading"
 const l10n=globalThis.l10n
 
 
-export default function Login({onLogin,style, noCancel}) {
+export default function Login({onLogin, style, onCancel}) {
     const dispatch = useDispatch();
     const [contact, setContact] = React.useState("");
     const [authReady, setAuthReady] = React.useState(false);
@@ -132,10 +135,13 @@ export default function Login({onLogin,style, noCancel}) {
                 </View>
             </View>
 
-            {!noCancel && <View style={{ flexDirection: "row", height: 50, marginTop:20, justifyContent:"center" }}>
+            <View style={{ flexDirection: "row", height: 50, marginTop:20, justifyContent:"center" }}>
                 <Button title={l10n["Cancel"]}
-                    onPress={e => dispatch({ type: "my", payload: { requireLogin: false } })} />
-            </View>}
+                    onPress={e => {
+                        dispatch({ type: "my", payload: { requireLogin: false } })
+                        onCancel?.()
+                    }} />
+            </View>
         </View>
     );
 }
@@ -159,7 +165,44 @@ Login.updateToken=async function updateToken(admin, dispatch) {
     }
 }
 
-Login.Required=({children, onLogin, ...props})=>{
+
+Login.Container=function({children, iconSource}){
+    const linkStyle= { color: 'yellow'}
+    const padding=10
+    return (
+        <View style={{flex:1, flexDirection:"column"}}>
+            <View style={{height:200, backgroundColor:""}}>
+                <View style={{height:100, flexDirection:"row", justifyContent:"center"}}>
+                    {iconSource && <Image style={{height:100, width:100}} source={iconSource}/>}
+                    <Text style={{marginTop:30,fontSize:20}}>{l10n[Constants.expoConfig.name]}</Text>
+                </View>
+                <View style={{alignItems:"center"}}>
+                    <Text style={{fontSize:16}}>{l10n[Constants.expoConfig.description]}</Text>
+                </View>
+            </View>
+            <View style={{flex:1}}>
+                {children}
+                <Text style={{paddingLeft:padding,paddingBottom:20}}>{l10n["Registration will enable you to access account based features"]}.</Text>
+            </View>
+            <View style={{paddingLeft:padding,paddingBottom:20}}>
+                <Text>
+                    {l10n["By proceeding, you consent to"]}
+                    <TouchableOpacity onPress={e=>Linking.openURL(Constants.expoConfig.urlPrivacy)}>
+                        <Text style={linkStyle}>{l10n["Privacy Policy"]}</Text>
+                    </TouchableOpacity>
+                    { l10n["and"] }
+                    <TouchableOpacity onPress={e=>Linking.openURL(Constants.expoConfig.urlTerms)}>
+                        <Text style={linkStyle}>{l10n["License Agreement"]}</Text>
+                    </TouchableOpacity>
+                    .
+                </Text>
+            </View>
+        </View>
+    )
+}
+
+Login.Required=({children, onLogin, Container=Login.Container,iconSource, ...props})=>{
+    const dispatch=useDispatch()
     const store=useStore()
     const hasSession=useSelector(state=>isUserLogin(state))
     const [logined, setLogined]=React.useState()
@@ -181,11 +224,16 @@ Login.Required=({children, onLogin, ...props})=>{
     if(logined===true){
         return children
     } else if(logined===false){
-        return <Login {...props} noCancel={true}
-            onLogin={async e=>{
-                await onLogin?.()
-                setLogined(true)
-            }} />
+        return (
+            <Container iconSource={iconSource}>
+                <Login {...props} 
+                    onCancel={e=>dispatch({ type: "my", payload: { firstTimeTutorial: false } })}
+                    onLogin={async e=>{
+                        await onLogin?.()
+                        setLogined(true)
+                    }} />
+            </Container>
+        )
     }
 
     return <Loading/>

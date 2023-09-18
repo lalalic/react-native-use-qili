@@ -1,13 +1,15 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.0.93",
+  "version": "1.0.94",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
   "author": "lalalic@139.com",
   "license": "MIT",
   "dependencies": {
-    "react-native-exception-handler": "^2.10.10",
+    "deprecated-react-native-prop-types": "^4.2.1",
+    "expo-constants": "^14.4.2",
+    "expo-linking": "^6.0.0",
     "react-native-snap-carousel": "^3.9.1"
   },
   "scripts": {
@@ -22,6 +24,7 @@
     "expo": "~46.0.16",
     "react": "18.0.0",
     "react-native": "0.69.9",
+    "react-native-exception-handler": "^2.10.10",
     "react-native-iap": "~10.0.0"
   },
   "devDependencies": {

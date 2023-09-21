@@ -76,8 +76,8 @@ if(!Date.prototype.getWeek){
     }
 
     Date.prototype.switchWeek=function(that){
-        const thisWeekDay=this.getDay()
-        const thatWeekDay=that.getDay()
+        const thisWeekDay=this.getDay()||7
+        const thatWeekDay=that.getDay()||7
         this.switchDay(that)
         this.setTime(this.getTime()-(thatWeekDay-thisWeekDay)*24*60*60*1000)
         return this
@@ -124,8 +124,12 @@ if(!Date.prototype.getWeek){
     }
 
     Date.fromWeek=function(year, week, day){
-        const firstDay=Date.from(`${year}-1-1`)
-        return firstDay.nextDay(week*7+day-firstDay.getDay())
+        const firstDay=new Date(year,0,1)
+        return firstDay.nextDay(
+             (7-(firstDay.getDay()||7))
+            +week*7
+            -(7-(day||7))
+        )
     }
 }
 

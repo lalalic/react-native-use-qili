@@ -58,9 +58,11 @@ export default new Proxy(
 				})
 			);
 
-			this.consumables = (await IAP.getProducts({ skus: skus.consumables })).map(ios2IapProduct);
+			this.consumables = (await IAP.getProducts({ skus: skus.consumables })).map(ios2IapProduct)
+				.sort((a,b)=>skus.consumables.indexOf(a.id)-skus.consumables.indexOf(b.id));
 
-			this.subscriptions = (await IAP.getSubscriptions({ skus: skus.subscriptions })).map(ios2IapProduct);
+			this.subscriptions = (await IAP.getSubscriptions({ skus: skus.subscriptions })).map(ios2IapProduct)
+				.sort((a,b)=>skus.subscriptions.indexOf(a.id)-skus.subscriptions.indexOf(b.id));
 		}
 
 		async buy(sku) {

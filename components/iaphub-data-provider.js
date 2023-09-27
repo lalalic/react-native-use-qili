@@ -36,6 +36,10 @@ export default function MyIaphubDataProvider({products,onPurchase, ...props}) {
 ;(function({type:Buy}){
     Buy.prototype.render=(_render=>function(){
         const {selectedProduct, selectedActiveProductIndex}=this.props
+        if(!selectedProduct){
+            return null
+        }
+        
         if(selectedActiveProductIndex==null && 
             selectedProduct.type=="renewable_subscription" && 
             selectedProduct.isActive){

@@ -37,6 +37,8 @@ const default_zh={
     "Your subscription will auto-renew for the same price and duration until you cancel at any time from the App Store.":"免费体验过后才会产生扣款，你的订阅将用相同的价格和时间自动更新，你随时可以在苹果商店取消订阅.",
     "Subscribe now and enjoy the following:":`现在订阅立即获得:`,
     "Continue":"立即购买",
+    "Buy Now":"立即购买",
+    "Subscript Now":"立即订阅",
     "month":"月",
     "buy":"购买",
     "Buy successfully!":"购买成功！",

@@ -17,7 +17,7 @@ export default function MyPaywall({consumable=true, subscriptable=true, formatPr
                             {children}
                             <Paywall style={{flex:1}}
                                 {...iaphubData} 
-                                i18n={{Buy:{continue:()=>"Buy Now"}}}
+                                i18n={{Buy:{continue:()=>l10n["Buy Now"]}}}
                                 ProductTitle={props=><ProductTitle {...props}/>}
                                 selectedActiveProductIndex={null}
                                 showBuySuccessAlert={false}
@@ -27,7 +27,7 @@ export default function MyPaywall({consumable=true, subscriptable=true, formatPr
                         </View>}
                         {subscriptable && <PaywallSubscriptionGroup style={{flexGrow:1}}
                             {...iaphubData}
-                            i18n={{Buy:{continue:()=>"Subscript Now"}}}
+                            i18n={{Buy:{continue:()=>l10n["Subscript Now"]}}}
                             ProductPrice={()=>null}
                             ProductTitle={props=><ProductTitle {...props}/>}
                             showBuySuccessAlert={false}

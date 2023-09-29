@@ -71,6 +71,9 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
                 }
                 
                 const { status,  latest_receipt_info }=data
+                if(status!==0){
+                    throw new Error(status)
+                }
                 const i=latest_receipt_info.findIndex(a=>a.transaction_id==transactionId)
                 const purchase=latest_receipt_info[i]
                 if(purchase.subscription_group_identifier){
@@ -87,16 +90,14 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
                 purchase._id=purchase.transaction_id;
                 ["expires_date_ms","purchase_date_ms","original_purchase_date_ms"]
                     .forEach(k=>purchase[k]=parseInt(purchase[k]))
-                ctx.app.emit('purchase', purchase)
-                if(status===0){
-                    const purchased=await ctx.app.resolver.Mutation.buy(_, purchase, ctx )
-                    if(purchased){
-                        const result=await onVerified?.(_,purchase,ctx)
-                        return result==undefined ? data : result
-                    }
+                
+                const purchased=await ctx.app.resolver.Mutation.buy(_, purchase, ctx )
+                if(!purchased)
                     return {}
-                }
-                throw new Error(status)
+                
+                const result=await onVerified?.(_,purchase,ctx)
+                ctx.app.emit('purchase', purchase, result)
+                return result==undefined ? data : result
             }
         }
     },

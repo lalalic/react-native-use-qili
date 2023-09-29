@@ -40,12 +40,13 @@ export default new Proxy(
 							this.emit("onError", error);
 							return 
 						}
-						await IAP.finishTransaction({purchase})
-						console.debug(`purchase ${purchase.productId}[${purchase.transactionId}] done`)
+						
 						this.emit("onPurchase",result,purchase.sku)
 						if(skus.subscriptions.indexOf(purchase.sku)!=-1){
 							this.emit("onUserUpdate", purchase.sku)
 						}
+						await IAP.finishTransaction({purchase})
+						console.debug(`purchase ${purchase.productId}[${purchase.transactionId}] done`)
 					} catch (error) {
 						this.emit("onError", error);
 					}

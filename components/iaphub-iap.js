@@ -24,33 +24,35 @@ export default new Proxy(
 			IAP.endConnection();
 		}
 
+		async handlePurchase(purchase){
+			try {
+				this.emit("onReceipt", { receipt: purchase.transactionReceipt })
+				const {verifyIapReceipt:result, error} = await Qili.fetch({
+					query: `mutation($receipt:String!, $transactionId:String!){
+							verifyIapReceipt(receipt:$receipt, transactionId:$transactionId)
+						}`,
+					variables: { receipt: purchase.transactionReceipt, transactionId:purchase.transactionId },
+				})
+				if(error){
+					this.emit("onError", error);
+					return 
+				}
+				
+				this.emit("onPurchase",result,purchase.productId)
+				if(skus.subscriptions.indexOf(purchase.productId)!=-1){
+					this.emit("onUserUpdate", purchase.productId)
+				}
+				await IAP.finishTransaction({purchase})
+				console.debug(`purchase ${purchase.productId}[${purchase.transactionId}] done`)
+			} catch (error) {
+				this.emit("onError", error);
+			}
+		}
+
 		async start() {
 			await IAP.initConnection();
 			this.listeners.push(
-				IAP.purchaseUpdatedListener(async (purchase) => {
-					try {
-						this.emit("onReceipt", { receipt: purchase.transactionReceipt })
-						const {verifyIapReceipt:result, error} = await Qili.fetch({
-							query: `mutation($receipt:String!, $transactionId:String!){
-									verifyIapReceipt(receipt:$receipt, transactionId:$transactionId)
-								}`,
-							variables: { receipt: purchase.transactionReceipt, transactionId:purchase.transactionId },
-						})
-						if(error){
-							this.emit("onError", error);
-							return 
-						}
-						
-						this.emit("onPurchase",result,purchase.sku)
-						if(skus.subscriptions.indexOf(purchase.sku)!=-1){
-							this.emit("onUserUpdate", purchase.sku)
-						}
-						await IAP.finishTransaction({purchase})
-						console.debug(`purchase ${purchase.productId}[${purchase.transactionId}] done`)
-					} catch (error) {
-						this.emit("onError", error);
-					}
-				})
+				IAP.purchaseUpdatedListener(purchase=>this.handlePurchase(purchase))
 			);
 
 			this.listeners.push(
@@ -67,11 +69,18 @@ export default new Proxy(
 		}
 
 		async buy(sku) {
-			if (skus.consumables.indexOf(sku) != -1) {
-				return await IAP.requestPurchase({ sku });
-			} else if (skus.subscriptions.indexOf(sku) != -1) {
-				return await IAP.requestSubscription({ sku });
+			const purchase=await (async ()=>{
+				if (skus.consumables.indexOf(sku) != -1) {
+					return await IAP.requestPurchase({ sku });
+				} else if (skus.subscriptions.indexOf(sku) != -1) {
+					return await IAP.requestSubscription({ sku });
+				}
+			})();
+
+			if(purchase){
+				await this.handlePurchase(purchase)
 			}
+			return purchase
 		}
 
 		async getProducts() {

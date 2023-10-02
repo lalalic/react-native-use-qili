@@ -91,8 +91,8 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
                 if(!purchased)
                     return {}
                 
-                const result=await onVerified?.(_,purchase,ctx)
                 ctx.app.emit('purchase', purchase, result)
+                const result=await onVerified?.(_,purchase,ctx)
                 return result==undefined ? data : result
             }
         }

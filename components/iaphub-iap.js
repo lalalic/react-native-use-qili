@@ -75,7 +75,7 @@ export default new Proxy(
 				} else if (skus.subscriptions.indexOf(sku) != -1) {
 					return await IAP.requestSubscription({ sku });
 				}
-			});
+			})();
 			if(purchase){
 				await this.handlePurchase(purchase)
 			}

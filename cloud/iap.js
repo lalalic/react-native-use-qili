@@ -46,8 +46,7 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
 
         Mutation:{
             async buy(_,info,{app,user}){
-                const purchase=await app.createEntity("Purchase",{...info,author:user._id, createdAt:new Date()})
-                return !!purchase
+                return await app.createEntity("Purchase",{...info,author:user._id, createdAt:new Date()})
             },
             async verifyIapReceipt(_,{receipt, transactionId},ctx){
                 debugger

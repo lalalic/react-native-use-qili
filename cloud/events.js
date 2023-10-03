@@ -1,4 +1,4 @@
-const $=user=>user.username||user.phone||user.contact||user._id
+const $=user=>user&&(user.username||user.phone||user.contact||user._id)
 module.exports={
     name:"events",
     events:{

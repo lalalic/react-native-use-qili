@@ -1,5 +1,8 @@
 import React from 'react';
-import { useSelector } from "react-redux";
+import { Switch } from 'react-native';
+import { useSelector, useDispatch} from "react-redux";
+import { useLocation } from "react-router-native"
+
 import { hasChatGPTAccount } from "../store";
 import { ChatGptProvider } from 'react-native-chatgpt';
 import SubscribeHelpQueue from './SubscribeHelpQueue';
@@ -36,4 +39,18 @@ export default function ChatProvider({ children, services , debug,  api="chatgpt
 }
 
 export const ChatContext=React.createContext({})
+
+export function SwitchChatGPT(){
+    const dispatch=useDispatch()
+    const {widgets}=useSelector(state=>state.my)
+    const {pathname}=useLocation()
+    return (
+        <Switch value={widgets.chatgpt} style={{transform:[{scale:0.5}], alignSelf:"center"}}
+            onValueChange={e=>{
+                dispatch({type:"my", payload:{sessions:{},widgets:{...widgets, chatgpt:!widgets.chatgpt}}})
+                globalThis.lastPathName=pathname
+            }}
+            />
+    )
+}
 

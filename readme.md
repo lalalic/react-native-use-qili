@@ -33,8 +33,8 @@ scripts
 bin
 ===
 * qili-export-updates: create updates manifest and upload
-* qili-get-session-token
-* qili-get-access-token
+* qili-get-session-token: get session token of app for a contact
+* qili-get-access-token: generate access token for type and name
 * screenshots: convert all images in a folder for devices, default 4 ios devices, [folderPath] [outputFolder] [devicesFilePath: a json file : [{name, width, height}]]
 
 bridge-chrome-extension

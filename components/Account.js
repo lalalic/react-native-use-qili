@@ -43,7 +43,9 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
         return true
     },[])
     const checkUpdate=React.useCallback(async()=>{
+        setLoading(true)
         const {isAvailable} = await Updates.checkForUpdateAsync()
+        setLoading(false)
         if(isAvailable){
             Alert.alert(
                 l10n["Update"], 

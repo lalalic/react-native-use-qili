@@ -49,7 +49,8 @@ const default_zh={
     "Replace subscription":"更换订阅",
     "Restore purchases":"恢复购买",
     "Restore successful":"恢复成功",
-    "Your purchases have been restored successfully!":"你的购买已经恢复！",  
+    "Your purchases have been restored successfully!":"你的购买已经恢复！", 
+    "Has ChatGPT Account?":"有ChatGPT账号?", 
 }
 
 export default function makeLocalized({zh,en,...data}={},lang){

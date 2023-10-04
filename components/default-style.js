@@ -100,7 +100,7 @@ if(!Date.prototype.getWeek){
     }
 
     Date.fromTimeInt=time=>{
-        return Date.from(`${new Date().asDateString()} ${time}`)
+        return Date.from(`${new Date().asDateString()} ${String(time).match(/\d{2}/g).join(':')}`)
     }
 
     Date.prototype.asTimeInt=function(){

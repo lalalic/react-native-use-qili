@@ -12,10 +12,10 @@ export default function MyPaywall({consumable=true, subscriptable=true, formatPr
                 productsForSale.forEach(formatProduct)
                 return ( 
                     <View style={{flex:1}}>
+                        {children}
                         {consumable && 
-                        <View style={{height:200,backgroundColor:"#999999"}}>
-                            {children}
-                            <Paywall style={{flex:1}}
+                        <View style={[{height:200,backgroundColor:"#999999"},consumable?.style]}>
+                            <Paywall
                                 {...iaphubData} 
                                 i18n={{Buy:{continue:()=>l10n["Buy Now"]}}}
                                 ProductTitle={props=><ProductTitle {...props}/>}
@@ -23,6 +23,7 @@ export default function MyPaywall({consumable=true, subscriptable=true, formatPr
                                 showBuySuccessAlert={false}
                                 productsForSale={productsForSale?.filter(a=>!a.subscriptionDuration).sort((a,b)=>parseFloat(a.price)-parseFloat(b.price))}
                                 {...(typeof(consumable)=="object" ? consumable : {})}
+                                style={{flex:1}}
                                 />
                         </View>}
                         {subscriptable && <PaywallSubscriptionGroup style={{flexGrow:1}}

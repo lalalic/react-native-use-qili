@@ -11,7 +11,20 @@ import { FirstTimeTutorial } from "./components/Tutorial"
 LogBox.ignoreAllLogs()
 ExpoSplashScreen.preventAutoHideAsync()
 
-export default function App({ContainerView=SafeAreaView, children, colorScheme:scheme="light", onCrash, recreateWhenCrash, tutorials, ...props}){
+export default function App({autoReloadUpdate, ContainerView=SafeAreaView, children, colorScheme:scheme="light", onCrash, recreateWhenCrash, tutorials, ...props}){
+    React.useEffect(()=>{
+        Updates.addListener(event=>{
+            if(event.type === Updates.UpdateEventType.UPDATE_AVAILABLE){
+                (async()=>{
+                    await Updates.fetchUpdateAsync()
+                    if(autoReloadUpdate){
+                        await Updates.reloadAsync()
+                    }
+                })();
+            }
+        })
+    },[])
+
     const [style, setStyle]=React.useState({})
     const [dataReady, setDataReady]=React.useState(false)
 

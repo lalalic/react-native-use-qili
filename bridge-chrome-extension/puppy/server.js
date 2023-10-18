@@ -56,6 +56,12 @@ const {chrome, window}=(()=>{
         set(target, key, value){
             if(key=="bros"){
                 const services=value
+                if(require.main){
+                    console.info(`Remove facked service: chatgpt, bingAI`)
+                    delete services.chatgpt
+                    delete services.bingAI
+                }
+
                 if(process.env.chatgptToken && services.chatgpt){
                     services.chatgpt.getToken=()=>process.env.chatgptToken
                     services.chatgpt.read=async function(stream){

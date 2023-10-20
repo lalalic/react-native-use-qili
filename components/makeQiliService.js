@@ -61,7 +61,7 @@ export default function makeQiliService(getSession) {
 		},
 		subscribe(request, callback, headers=globalHeaders) {
 			headers=headers||{...getSession(),}
-			const url = this.service.replace(/^http/, "ws");
+			const url = this.service.replace(/^http/, "ws").replace(/graphql$/,"websocket");
 			//@Why: a shared client can't work, is it because close method is changed ???
 			const client = new SubscriptionClient(url, {
 				reconnect: true,

@@ -26,9 +26,10 @@ const Qili={
 	},
 	subscribe(request, callback){
 		const {SubscriptionClient} = SubscriptionsTransportWs
+		const url=this.service.replace(/^http/, "ws").replace(/graphql$/,"websocket")
 		let first=true
 		//@Why: a shared client can't work, is it because close method is changed ???
-		const client=new SubscriptionClient(this.service.replace(/^http/, "ws"),{
+		const client=new SubscriptionClient(url,{
 			reconnect:true,
 			timeout: 0.5*60*1000,
 			connectionParams:{

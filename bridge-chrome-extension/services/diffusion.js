@@ -32,6 +32,30 @@ function diffusion(){
                     }
                 }
             })
+        },
+
+        async dalle(prompt,{size="1024x1024", openApiKey=OPENAI_API_KEY}={}){
+            const res=await fetch("https://api.openai.com/v1/images/generations",{
+                method:"POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + openApiKey,
+                },
+                body:JSON.stringify({
+                    prompt,
+                    n:1,
+                    size
+                })
+            })
+            try{
+                const data=await res.json()
+                const {data:[{url}]} = data
+                return {message:url, tokens: 100}
+            }catch(e){
+                return {message:"error: "+e.message, tokens: 1}
+            }
         }
     }
 }
+
+diffusion.accessible="https://runwayml-stable-diffusion-v1-5.hf.space/"

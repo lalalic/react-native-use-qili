@@ -11,8 +11,8 @@ import { useBing } from './bing';
  * @returns
  */
 
-export default function useAsk({id:xid = "random", prompt:defaultQuestion,  timeout:timeout0 = 60000, api}={}) {
-    const { sendMessage, status, login } = useChat(api);
+export default function useAsk({id:xid = "random", prompt:defaultQuestion,  timeout:timeout0 = 60000, initSession}={}) {
+    const { sendMessage, status, login } = useChat(initSession);
 
     const dispatch = useDispatch();
     const $sessions= React.useRef(null)
@@ -26,9 +26,7 @@ export default function useAsk({id:xid = "random", prompt:defaultQuestion,  time
         if(!message)
             throw new Error('No message returned')
             
-        if (id && Object.keys(newSession).length > 0 && (!session
-            || session.conversationId != newSession.conversationId
-            || session.messageId != newSession.messageId)) {
+        if(id){
             dispatch({ type: "my/session", payload: { [id]: newSession } });
         }
 
@@ -44,10 +42,10 @@ export default function useAsk({id:xid = "random", prompt:defaultQuestion,  time
 }
 
 
-function useChat() {
+function useChat(initSession) {
     const {api}=React.useContext(ChatContext)
     const bridge= useBridgeChat()
-    const service=api=="chatgpt" ? useChatGPTChat() : (api=="bing" && useBingChat())
+    const service=api=="chatgpt" ? useChatGPTChat(initSession) : (api=="bing" && useBingChat())
     if(service){
         const {sendMessage, ...info}=service
         return {
@@ -64,15 +62,19 @@ function useChat() {
     return bridge
 }
 
-function useChatGPTChat(){
+function useChatGPTChat(initSession){
     const {sendMessage, ...status}=useChatGpt()
-    const doSend=React.useCallback(async function(ask){
+    const doSend=React.useCallback(async function(ask,session, id, ...args){
+        if(initSession && !session && id){
+            session=await initSession(id, sendMessage)
+        }
+
         if(ask.onAccumulatedResponse){
             return await new Promise((resolve,reject)=>{
                 sendMessage({
                     ...ask,
                     onAccumulatedResponse({isDone, ...response}){
-                        ask.onAccumulatedResponse(...arguments)
+                        ask.onAccumulatedResponse(ask, session, id, ...args)
                         if(isDone){
                             resolve(response)
                         }
@@ -85,7 +87,7 @@ function useChatGPTChat(){
             })
         }
         
-        return await sendMessage(...arguments)
+        return await sendMessage(ask, session, id, ...args)
         
     },[sendMessage])
 

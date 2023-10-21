@@ -777,7 +777,7 @@ async function subscribe({helper, defaultChatService=DefaultChatService, ...opts
 
 // background_script.js
 
-subscribe({helper},window.bros={
+const unsub=subscribe({helper},window.bros={
 	autoAI: 	new (class extends Service{
 					run(){
 						this.apis=["chatgpt", "bingAI", "openAI"]
@@ -846,8 +846,12 @@ subscribe({helper},window.bros={
 									messages:[{role:"user", content:question}]
 								})
 							})
-							const {choices:[{message:{content}}], usage:{total_tokens}} = await res.json()
-							return {message:content, tokens: total_tokens}
+							try{
+								const {choices:[{message:{content}}], usage:{total_tokens}} = await res.json()
+								return {message:content, tokens: total_tokens}
+							}catch(e){
+								return {message:"error: "+e.message, tokens: 1}
+							}
 						}
 					}
 				})({helper, name:"openAI", multithread:true}),
@@ -871,5 +875,6 @@ subscribe({helper},window.bros={
 					}
 				})
 })
+return unsub
 			}
 		

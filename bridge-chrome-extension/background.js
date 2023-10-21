@@ -409,7 +409,7 @@ async function subscribe({helper, defaultChatService=DefaultChatService, ...opts
 
 // background_script.js
 
-subscribe({helper},window.bros={
+const unsub=subscribe({helper},window.bros={
 	autoAI: 	new (class extends Service{
 					run(){
 						this.apis=["chatgpt", "bingAI", "openAI"]
@@ -488,6 +488,7 @@ subscribe({helper},window.bros={
 						super.run(...arguments)
 						const service=diffusion()
 						this.consume1=function({message:{args:[prompt]}}){
+							return service.dalle(prompt)
 							return service.generate(prompt)
 						}
 					}
@@ -501,5 +502,6 @@ subscribe({helper},window.bros={
 						}
 						return await this.batchUpload(images, `temp/diffusion/${ask.session}`)
 					}
-				})
+				}),
+	
 })

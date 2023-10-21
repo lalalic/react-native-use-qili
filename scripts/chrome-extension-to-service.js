@@ -32,6 +32,7 @@ function mergeServices(dirChromeExtension=`${process.cwd()}/chrome-extension`) {
 
 			exports.subscriptAsHelper=function({helper, chrome, window, Qili}){
 				${fs.readFileSync(`${dirChromeExtension}/background.js`)}
+				return unsub
 			}
 		`);
 	console.log(`done: ${dirChromeExtension}/index.js`)

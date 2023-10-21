@@ -9,6 +9,7 @@ import { Provider as ReduxProvider} from "react-redux"
 import { PersistGate } from 'redux-persist/integration/react'
 import { persistStore,persistReducer, FLUSH,REHYDRATE,PAUSE,PERSIST,PURGE,REGISTER } from 'redux-persist'
 import makeQiliService from "./components/makeQiliService";
+import { produce } from "immer"
 import Loading from "./components/Loading"
 
 
@@ -22,8 +23,21 @@ export function myReducer(state = {
         webviewservices:{},
     }, action) {
     switch (action.type) {
-        case "my/session":
-            return {...state, sessions:{...state.sessions, ...action.payload}}
+        case "my/session":{
+			return produce(state, $state=>{
+				const {payload:sessions}=action
+				Object.keys(sessions).forEach(k=>{
+					const session=sessions[k]
+					if(!session){
+						delete $state.sessions[k]
+					}else if($state.sessions[k]){
+						$state.sessions[k]={...$state.sessions[k], ...session}
+					}else{
+						$state.sessions[k]=session
+					}
+				})
+			})
+		}
         case "my":
             return {...state, ...action.payload}
     }

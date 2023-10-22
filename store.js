@@ -78,7 +78,7 @@ export function getSession(){
 export const Qili=makeQiliService(getSession)
 export const Reset={type:"$/delete/account"}
 
-export function createStore({reducers:extendReducers,storage, middlewares=[], listeners=[]}){
+export function createStore({reducers:extendReducers,storage, middlewares=[], listeners=[], serializableCheckIgnoreActions}){
 	function resetify(reducers){
 		for(let [key,reducer] of Object.entries(reducers)){
 			reducers[key]=function(state,action){
@@ -108,7 +108,7 @@ export function createStore({reducers:extendReducers,storage, middlewares=[], li
 
 		middleware: (getDefaultMiddleware) =>getDefaultMiddleware({
 				serializableCheck:{
-					ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+					ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, ...serializableCheckIgnoreActions],
 					isSerializable(value){
 						return isPlain(value)||value?.constructor===Date
 					}
@@ -123,10 +123,10 @@ export function createStore({reducers:extendReducers,storage, middlewares=[], li
 	return {store, persistor:persistStore(store)}
 }
 
-export const Provider=({children, onReady, loading=<Loading/>, init, 
+export const Provider=({children, onReady, loading=<Loading/>, init, serializableCheckIgnoreActions,
 	middlewares, listeners, reducers, storage=ExpoFileSystemStorage})=>{
 	const {store, persistor}=React.useMemo(()=>{
-		const data=createStore({reducers, storage, listeners, middlewares})
+		const data=createStore({reducers, storage, listeners, middlewares, serializableCheckIgnoreActions})
 		const unsub=data.store.subscribe(async ()=>{
 			unsub()
 			await init?.(data.store)

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from "react-redux";
-import { Qili, hasChatGPTAccount } from "../store";
-import { useChatGpt } from 'react-native-chatgpt';
+import { Qili } from "../store";
+import { useChatGpt } from './chatgpt-provider';
 import { ChatContext } from './ChatProvider'
 import { useBing } from './bing';
 

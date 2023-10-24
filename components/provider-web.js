@@ -2,20 +2,30 @@ import React, { useRef } from "react";
 import { Platform, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { Buffer } from "buffer";
+import PressableIcon from "./PressableIcon"
+
 import { Qili } from "../store"
 import useStateAndLatest from "./useStateAndLatest"
 
-export default function WebviewServiceProvider({ id, banned, uri, Context, children, bro, broName, onServiceReady, debug: initDebug, ...props }) {
+export default function WebviewServiceProvider({ 
+    id, banned, uri, 
+    Context, children, 
+    bro, broName, 
+    onServiceReady, 
+    debug: initDebug, 
+    webviewStyle, closerStyle,
+    ...props }) {
     const webviewRef = useRef(null);
     const [debug, setDebug, $debug] = useStateAndLatest(!!initDebug);
     const [status, setStatus, $status] = useStateAndLatest("loading");
+    const [show, setShow]=React.useState(false)
 
     const webviewProps = React.useMemo(() => {
         return !debug ? {
-            pointerEvents: "none",
-            style: { position: "absolute", width: "100%", height: 0, top: 0, left: 0 }
+            //pointerEvents: "none",
+            style: { position: "absolute", overflow:"hidden", width: "100%", height: show ? "100%" : 0, top: 0, left: 0, ...webviewStyle }
         } : { style: { width: "100%", flex: 1 } };
-    }, [debug]);
+    }, [debug, show, webviewStyle]);
 
     const userAgent = React.useMemo(() => Platform.select({
         ios: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
@@ -89,7 +99,14 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
             webviewRef,
             extend(obj){
                 return Object.assign(extendFx,obj)
-            }
+            },
+            show(){
+                setShow(true)
+            },
+            hide(){
+                setShow(false)
+            },
+            userAgent
         };
 
         events.on("fnCall", ({ id, result }) => {
@@ -157,6 +174,7 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
 
     return (
         <Context.Provider value={{ service, status }}>
+            {children}
             {!banned && <View {...webviewProps}>
                 <WebView
                     ref={webviewRef}
@@ -169,8 +187,10 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
                     onLoad={onLoad}
                     onNavigationStateChange={onNavigationStateChange}
                     {...props} />
+                <PressableIcon name="close" size={32}
+                    style={{position:"absolute", top:10, right:10, ...closerStyle}} 
+                    onPress={e=>setShow(!show)}/>
             </View>}
-            {children}
         </Context.Provider>
     );
 }

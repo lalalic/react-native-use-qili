@@ -21,6 +21,7 @@ export function myReducer(state = {
         admin:false,
         widgets:{chatgpt:false},
         webviewservices:{},
+		queue:{}
     }, action) {
     switch (action.type) {
         case "my/session":{
@@ -38,6 +39,12 @@ export function myReducer(state = {
 				})
 			})
 		}
+		case "my/queue":
+			return produce(state, $state=>{
+				const {queue, item}=action
+				const a=$state.queue=$state.queue||{}
+				(a[queue]=a[queue]||[]).push(item)
+			})
         case "my":
             return {...state, ...action.payload}
     }
@@ -98,6 +105,18 @@ export function createStore({reducers:extendReducers,storage, middlewares=[], li
 
 	const listener=createListenerMiddleware()
 	listeners.forEach(fx=>listener.startListening(fx))
+	listener.startListening({
+        type:"my/session",
+        async effect(action, api){
+            const [id]=Object.keys(action.payload)
+            const {my:{sessions:{[id]:current}}}=api.getState()
+            const {my:{sessions:{[id]:old}}}=api.getOriginalState()
+            if(old?.conversationId && old.conversationId!=current?.conversationId){
+                api.dispatch({type:"my/queue", queue:"chatgpt", item:old.conversationId})
+            }
+        }
+    },)
+
 	const store = globalThis.store=configureStore({
 		/** reducer can't directly change any object in state, instead shallow copy and change */
 		reducer:

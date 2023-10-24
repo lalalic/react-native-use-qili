@@ -2,7 +2,7 @@ import React from "react"
 import ProvideWeb from "./provider-web"
 import useStateAndLatest from "./useStateAndLatest"
 import {parse, generateUUID as uid, asAsyncIterable} from "../tools/text-stream-fetch"
-
+import { useDispatch, useSelector } from "react-redux"
 
 const Context=React.createContext({status:"initializing", login:null, sendMessage:null})
 
@@ -22,34 +22,26 @@ export function useChatGpt(){
 	},[status, service])
 }
 
-export function ChatGptProvider(props){
-	const [accessToken, setAccessToken, $accessToken]=useStateAndLatest("")
-	const headers=React.useCallback((accessToken)=>({
-		"Authorization": "Bearer " + accessToken,
-		'accept': 'application/json',
-		'x-openai-assistant-app-id': '',
-		'content-type': 'application/json',
-		'origin': HOST_URL,
-		'referrer': CHAT_PAGE,
-		['sec-fetch-mode']: 'cors',
-		['sec-fetch-site']: 'same-origin',
-		'x-requested-with': 'com.chatgpt3auth',
-		'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
-	}),[])
+export function ChatGptProvider({children, headers:extraHeaders, ...props}){
+	const [, setAccessToken, $accessToken]=useStateAndLatest("")
 	return (
 		<ProvideWeb
 			debug={false}
 			uri={CHAT_PAGE}
 			Context={Context}
+			webviewStyle={{marginTop:50}}
 			bro={`
 			function bro(){
 				let asscessToken=null
 				return {
-					beatifyLogin(){
+					beautifyLogin(){
 						const login=document.querySelector("button[data-testid='login-button']")
 						if(login.textContent=="Log in"){
 							login.firstElementChild.innerText="登录"
 						}
+						//span, h1, a, svg,
+						Array.from(document.querySelectorAll("h2,button:not([data-testid='login-button'])"))
+							.forEach(a=>a.style.visibility="hidden")
 					},
 					async getAccessToken(){
 						const res=await fetch("${SESSION_PAGE}");
@@ -66,15 +58,28 @@ export function ChatGptProvider(props){
 			}			
 			`}
 			onServiceReady={React.useCallback(service=>{
-				console.log('chatgpt.onServiceReady')
+				const headers=accessToken=>({
+					"Authorization": "Bearer " + accessToken,
+					'accept': 'application/json',
+					'x-openai-assistant-app-id': '',
+					'content-type': 'application/json',
+					'origin': HOST_URL,
+					'referrer': CHAT_PAGE,
+					['sec-fetch-mode']: 'cors',
+					['sec-fetch-site']: 'same-origin',
+					'x-requested-with': 'com.chatgpt3auth',
+					'user-agent': service.userAgent,
+					...extraHeaders,
+				})
+
 				service.on('load',async ({url, loading})=>{
-					console.log({type:"chatgpt.load", url, loading})
 					if(url.startsWith(LOGIN_PAGE) && !loading){
-						service.beatifyLogin()
+						service.beautifyLogin()
+						setAccessToken("")
+						service.show()
 					}
 					if(service.status()=="authenticated" && !loading && !$accessToken.current){
 						const accessToken=await service.getAccessToken()
-						console.log('chatgpt.accessToken: '+accessToken)
 						setAccessToken(accessToken)
 					}
 				})
@@ -84,6 +89,10 @@ export function ChatGptProvider(props){
 					if(url.startsWith(CHAT_PAGE) && loading){
 						service.status('authenticated')
 						console.log('chatgpt.authenticated')
+					}
+
+					if(url.startsWith(LOGOUT_PAGE) && loading){
+						service.status('logged-out')
 					}
 				})
 
@@ -99,43 +108,33 @@ export function ChatGptProvider(props){
 			
 						return await res.json()
 					},
+
+					async genTitle(conversationId){
+						const res=await fetch(`${PROMPT_ENDPOINT}/gen_title/${conversationId}`,{
+							method:"POST",
+							headers: headers($accessToken.current),
+							body: JSON.stringify({
+								is_visible:false
+							})
+						})
+			
+						return (await res.json())?.title
+					},
 					
-					async postMessage(request, opt){
+					async sendMessage(request, opt){
 						if(typeof(request)=="string" || Array.isArray(request)){
 							request={message:request, options:opt}
 						}
 
 						const {
-							options:{conversationId:$conversationId, messageId=uid()}={}, 
+							options:{conversationId, messageId=uid(), model="text-davinci-002-render"}={}, 
 							message, 
 							onAccumulatedResponse, onError}=request
-						let conversationId=$conversationId
-
+						
 						const body={
 							action: "next",
-							messages: [
-								{
-									id:uid(),
-									role:"system",
-									content: {
-										content_type: "text",
-										parts:[
-											"Use the following pieces of context to answer the users question.",
-											"If you don't know the answer, just say that you don't know, don't try to make up an answer.",
-											"2023年10月23日，中共中央政治局委员、外交部长王毅同巴勒斯坦外长马立基通电话。"
-										]
-									}
-								},
-								{
-									id: uid(),
-									role: "user",
-									content: {
-										content_type: "text",
-										parts: [message]
-									}
-								}
-							],
-							model: "text-davinci-002-render",
+							messages: makeMessage(message),
+							model: model,
 							conversationId,
 							parent_message_id: messageId,
 						}
@@ -146,16 +145,11 @@ export function ChatGptProvider(props){
 							headers:headers($accessToken.current),
 							body: JSON.stringify(body)
 						})
-
-						checkStatus(res)
 						
 						try{
 							for await (const chunk of asAsyncIterable(res)) {
 								const piece=parse(chunk)
 								if(piece){
-									if(!conversationId && piece.conversationId)
-										conversationId=piece.conversationId
-
 									if(piece.error){
 										onError?.(piece.error)
 										return piece
@@ -168,16 +162,21 @@ export function ChatGptProvider(props){
 									}
 								}
 							}
-						}finally{
-							if(conversationId){
-								this.removeConversation(conversationId)
+						}catch(e){
+							switch(e.message){
+								case "SessionExpired":
+									service.logout()
+								break
 							}
 						}
 					}
 				})
 			},[])}
 			{...props}
-			/>
+			>
+			{children}
+			<ClearChatGPTUnused/>
+		</ProvideWeb>
 	)
 } 
 
@@ -187,3 +186,32 @@ const LOGIN_PAGE = `${HOST_URL}/auth/login`;
 const LOGOUT_PAGE = `${HOST_URL}/auth/logout`;
 const PROMPT_ENDPOINT = `${HOST_URL}/backend-api/conversation`;
 const SESSION_PAGE = `${HOST_URL}/api/auth/session`;
+
+function makeMessage(message){
+	if(typeof(message)=="string"){
+		message=[{content:"message"}]
+	}
+
+	return message.map(({role="user", content})=>({id:uid(), role, content:{content_type:"text", parts:Array.isArray(content) ? content : [content]}}))
+}
+
+function ClearChatGPTUnused(){
+    const dispatch=useDispatch()
+	const {service, status}=useChatGpt()
+	const accessToken=React.useMemo(async ()=>{
+		if(status=="authenticated"){
+			return await service.getAccessToken()
+		}
+		return ""
+	},[status])
+    const [conversationId]=useSelector(state=>state.my.queue?.chatgpt)||[]
+    React.useEffect(()=>{
+        if(status="authenticated" && conversationId && accessToken){
+			(async()=>{
+				await service.removeConversation(conversationId)
+				dispatch({type:"wechat/chatgpt/remove", conversationId, done:true})
+			})();
+        }
+    },[status,accessToken,conversationId])
+	return null
+}

@@ -5,7 +5,7 @@ import { Buffer } from "buffer";
 import { Qili } from "../store"
 import useStateAndLatest from "./useStateAndLatest"
 
-export default function WebviewServiceProvider({ id, banned, uri, Context, children, bro, broName, debug: initDebug, ...props }) {
+export default function WebviewServiceProvider({ id, banned, uri, Context, children, bro, broName, onServiceReady, debug: initDebug, ...props }) {
     const webviewRef = useRef(null);
     const [debug, setDebug, $debug] = useStateAndLatest(!!initDebug);
     const [status, setStatus, $status] = useStateAndLatest("loading");
@@ -87,6 +87,9 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
                 return typeof (v) != "undefined" ? setDebug(!!v) : $debug.current;
             },
             webviewRef,
+            extend(obj){
+                return Object.assign(extendFx,obj)
+            }
         };
 
         events.on("fnCall", ({ id, result }) => {
@@ -109,6 +112,13 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
 
         const injectBro = `
             window.emit=(event, data)=>window.ReactNativeWebView.postMessage(JSON.stringify({event,data}));
+
+            window.fetch=(originalFetch=>async (url, config) => {
+                const response=await originalFetch(url, config);
+                window.emit('fetch',{url, config, response})
+                return response
+            })(window.fetch);
+            window.emit('fetch.intercepted');
             
             window.imgToDataURI=(image)=>{
                 const canvas = document.createElement('canvas')
@@ -127,8 +137,8 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
             window.emit('bro', '${broName}');
             true;
         `;
-
-
+        
+        onServiceReady?.(proxy)
         return [proxy, injectBro];
     }, [banned]);
 
@@ -136,6 +146,14 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
         const { event, data } = JSON.parse(nativeEvent.data);
         service.fire(event, data);
     }, [service]);
+
+    const onLoad=React.useCallback(({ nativeEvent: {url, loading} })=>{
+        service.fire('load', {url, loading})
+    },[service])
+
+    const onNavigationStateChange=React.useCallback(({url, loading})=>{
+        service.fire('navigationStateChange', {url, loading})
+    },[service])
 
     return (
         <Context.Provider value={{ service, status }}>
@@ -148,6 +166,8 @@ export default function WebviewServiceProvider({ id, banned, uri, Context, child
                     userAgent={userAgent}
                     injectedJavaScriptBeforeContentLoaded={injectBro}
                     onMessage={onMessage}
+                    onLoad={onLoad}
+                    onNavigationStateChange={onNavigationStateChange}
                     {...props} />
             </View>}
             {children}

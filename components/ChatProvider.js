@@ -4,7 +4,8 @@ import { useSelector, useDispatch} from "react-redux";
 import { useLocation } from "react-router-native"
 
 import { hasChatGPTAccount } from "../store";
-import { ChatGptProvider } from 'react-native-chatgpt';
+import { ChatGptProvider } from './chatgpt-provider';
+
 import SubscribeHelpQueue from './SubscribeHelpQueue';
 import { BingProvider } from './bing';
 

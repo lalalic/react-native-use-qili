@@ -436,6 +436,74 @@ const unsub=subscribe({helper},window.bros={
 						alert(`Chatgpt need login before ${expireTime}, otherwise bridge service is `)
 					}
 				}),
+	chatgpt1: 	new (class extends Service{
+					run(){
+						const service=chatgpt()
+						this.consume1=async function(){
+							const {messageId=uid(), conversationId}=(msg=>{
+								if(typeof(msg)=="string" || !msg.options)
+									return {}
+								if(msg.options.helper==helper){
+									const {conversationId, messageId}=msg.options
+									return {conversationId, messageId}
+								}
+								return {}
+							})(message);
+				
+							const question=message.message||message
+							const res = await fetch("https://chat.openai.com/backend-api/conversation", {
+									method: "POST",
+									headers: {
+											"Content-Type": "application/json",
+											"Authorization": "Bearer " + (await me.getToken()),
+									},
+									body: JSON.stringify({
+											action: "next",
+											messages: [
+												{
+													id: uid(),
+													role: "user",
+													content: {
+														content_type: "text",
+														parts: [question]
+													}
+												}
+											],
+											model: "text-davinci-002-render",
+											...(conversationId? {conversation_id: conversationId} : {}),
+											parent_message_id: messageId,
+									})
+							})
+							const response=await this.read(res.body)
+							
+							if (!message.options) {
+								if(response.conversationId){
+									fetch(`https://chat.openai.com/backend-api/conversation/${response.conversationId}`,{
+										method:"PATCH",
+										headers: {
+												"Content-Type": "application/json",
+												"Authorization": "Bearer " + (await me.getToken()),
+										},
+										body: JSON.stringify({
+											is_visible:false
+										})
+									})
+								}
+								delete response.messageId;
+								delete response.conversationId;
+							}else{
+								response.helper=helper
+							}
+							return response
+						}
+					}
+				})({
+					helper,
+					name:"chatgpt",
+					notifyExpiration(expireTime){
+						alert(`Chatgpt need login before ${expireTime}, otherwise bridge service is `)
+					}
+				}),
 	bingAI: 	new (class extends Service{
 					async run({}){
 						const BingAI=bingAI()

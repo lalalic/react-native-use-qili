@@ -135,11 +135,9 @@ export function ChatGptProvider({children, headers:extraHeaders, ...props}){
 							action: "next",
 							messages: makeMessage(message),
 							model: model,
-							conversationId,
+							conversation_id:conversationId,
 							parent_message_id: messageId,
 						}
-						if(conversationId)
-							body.conversationId=conversationId
 						const res = await fetch(PROMPT_ENDPOINT, {
 							method: "POST",
 							headers:headers($accessToken.current),
@@ -189,7 +187,7 @@ const SESSION_PAGE = `${HOST_URL}/api/auth/session`;
 
 function makeMessage(message){
 	if(typeof(message)=="string"){
-		message=[{content:"message"}]
+		message=[{content:message}]
 	}
 
 	return message.map(({role="user", content})=>({id:uid(), role, content:{content_type:"text", parts:Array.isArray(content) ? content : [content]}}))
@@ -206,10 +204,10 @@ function ClearChatGPTUnused(){
 	},[status])
     const [conversationId]=useSelector(state=>state.my.queue?.chatgpt)||[]
     React.useEffect(()=>{
-        if(status="authenticated" && conversationId && accessToken){
+        if(status=="authenticated" && conversationId && accessToken){
 			(async()=>{
-				await service.removeConversation(conversationId)
-				dispatch({type:"wechat/chatgpt/remove", conversationId, done:true})
+				service.removeConversation(conversationId)
+				dispatch({type:"my/queue", queue:"chatgpt", item:conversationId, done:true})
 			})();
         }
     },[status,accessToken,conversationId])

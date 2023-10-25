@@ -41,9 +41,18 @@ export function myReducer(state = {
 		}
 		case "my/queue":
 			return produce(state, $state=>{
-				const {queue, item}=action
-				const a=$state.queue=$state.queue||{}
-				(a[queue]=a[queue]||[]).push(item)
+				const {queue, item, done}=action
+				const a=($state.queue=$state.queue||{});
+				const theQueue=(a[queue]=a[queue]||[])
+				if(done){
+					const i=theQueue.indexOf(item)
+					if(i!=-1){
+						theQueue.splice(i,1)
+					}
+				}else{
+					theQueue.push(item)
+				}
+				
 			})
         case "my":
             return {...state, ...action.payload}

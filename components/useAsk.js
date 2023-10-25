@@ -11,7 +11,7 @@ import { useBing } from './bing';
  * @returns
  */
 
-export default function useAsk({id:xid = "random", prompt:defaultQuestion,  timeout:timeout0 = 60000, initSession}={}) {
+export default function useAsk({id:xid = "random", prompt:defaultQuestion,  timeout:timeout0 = 60000, initSession, createChain=({send:call})=>({call})}={}) {
     const { sendMessage, status, login } = useChat(initSession);
 
     const dispatch = useDispatch();
@@ -21,7 +21,9 @@ export default function useAsk({id:xid = "random", prompt:defaultQuestion,  time
     const ask = React.useCallback(async (prompt = defaultQuestion, id = xid, timeout = timeout0) => {
         const session = $sessions.current[id];
         console.debug({ event: "ask", prompt, session, id });
-        const { message, ...newSession } = await sendMessage(prompt, session, id, timeout);
+        // const { message, isDone, tokens, ...newSession } = await sendMessage(prompt, session, id, timeout);
+        const chain=await createChain({id,session,timeout, send:async ({question})=>sendMessage(question, session, id, timeout)})
+        const { message, isDone, tokens, ...newSession } = chain.call({question:prompt});
 
         if(!message)
             throw new Error('No message returned')

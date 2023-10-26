@@ -30,6 +30,7 @@ export function ChatGptProvider({children, headers:extraHeaders, ...props}){
 			uri={CHAT_PAGE}
 			Context={Context}
 			webviewStyle={{marginTop:50}}
+			broName="chatgptBro"
 			bro={`
 			function bro(){
 				let asscessToken=null
@@ -58,19 +59,21 @@ export function ChatGptProvider({children, headers:extraHeaders, ...props}){
 			}			
 			`}
 			onServiceReady={React.useCallback(service=>{
-				const headers=accessToken=>({
-					"Authorization": "Bearer " + accessToken,
-					'accept': 'application/json',
-					'x-openai-assistant-app-id': '',
-					'content-type': 'application/json',
-					'origin': HOST_URL,
-					'referrer': CHAT_PAGE,
-					['sec-fetch-mode']: 'cors',
-					['sec-fetch-site']: 'same-origin',
-					'x-requested-with': 'com.chatgpt3auth',
-					'user-agent': service.userAgent,
-					...extraHeaders,
-				})
+				const headers=async (accessToken)=>{
+					return {
+						"Authorization": "Bearer " + accessToken,
+						'accept': 'application/json',
+						'x-openai-assistant-app-id': '',
+						'content-type': 'application/json',
+						'origin': HOST_URL,
+						'referer': CHAT_PAGE,
+						['sec-fetch-mode']: 'cors',
+						['sec-fetch-site']: 'same-origin',
+						'x-requested-with': 'com.chatgpt3auth',
+						'user-agent': service.userAgent,
+						...extraHeaders,
+					}
+				}
 
 				service.on('load',async ({url, loading})=>{
 					if(url.startsWith(LOGIN_PAGE) && !loading){
@@ -112,7 +115,7 @@ export function ChatGptProvider({children, headers:extraHeaders, ...props}){
 					async genTitle(conversationId){
 						const res=await fetch(`${PROMPT_ENDPOINT}/gen_title/${conversationId}`,{
 							method:"POST",
-							headers: headers($accessToken.current),
+							headers: await headers($accessToken.current),
 							body: JSON.stringify({
 								is_visible:false
 							})
@@ -127,7 +130,7 @@ export function ChatGptProvider({children, headers:extraHeaders, ...props}){
 						}
 
 						const {
-							options:{conversationId, messageId=uid(), model="text-davinci-002-render"}={}, 
+							options:{conversationId, messageId=uid(), model="text-davinci-002-render-sha"}={}, 
 							message, 
 							onAccumulatedResponse, onError}=request
 						
@@ -190,7 +193,15 @@ function makeMessage(message){
 		message=[{content:message}]
 	}
 
-	return message.map(({role="user", content})=>({id:uid(), role, content:{content_type:"text", parts:Array.isArray(content) ? content : [content]}}))
+	return message.map(({role="user", content})=>({
+		id:uid(), 
+		author:{role}, 
+		content:{
+			content_type:"text", 
+			parts:Array.isArray(content) ? content : [content]
+		},
+		metadata:{}
+	}))
 }
 
 function ClearChatGPTUnused(){

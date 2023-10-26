@@ -211,60 +211,49 @@ class Chatgpt extends Service{
 			throw new Error("Unknow Error")
 		}
 
-		this.consume1=async function consume1({message}) {
-			const {messageId=uid(), conversationId}=(msg=>{
-				if(typeof(msg)=="string" || !msg.options)
-					return {}
-				if(msg.options.helper==helper){
-					const {conversationId, messageId}=msg.options
-					return {conversationId, messageId}
-				}
-				return {}
-			})(message);
 
-			const question=message.message||message
+		function makeMessage(message){
+			if(typeof(message)=="string"){
+				message=[{content:message}]
+			}
+
+			return message.map(({role="user", content})=>({
+				id:uid(), 
+				role, 
+				content:{
+					content_type:"text", 
+					parts:Array.isArray(content) ? content : [content]
+				}
+			}))
+		}
+
+		this.consume1=async function consume1({message}) {
 			const res = await fetch("https://chat.openai.com/backend-api/conversation", {
 					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"Authorization": "Bearer " + (await me.getToken()),
+						"arkose_token":"4701791b066246fb2.4042962601|r=us-east-1|meta=3|metabgclr=transparent|metaiconclr=%23757575|guitextcolor=%23000000|pk=3D86FBBA-9D22-402A-B512-3420086BA6CC|at=40|sup=1|rid=17|ag=101|cdn_url=https%3A%2F%2Ftcr9i.chat.openai.com%2Fcdn%2Ffc|lurl=https%3A%2F%2Faudio-us-east-1.arkoselabs.com|surl=https%3A%2F%2Ftcr9i.chat.openai.com|smurl=https%3A%2F%2Ftcr9i.chat.openai.com%2Fcdn%2Ffc%2Fassets%2Fstyle-manager",
+					},
+					body: JSON.stringify({
+							action: "next",
+							messages: makeMessage(message?.message||message),
+							model: "text-davinci-002-render",
+							parent_message_id: uid(),
+					})
+			})
+			const response=await this.read(res.body)
+			if(response.conversationId){
+				fetch(`https://chat.openai.com/backend-api/conversation/${response.conversationId}`,{
+					method:"PATCH",
 					headers: {
 							"Content-Type": "application/json",
 							"Authorization": "Bearer " + (await me.getToken()),
 					},
 					body: JSON.stringify({
-							action: "next",
-							messages: [
-								{
-									id: uid(),
-									role: "user",
-									content: {
-										content_type: "text",
-										parts: [question]
-									}
-								}
-							],
-							model: "text-davinci-002-render",
-							...(conversationId? {conversation_id: conversationId} : {}),
-							parent_message_id: messageId,
+						is_visible:false
 					})
-			})
-			const response=await this.read(res.body)
-			
-			if (!message.options) {
-				if(response.conversationId){
-					fetch(`https://chat.openai.com/backend-api/conversation/${response.conversationId}`,{
-						method:"PATCH",
-						headers: {
-								"Content-Type": "application/json",
-								"Authorization": "Bearer " + (await me.getToken()),
-						},
-						body: JSON.stringify({
-							is_visible:false
-						})
-					})
-				}
-				delete response.messageId;
-				delete response.conversationId;
-			}else{
-				response.helper=helper
+				})
 			}
 			return response
 		}
@@ -412,17 +401,21 @@ async function subscribe({helper, defaultChatService=DefaultChatService, ...opts
 const unsub=subscribe({helper},window.bros={
 	autoAI: 	new (class extends Service{
 					run(){
-						this.apis=["chatgpt", "bingAI", "openAI"]
+						this.apis=["chatgpt", "openAI"]
 						this.printAPI=()=>console.log(`AutoAI: ${this.apis.join(" -> ")}`)
 						this.consume1=async function(){
+							let errors=[]
 							for(let service of this.apis){
 								try{
 									const res=await window.bros[service]?.consume1(...arguments)
 									if(!res?.message){
 										continue
 									}
-									return {...res, service}
+									if(errors)
+										console.warn(errors.join("\n"))
+									return {service, ...res}
 								}catch(e){
+									errors.push(`[${service}] : ${e.message}`)
 									continue
 								}
 							}
@@ -436,105 +429,21 @@ const unsub=subscribe({helper},window.bros={
 						alert(`Chatgpt need login before ${expireTime}, otherwise bridge service is `)
 					}
 				}),
-	chatgpt1: 	new (class extends Service{
-					run(){
-						const service=chatgpt()
-						this.consume1=async function(){
-							const {messageId=uid(), conversationId}=(msg=>{
-								if(typeof(msg)=="string" || !msg.options)
-									return {}
-								if(msg.options.helper==helper){
-									const {conversationId, messageId}=msg.options
-									return {conversationId, messageId}
-								}
-								return {}
-							})(message);
-				
-							const question=message.message||message
-							const res = await fetch("https://chat.openai.com/backend-api/conversation", {
-									method: "POST",
-									headers: {
-											"Content-Type": "application/json",
-											"Authorization": "Bearer " + (await me.getToken()),
-									},
-									body: JSON.stringify({
-											action: "next",
-											messages: [
-												{
-													id: uid(),
-													role: "user",
-													content: {
-														content_type: "text",
-														parts: [question]
-													}
-												}
-											],
-											model: "text-davinci-002-render",
-											...(conversationId? {conversation_id: conversationId} : {}),
-											parent_message_id: messageId,
-									})
-							})
-							const response=await this.read(res.body)
-							
-							if (!message.options) {
-								if(response.conversationId){
-									fetch(`https://chat.openai.com/backend-api/conversation/${response.conversationId}`,{
-										method:"PATCH",
-										headers: {
-												"Content-Type": "application/json",
-												"Authorization": "Bearer " + (await me.getToken()),
-										},
-										body: JSON.stringify({
-											is_visible:false
-										})
-									})
-								}
-								delete response.messageId;
-								delete response.conversationId;
-							}else{
-								response.helper=helper
-							}
-							return response
-						}
-					}
-				})({
-					helper,
-					name:"chatgpt",
-					notifyExpiration(expireTime){
-						alert(`Chatgpt need login before ${expireTime}, otherwise bridge service is `)
-					}
-				}),
-	bingAI: 	new (class extends Service{
-					async run({}){
-						const BingAI=bingAI()
-						this.getCookie=async ()=>{
-							function getCookiesForURL(url) {
-								return new Promise((resolve)=>{
-									chrome.cookies.getAll({ url }, (cookies) => {
-										resolve(cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; '))
-									})
-								})
-							}
-							return await getCookiesForURL("https://www.bing.com")
-						}
-						
-						let service=null
-						this.consume1=async ({message:question})=>{
-							if(!service){
-								const cookie=await this.getCookie()
-								service=new BingAI({cookie})
-							}
-							const {text}=await service.sendMessage(question,{variant:"Precise"})
-							return {message:text}
-						}
-					}
-				})({helper,name:"bingAI"}),
 	openAI:		new (class extends Service{
 					async run({openApiKey=OPENAI_API_KEY}){
-						this.consume1=async ({message:question})=>{
+						function makeMessage(message){
+							if(typeof(message)=="string"){
+								message=[{role:"user", content:message}]
+							}
+				
+							return message
+						}
+
+						this.consume1=async ({message})=>{
 							if(typeof(openApiKey)=="undefined"){
 								new Error("Unknow Error")
 							}
+
 							const res=await fetch("https://api.openai.com/v1/chat/completions",{
 								method:"POST",
 								headers: {
@@ -543,7 +452,7 @@ const unsub=subscribe({helper},window.bros={
 								},
 								body:JSON.stringify({
 									model:"gpt-3.5-turbo",
-									messages:[{role:"user", content:question}]
+									messages: makeMessage(message?.message||message)
 								})
 							})
 							const {choices:[{message:{content}}], usage:{total_tokens}} = await res.json()
@@ -556,7 +465,6 @@ const unsub=subscribe({helper},window.bros={
 						super.run(...arguments)
 						const service=diffusion()
 						this.consume1=function({message:{args:[prompt]}}){
-							return service.dalle(prompt)
 							return service.generate(prompt)
 						}
 					}

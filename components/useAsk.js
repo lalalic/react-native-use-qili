@@ -11,28 +11,34 @@ import { useBing } from './bing';
  * @returns
  */
 
-export default function useAsk({id:xid = "random", prompt:defaultQuestion,  timeout:timeout0 = 60000, initSession, createChain=({send:call})=>({call})}={}) {
+export default function useAsk({id:xid = "random", question:defaultQuestion,  timeout:timeout0 = 60000, initSession, createChain=({send:call})=>({call})}={}) {
     const { sendMessage, status, login } = useChat(initSession);
 
     const dispatch = useDispatch();
     const $sessions= React.useRef(null)
     $sessions.current=useSelector(state => state.my.sessions)
 
-    const ask = React.useCallback(async (prompt = defaultQuestion, id = xid, timeout = timeout0) => {
+    const ask = React.useCallback(async (question = defaultQuestion, id = xid, timeout = timeout0) => {
         const session = $sessions.current[id];
-        console.debug({ event: "ask", prompt, session, id });
-        // const { message, isDone, tokens, ...newSession } = await sendMessage(prompt, session, id, timeout);
-        const chain=await createChain({id,session,timeout, send:async ({question})=>sendMessage(question, session, id, timeout)})
-        const { message, isDone, tokens, ...newSession } = chain.call({question:prompt});
+        const chain=await createChain({
+            id,session,timeout, 
+            send:async message=>await sendMessage(message, session, id, timeout)
+        })
 
-        if(!message)
-            throw new Error('No message returned')
-            
-        if(id){
-            dispatch({ type: "my/session", payload: { [id]: newSession } });
+        let answer=await chain.call(question)
+
+        if(typeof(answer)=="object"){
+            const {message, conversationId, messageId}=answer
+            answer=message
+            if(id && conversationId){
+                dispatch({ type: "my/session", payload: {[id]:{conversationId, messageId}} });
+            }
         }
 
-        return message;
+        if(!answer)
+            throw new Error('No message returned')
+
+        return answer;
     }, [sendMessage]);
 
     if (status == "logged-out") {

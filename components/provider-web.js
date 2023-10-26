@@ -91,7 +91,11 @@ export default function WebviewServiceProvider({
 
         const extendFx = {
             status(v) {
-                return typeof (v) != "undefined" ? setStatus(v) : $status.current;
+                try{
+                    return typeof (v) != "undefined" ? setStatus(v) : $status.current;
+                }finally{
+                    console.log({bro:broName, status: v||$status.current})
+                }
             },
             debug(v) {
                 return typeof (v) != "undefined" ? setDebug(!!v) : $debug.current;
@@ -156,6 +160,7 @@ export default function WebviewServiceProvider({
         `;
         
         onServiceReady?.(proxy)
+        globalThis[broName]=proxy
         return [proxy, injectBro];
     }, [banned]);
 

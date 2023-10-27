@@ -135,9 +135,8 @@ export default function WebviewServiceProvider({
             window.emit=(event, data)=>window.ReactNativeWebView.postMessage(JSON.stringify({event,data}));
 
             window.fetch=(originalFetch=>async (url, config) => {
-                const response=await originalFetch(url, config);
-                window.emit('fetch',{url, config, response})
-                return response
+                window.emit('fetch',{url, config})
+                return await originalFetch(url, config);
             })(window.fetch);
             window.emit('fetch.intercepted');
             
@@ -149,13 +148,13 @@ export default function WebviewServiceProvider({
                 context.drawImage(image, 0, 0)
                 return canvas.toDataURL()
             };
-            window.emit('emit.ready','${broName}');
 
             ;let $$bro$$=(${broCode})();
             if($$bro$$ && !('${broName}' in window)){
                 window.${broName}=$$bro$$
+                $$bro$$.window=window
             };
-            window.emit('bro', '${broName}');
+            window.emit('${broName}.ready');
             true;
         `;
         

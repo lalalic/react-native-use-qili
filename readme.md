@@ -40,3 +40,9 @@ bin
 bridge-chrome-extension
 =====
 helper to provide service for chatgpt from desktop
+
+Break Changes
+=====
+
+> 1.1.0
+>> remove all chat provider, chatgpt, bing, and etc. 

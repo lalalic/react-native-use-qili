@@ -1,188 +1,45 @@
 import React from 'react';
-import { useSelector, useDispatch } from "react-redux";
 import { Qili } from "../store";
-import { useChatGpt } from './chatgpt-provider';
-import { ChatContext } from './ChatProvider'
-import { useBing } from './bing';
 
-/**
- * local: use id to avoid massive session
- * remote: chat session should be kept
- * @returns
- */
 
-export default function useAsk({id:xid = "random", question:defaultQuestion,  timeout:timeout0 = 60000, initSession, createChain=({send:call})=>({call})}={}) {
-    const { sendMessage, status, login } = useChat(initSession);
-
-    const dispatch = useDispatch();
-    const $sessions= React.useRef(null)
-    $sessions.current=useSelector(state => state.my.sessions)
-
-    const ask = React.useCallback(async (question = defaultQuestion, id = xid, timeout = timeout0) => {
-        const session = $sessions.current[id];
-        const chain=await createChain({
-            id,session,timeout, 
-            send:async message=>await sendMessage(message, session, id, timeout)
-        })
-
-        let answer=await chain.call(question)
-
-        if(typeof(answer)=="object"){
-            const {message, conversationId, messageId}=answer
-            answer=message
-            if(id && conversationId){
-                dispatch({ type: "my/session", payload: {[id]:{conversationId, messageId}} });
-            }
+function useCloudPredict({question:defaultQuestion, chatflow:defaultChatFlow, timeout:defaultTimeout}={}) {
+    const ask=React.useCallback(async (info = defaultQuestion, chatflow=defaultChatFlow, timeout=defaultTimeout) => {
+        const config={}
+        if(typeof(info)=="string"){
+            info={question:info}
         }
 
-        if(!answer)
-            throw new Error('No message returned')
+        const {options, message, onError=console.error, onAccumulatedResponse, history}=info
 
-        return answer;
-    }, [sendMessage]);
+        config.question=message
+        config.history=history?.map(({text,user:{_id}})=>({message:text, type:`${_id=="user" ? "user" : "api"}Message`}))
 
-    if (status == "logged-out") {
-        dispatch({ type: "my", sessions: {} });
-        login?.();
-    }
-
-    return ask;
-}
-
-
-function useChat(initSession) {
-    const {api}=React.useContext(ChatContext)
-    const bridge= useBridgeChat()
-    const service=api=="chatgpt" ? useChatGPTChat(initSession) : (api=="bing" && useBingChat())
-    if(service){
-        const {sendMessage, ...info}=service
-        return {
-            ...info,
-            async sendMessage(){
-                try{
-                    return await service.sendMessage(...arguments)
-                }catch(e){
-                    return await bridge.sendMessage(...arguments)
+        try{
+            const data=await Qili.fetch({
+                query:`query($chatflow:String, $config:JSON!){
+                    predict(chatflow:$chatflow, config:$config)
+                }`,
+                variables:{
+                    chatflow, 
+                    config
                 }
+            }, timeout)
+
+
+            const result= data.predict
+
+            if(onAccumulatedResponse){
+                onAccumulatedResponse({isDone:true, message:result})
             }
+            
+            return result
+        }catch(e){
+            onError?.(e)
         }
-    }
-    return bridge
+
+    }, []);
+
+    return ask
 }
 
-function useChatGPTChat(initSession){
-    const {sendMessage, ...status}=useChatGpt()
-    const doSend=React.useCallback(async function(ask,session, id, ...args){
-        if(initSession && !session && id){
-            session=await initSession(id, sendMessage)
-        }
-
-        if(ask.onAccumulatedResponse){
-            return await new Promise((resolve,reject)=>{
-                sendMessage({
-                    ...ask,
-                    onAccumulatedResponse({isDone, ...response}){
-                        ask.onAccumulatedResponse(ask, session, id, ...args)
-                        if(isDone){
-                            resolve(response)
-                        }
-                    },
-                    onError(error){
-                        ask.onError?.(error)
-                        reject(error)
-                    }
-                })
-            })
-        }
-        
-        return await sendMessage(ask, session, id, ...args)
-        
-    },[sendMessage])
-
-    return {
-        ...status,
-        async sendMessage(ask, session, id, ...args){
-            try{
-                return doSend(...arguments)
-            }catch(e){
-                if(e.message=="Not Found" && session){
-                    if (id) {
-                        dispatch({ type: "my/session", payload: { [id]: null } });
-                    }
-                    return await doSend(ask, null, id, ...args)
-                }else{
-                    throw e;
-                }
-            }
-        }
-    }
-}
-
-function useBingChat(){
-    const {service, status}=useBing()
-    return React.useMemo(()=>{
-        return {
-            status,
-            async sendMessage(message, session){
-                const options={...session, variant:"Precise"}
-                if(typeof(message)=="object"){
-                    const {message:prompt, onAccumulatedResponse, onError}=message
-                    try{
-                        if(onAccumulatedResponse){
-                            options.onProgress=({text, conversationId})=>{
-                                onAccumulatedResponse({message:text, conversationId, isDone:false})
-                            }
-                        }
-                        
-                        const {conversationId, text} = await service.sendMessage(prompt, options)
-                        onAccumulatedResponse?.({message:text, conversationId, isDone:true})
-                        return {message:text, conversationId}
-                    }catch(e){
-                        onError?.(e)
-                    }
-                }
-                const {conversationId, text}=await service.sendMessage(message, options)
-                return {conversationId, message:text}
-            }
-        }
-    },[service])
-}
-
-function useBridgeChat(){
-    return React.useMemo(()=>({
-        status: "authenticated", 
-        sendMessage:async (message, options, id, timeout)=>{
-            const [request, processData = a => a, onError = a => a] = (() => {
-                if (id == "chat") { //no helper then no session
-                    if (typeof (message) == "object") {
-                        const { message: prompt, options: $options, onAccumulatedResponse, onError } = message;
-                        return [
-                            { message: prompt, options: { ...$options, ...options } },
-                            data => {
-                                onAccumulatedResponse?.({ ...data, isDone: true });
-                                return { ...data };
-                            },
-                            onError
-                        ];
-                    } else {
-                        return [
-                            {
-                                message,
-                                options: options?.helper ? options : {} /* empty indicate remote proxy to return session*/
-                            }
-                        ];
-                    }
-                } else {
-                    return [message.message || message];
-                }
-            })();
-            console.debug({ event: "askThenWaitAnswer", message, options, id, timeout });
-            try{
-                const message=await Qili.bridge.askThenWaitAnswer(request, timeout)
-                return processData(message)
-            }catch(error){
-                onError(error)
-            }
-        }
-    }),[])
-}
+module.exports=useCloudPredict

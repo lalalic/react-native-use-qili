@@ -7,7 +7,7 @@ const FormData = require("form-data");
 const fetch = require("node-fetch2");
 const cwd = process.cwd();
 
-const { version } = require(`${cwd}/package.json`);
+const { runtimeVersion:version } = require(`${cwd}/app.json`);
 let platform = "ios";
 const {['QILI_TOKEN']:$token, ['QILI_APP']: $apiKey, ["QILI_UPDATES"]:$updates, api:$api="https://api.qili2.com/1/graphql"} = process.env
 

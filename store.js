@@ -94,7 +94,7 @@ export function getSession(){
 export const Qili=makeQiliService(getSession)
 export const Reset={type:"$/delete/account"}
 
-export function createStore({reducers:extendReducers,storage, middlewares=[], listeners=[], serializableCheckIgnoreActions}){
+export function createStore({reducers:extendReducers,storage, middlewares=[], listeners=[], serializableCheckIgnoreActions=[]}){
 	function resetify(reducers){
 		for(let [key,reducer] of Object.entries(reducers)){
 			reducers[key]=function(state,action){

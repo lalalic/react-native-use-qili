@@ -12,8 +12,15 @@ export default function makeQiliService(getSession) {
 	const factory=({api, apiKey, headers:globalHeaders})=>({
 		service: api,
 		storage: "https://up.qbox.me",
-		async fetch(request, headers=globalHeaders) {
+		async fetch(request, headers=globalHeaders, timeout=60000) {
+			if(typeof(arguments[1])=="number"){
+				timeout=headers
+				headers=globalHeaders
+			}
 			headers=headers||{...getSession(),}
+			const timer=setTimeout(()=>{
+				throw new Error('Timeout from qili service')
+			},timeout)
 			const res = await fetch(this.service, {
 				method: "POST",
 				headers: {
@@ -23,14 +30,15 @@ export default function makeQiliService(getSession) {
 				},
 				body: request instanceof FormData ? request : JSON.stringify(request)
 			});
-			const { data } = await res.json();
+			const { data, errors } = await res.json();
+			clearTimeout(timer)
 
 			if (!data) {
 				throw new Error(res.statusText);
 			}
 
-			if (data.errors) {
-				throw new Error(data.errors.map(a => a.message).join("\n"));
+			if (errors) {
+				throw new Error(errors);
 			}
 
 			return data;

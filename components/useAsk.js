@@ -2,11 +2,11 @@ import React from 'react';
 import { Qili } from "../store";
 
 
-function useCloudPredict({question:defaultQuestion, chatflow:defaultChatFlow, timeout:defaultTimeout}={}) {
+function useCloudPredict({message:defaultQuestion, chatflow:defaultChatFlow, timeout:defaultTimeout}={}) {
     const ask=React.useCallback(async (info = defaultQuestion, chatflow=defaultChatFlow, timeout=defaultTimeout) => {
         const config={}
         if(typeof(info)=="string"){
-            info={question:info}
+            info={message:info}
         }
 
         const {options, message, onError=console.error, onAccumulatedResponse, history}=info

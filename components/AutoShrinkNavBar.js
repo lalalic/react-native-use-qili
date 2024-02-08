@@ -3,14 +3,14 @@ import { View } from "react-native";
 import PopMenu from './PopMenu';
 
 
-export default function AutoShrinkNavBar({ children, label, style, size = 4 }) {
+export default function AutoShrinkNavBar({ children, label, style, size = 4 , popupStyle}) {
     children = React.Children.toArray(children).flat().filter(a => !!a);
     const popup = (() => {
         if (children.length <= size) {
             return null;
         }
         return (
-            <PopMenu {...{ label }}>
+            <PopMenu {...{ label, style:popupStyle }}>
                 {children.splice(size - 1)}
             </PopMenu>
         );

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text } from "react-native";
 
 
-export default  Object.assign(function FlyMessage({style, errorStyle}){
+export default  Object.assign(function FlyMessage({style, errorStyle, fireworks=[]}){
     const [message, setMessage] = React.useState({});
 
     useEffect(() => {
@@ -15,10 +15,16 @@ export default  Object.assign(function FlyMessage({style, errorStyle}){
     },[])
 
     const content=React.useMemo(()=>{
-        if(message.info){
-            return <Text style={style}>{message.info}</Text>
-        }else if(message.error){
-            return <Text style={errorStyle}>{message.error}</Text>
+        if(message){
+            if(React.isValidElement(message)){
+                return message
+            }
+
+            if(message.info){
+                return <Text style={style}>{message.info}</Text>
+            }else if(message.error){
+                return <Text style={errorStyle}>{message.error}</Text>
+            }
         }
         return null
     },[message])
@@ -32,11 +38,14 @@ export default  Object.assign(function FlyMessage({style, errorStyle}){
     show(info) {
         console.debug(info);
         this.setMessage({info});
-        setTimeout(() => this.setMessage({}), 3000);
+        setTimeout(() => this.setMessage(null), 3000);
     },
     error(error) {
         console.error(error);
         this.setMessage({error});
-        setTimeout(() => this.setMessage({}), 3000);
+        setTimeout(() => this.setMessage(null), 3000);
+    },
+    play(el){
+        this.setMessage(React.cloneElement(el,{done:() => this.setMessage(null)}))
     }
 });

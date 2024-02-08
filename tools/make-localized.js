@@ -97,6 +97,18 @@ export default function makeLocalized({zh,en,...data}={},lang){
     return globalThis.l10n=new Proxy(strings,{
         get(targets, key){
             if(typeof(key)=="string"){
+                if(key==="setLanguage"){
+                    return lang=>{
+                        const currentLang=targets.getLanguage()
+                        if(lang==currentLang)
+                            return
+                        const props=targets._props[currentLang]
+                        if(!props)
+                            return 
+                        Object.keys(props).forEach(k=>delete targets[k])
+                        targets.setLanguage(lang)
+                    }
+                }
                 return targets[key]||printf(key)
             }
             return targets[key]

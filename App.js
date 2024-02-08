@@ -125,7 +125,7 @@ function reportCrash(crash){
             }
         })
     }finally{
-        console.warn(crash.error)
+        console.warn(crash)
     }
 }
 

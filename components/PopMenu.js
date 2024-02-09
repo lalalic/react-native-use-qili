@@ -8,7 +8,7 @@ export default function PopMenu({ style, triggerIconName = "more-vert", label, c
     const color = React.useContext(ColorScheme);
     const [listing, setListing] = React.useState(false);
     return (
-        <View>
+        <>
             <PressableIcon name={triggerIconName} label={label} onPress={e => setListing(!listing)} />
             {listing && <View pointerEvents="box-none"
                 onTouchEnd={e => setListing(false)}
@@ -19,6 +19,6 @@ export default function PopMenu({ style, triggerIconName = "more-vert", label, c
                 ]}>
                 {children}
             </View>}
-        </View>
+        </>
     );
 }

@@ -4,8 +4,18 @@ utils to use qili service in react-native/expo project
 
 cloud modules
 =====
-* cloud/expo-updates
-* cloud/web-proxy
+* cloud/expo-updates([updates])
+* cloud/web-proxy: deprecated
+* cloud/graphql-proxy(proxyFx=>({appKey, apiKey, ...module})): make a proxy module for appKey
+    * proxyFx( resolverFunctionName | {name, query}, ...)
+        * array -> {[funName]:resolverFunc, ...}
+        * 1 -> resolverFunc
+* cloud/predict({apiKey for ai, chatflowId as default})
+    * predict({chatflowId, config})
+    * uploadDocument({urls, name})
+    * removeDocument(name)
+* cloud/iap({path='/verifyReceipt', password, onVerified,...}}): support apple iap
+* cloud/events: log built-in events
 
 api
 ===

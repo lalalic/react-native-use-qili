@@ -9,10 +9,12 @@ function useCloudPredict({message:defaultQuestion, chatflow:defaultChatFlow, tim
             info={message:info}
         }
 
-        const {options, message, onError=console.error, onAccumulatedResponse, history}=info
+        const {options, message, onError=console.error, onAccumulatedResponse, history, ...others}=info
 
+        Object.assign(config, others)
         config.question=message
         config.history=history?.map(({text,user:{_id}})=>({message:text, type:`${_id=="user" ? "user" : "api"}Message`}))
+
 
         try{
             const data=await Qili.fetch({
@@ -27,6 +29,10 @@ function useCloudPredict({message:defaultQuestion, chatflow:defaultChatFlow, tim
 
 
             const result= data.predict
+
+            if(result.errors){
+                throw new Error(errors.map(a=>a.message).join("\n"));
+            }
 
             if(onAccumulatedResponse){
                 onAccumulatedResponse({isDone:true, message:result})

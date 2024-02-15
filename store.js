@@ -64,7 +64,7 @@ export async function isAdmin(state=globalThis.store.getState()){
 	if(isUserLogin(state)){
 		const data=await Qili.fetch({
 			query:"query{isAdmin}"
-		},state.my.admin)
+		})
 		return data.isAdmin
 	}
 	return false

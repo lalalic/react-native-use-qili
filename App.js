@@ -13,16 +13,23 @@ ExpoSplashScreen.preventAutoHideAsync()
 
 export default function App({autoReloadUpdate, ContainerView=SafeAreaView, children, colorScheme:scheme="light", onCrash, recreateWhenCrash, tutorials, ...props}){
     React.useEffect(()=>{
-        Updates.addListener(event=>{
-            if(event.type === Updates.UpdateEventType.UPDATE_AVAILABLE){
-                (async()=>{
-                    await Updates.fetchUpdateAsync()
-                    if(autoReloadUpdate){
-                        await Updates.reloadAsync()
-                    }
-                })();
+        async function update(){
+            await Updates.fetchUpdateAsync()
+            if(autoReloadUpdate){
+                await Updates.reloadAsync()
             }
-        })
+        }
+        ;(async ()=>{
+            const {isAvailable} = await Updates.checkForUpdateAsync()
+            if(isAvailable){
+                await update()
+            }
+            Updates.addListener(event=>{
+                if(event.type === Updates.UpdateEventType.UPDATE_AVAILABLE){
+                    update()
+                }
+            })
+        })();
     },[])
 
     const [style, setStyle]=React.useState({})

@@ -61,7 +61,6 @@ export function Manage({labelStyle, selectFile}){
 }
 
 function Editor({ data={name:"", items:[]}, style, onSubmit, onClose, selectFile}) {
-    const wechat = useWechat();
     const [knowledge, setKnowledge]=React.useState(data)
     const [url, setUrl]=React.useState("")
     const labelStyle=React.useMemo(()=>({justifyContent:"center",padding:5, fontSize:20,color:"black"}),[])
@@ -101,7 +100,7 @@ function Editor({ data={name:"", items:[]}, style, onSubmit, onClose, selectFile
                 {!!selectFile && <PressableIcon name="cloud-upload"
                     style={{ width: 30, position:"absolute", right:5 }}
                     onPress={async (e) => {
-                        const items = selectFile()
+                        const items = await selectFile()
                         if(items?.length){
                             setKnowledge(produce(knowledge,$=>{
                                 $.items.splice($.items.length,0, ...items)

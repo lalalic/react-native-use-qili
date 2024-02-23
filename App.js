@@ -4,9 +4,13 @@ import { StatusBar } from "expo-status-bar"
 import * as ExpoSplashScreen from 'expo-splash-screen'
 import * as Updates from "expo-updates"
 import { setJSExceptionHandler, setNativeExceptionHandler } from "react-native-exception-handler"
+import makeLocalized from "./tools/make-localized"
+const l10n=globalThis.l10n||(globalThis.l10n=makeLocalized());
+
 import { Provider, Qili }  from "./store"
 import setDefaultStyle, {ColorScheme} from "./components/default-style"
 import { FirstTimeTutorial } from "./components/Tutorial"
+import { alert } from "./components/Prompt"
 
 LogBox.ignoreAllLogs()
 ExpoSplashScreen.preventAutoHideAsync()
@@ -15,7 +19,11 @@ export default function App({autoReloadUpdate, ContainerView=SafeAreaView, child
     React.useEffect(()=>{
         async function update(){
             await Updates.fetchUpdateAsync()
-            if(autoReloadUpdate){
+            if(autoReloadUpdate || 
+                (await alert({
+                    title:l10n["Update"], 
+                    message:l10n[`There's an update, do you want to reload?`],
+                }))){
                 await Updates.reloadAsync()
             }
         }

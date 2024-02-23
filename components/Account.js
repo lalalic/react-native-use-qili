@@ -14,7 +14,6 @@ const l10n=globalThis.l10n
 export default function Account({settings=[], information=[], onDeleteAccount}){
     const dispatch=useDispatch()
     const [loading, setLoading]=React.useState(false)
-    const loadingUseState=React.useMemo(()=>[loading, setLoading],[loading,setLoading])
     const signedIn=useSelector(state=>isUserLogin(state))
     const deleteAccount=React.useCallback(async ()=>{
         const yes=await new Promise(resolve=>{
@@ -49,7 +48,7 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
         if(isAvailable){
             Alert.alert(
                 l10n["Update"], 
-                l10n[`There's an update, do you want to update?`],
+                l10n[`There's an update, do you want to reload?`],
                 [
                     {text:l10n["No"]},
                     {text:l10n["Yes"], 

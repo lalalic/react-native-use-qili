@@ -20,8 +20,8 @@ const default_zh={
     "oops!":"糟糕！",
     
     "Update":"更新检查",
-    "There's an update, do you want to update?":"又一个更新版本，需要跟新吗？",
-    "Yes":"是的",
+    "There's an update, do you want to reload?":"有一个更新的版本，需要关闭重启吗？",
+    "Yes":"是",
     "No":"不",
     "There's no update.":"没有跟新的版本",
 

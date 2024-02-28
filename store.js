@@ -39,21 +39,6 @@ export function myReducer(state = {
 				})
 			})
 		}
-		case "my/queue":
-			return produce(state, $state=>{
-				const {queue, item, done}=action
-				const a=($state.queue=$state.queue||{});
-				const theQueue=(a[queue]=a[queue]||[])
-				if(done){
-					const i=theQueue.indexOf(item)
-					if(i!=-1){
-						theQueue.splice(i,1)
-					}
-				}else{
-					theQueue.push(item)
-				}
-				
-			})
         case "my":
             return {...state, ...action.payload}
     }
@@ -94,7 +79,7 @@ export function getSession(){
 export const Qili=makeQiliService(getSession)
 export const Reset={type:"$/delete/account"}
 
-export function createStore({reducers:extendReducers,storage, middlewares=[], listeners=[], serializableCheckIgnoreActions=[]}){
+export function createStore({reducers:extendReducers,storage, middlewares=[], listeners=[], serializableCheckIgnoreActions=[], blacklist=[]}){
 	function resetify(reducers){
 		for(let [key,reducer] of Object.entries(reducers)){
 			reducers[key]=function(state,action){
@@ -130,7 +115,7 @@ export function createStore({reducers:extendReducers,storage, middlewares=[], li
 		/** reducer can't directly change any object in state, instead shallow copy and change */
 		reducer:
 			persistReducer(
-				{key:"root",version:1,blacklist:[],storage},
+				{key:"root",version:1,blacklist,storage},
 				combineReducers(reducers)
 			),
 
@@ -151,10 +136,10 @@ export function createStore({reducers:extendReducers,storage, middlewares=[], li
 	return {store, persistor:persistStore(store)}
 }
 
-export const Provider=({children, onReady, loading=<Loading/>, init, serializableCheckIgnoreActions,
+export const Provider=({children, onReady, loading=<Loading/>, init, serializableCheckIgnoreActions,blacklist,
 	middlewares, listeners, reducers, storage=ExpoFileSystemStorage})=>{
 	const {store, persistor}=React.useMemo(()=>{
-		const data=createStore({reducers, storage, listeners, middlewares, serializableCheckIgnoreActions})
+		const data=createStore({reducers, storage, listeners, middlewares, serializableCheckIgnoreActions, blacklist})
 		const unsub=data.store.subscribe(async ()=>{
 			unsub()
 			await init?.(data.store)

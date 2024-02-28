@@ -93,25 +93,39 @@ export default function makeLocalized({zh,en,...data}={},lang){
     if(lang){
         strings.setLanguage(lang)
     }
+
+    function l10n(key, ...params){
+        const localized=strings[key]||key
+        return localized.replace(new RegExp(/%(\d+)/,'g'),(_,p1)=>{
+            return params[parseInt(p1)-1]
+        })
+    }
     
-    return globalThis.l10n=new Proxy(strings,{
+    return globalThis.l10n=new Proxy(l10n,{
+        apply(target, thisArg, argumentsList){
+            if(argumentsList.length==1){
+                return globalThis.l10n[argumentsList[0]]
+            }else if(argumentsList.length>1){
+                return target(...argumentsList)
+            }
+        },
         get(targets, key){
             if(typeof(key)=="string"){
                 if(key==="setLanguage"){
                     return lang=>{
-                        const currentLang=targets.getLanguage()
+                        const currentLang=strings.getLanguage()
                         if(lang==currentLang)
                             return
-                        const props=targets._props[currentLang]
+                        const props=strings._props[currentLang]
                         if(!props)
                             return 
-                        Object.keys(props).forEach(k=>delete targets[k])
-                        targets.setLanguage(lang)
+                        Object.keys(props).forEach(k=>delete strings[k])
+                        strings.setLanguage(lang)
                     }
                 }
-                return targets[key]||printf(key)
+                return strings[key]||printf(key)
             }
-            return targets[key]
+            return strings[key]
         }
     })
 }

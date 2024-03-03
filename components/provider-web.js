@@ -4,28 +4,40 @@ import { WebView } from "react-native-webview";
 import { Buffer } from "buffer";
 import PressableIcon from "./PressableIcon"
 
-import { Qili } from "../store"
 import useStateAndLatest from "./useStateAndLatest"
 
 export default function WebviewServiceProvider({ 
-    id, banned, uri, 
+    id, 
+    uri, 
     Context, children, 
     bro, broName, 
     onServiceReady, 
-    debug: initDebug, 
+    disabled,
     webviewStyle, closerStyle,
     ...props }) {
     const webviewRef = useRef(null);
-    const [debug, setDebug, $debug] = useStateAndLatest(!!initDebug);
     const [status, setStatus, $status] = useStateAndLatest("loading");
     const [show, setShow]=React.useState(false)
 
     const webviewProps = React.useMemo(() => {
-        return !debug ? {
-            //pointerEvents: "none",
-            style: { position: "absolute", overflow:"hidden", width: "100%", height: show ? "100%" : 0, top: 0, left: 0, ...webviewStyle }
-        } : { style: { width: "100%", flex: 1 } };
-    }, [debug, show, webviewStyle]);
+        const style={zIndex:99, position: "absolute", overflow:"hidden", width: "100%", height: "100%", top: 0, left: 0, ...webviewStyle}
+        if(disabled){
+            return { style: { ...style, left:99999999} }
+        }
+
+        if(show){
+            return { style }
+        }
+        
+        switch(status){
+            case "loginUI":
+                return { style }
+            case "loginInited":
+            case "logout":
+            default:
+                return { style: { ...style, left:99999999} }
+        }
+    }, [show, webviewStyle, disabled, status]);
 
     const userAgent = React.useMemo(() => Platform.select({
         ios: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
@@ -58,12 +70,6 @@ export default function WebviewServiceProvider({
         };
 
         const fx = fnKey => (...args) => {
-            if(banned){
-                const message={fnKey, args, $service: id}
-                console.debug(message)
-                return Qili.askThenWaitAnswer(message)
-            }
-
             if (!webviewRef.current) {
                 throw new Error("context is not ready yet");
             }
@@ -96,9 +102,6 @@ export default function WebviewServiceProvider({
                 }finally{
                     console.log({bro:broName, status: v||$status.current})
                 }
-            },
-            debug(v) {
-                return typeof (v) != "undefined" ? setDebug(!!v) : $debug.current;
             },
             webviewRef,
             extend(obj){
@@ -134,11 +137,53 @@ export default function WebviewServiceProvider({
         const injectBro = `
             window.emit=(event, data)=>window.ReactNativeWebView.postMessage(JSON.stringify({event,data}));
 
-            window.fetch=(originalFetch=>async (url, config) => {
-                window.emit('fetch',{url, config})
-                return await originalFetch(url, config);
-            })(window.fetch);
-            window.emit('fetch.intercepted');
+            ;(()=>{//intercept fetch, XMLHttpRequest
+                window.fetch=(originalFetch=>async function(url, config={}){
+                    const res=await originalFetch(...arguments);
+                    /*
+                    ;["json","text","blob","arrayBuffer","formData"].forEach(fn=>{
+                        res[fn]=(original=>async function(){
+                            const data=await this[fn](...arguments)
+                            window.emit('fetch',{url, ...config, response:data})
+                            return data
+                        })(res[fn])
+                    });
+                    */
+                    window.emit('fetch',{url, ...config})
+                    return res
+                })(window.fetch);
+
+                let info=null
+                XMLHttpRequest.prototype.open=(originalFx=>async function(m, url){
+                    info={}
+                    info.method=m
+                    info.url=url
+                    return await originalFx.call(this, ...arguments)
+                })(XMLHttpRequest.prototype.open);
+
+                XMLHttpRequest.prototype.send=(originalFx=>async function(data){
+                    info.body=data
+                    const myinfo=info
+                    this.addEventListener("readystatechange",()=>{
+                        if (this.readyState === XMLHttpRequest.DONE){
+                            const status = this.status;
+                            if (status === 0 || (status >= 200 && status < 400)) {
+                                myinfo.response=this.responseText
+                            }
+                            return window.emit("xhr", myinfo)
+                        }
+                    })
+                    return await originalFx.call(this, ...arguments)
+                })(XMLHttpRequest.prototype.send);
+
+                XMLHttpRequest.prototype.setRequestHeader=(originalFx=>async function(key,value){
+                    if(!info.headers){
+                        info.headers={}
+                    }
+                    info.headers[key]=value
+                    return await originalFx.call(this, ...arguments)
+                })(XMLHttpRequest.prototype.setRequestHeader);
+            })();
             
             window.imgToDataURI=(image)=>{
                 const canvas = document.createElement('canvas')
@@ -160,8 +205,18 @@ export default function WebviewServiceProvider({
         
         onServiceReady?.(proxy)
         globalThis[broName]=proxy
+        proxy
+            .on("login", data=>{
+                proxy.status("loginInited")
+            })
+            .on("logout", data=>{
+                proxy.status("logout")
+            })
+            .on("loginUI", data=>{
+                proxy.status("loginUI")
+            })
         return [proxy, injectBro];
-    }, [banned]);
+    }, []);
 
     const onMessage = React.useCallback(({ nativeEvent }) => {
         const { event, data } = JSON.parse(nativeEvent.data);
@@ -178,8 +233,7 @@ export default function WebviewServiceProvider({
 
     return (
         <Context.Provider value={{ service, status }}>
-            {children}
-            {!banned && <View {...webviewProps}>
+            <View {...webviewProps}>
                 <WebView
                     ref={webviewRef}
                     style={{ flex: 1 }}
@@ -194,7 +248,8 @@ export default function WebviewServiceProvider({
                 <PressableIcon name="close" size={32}
                     style={{position:"absolute", top:10, right:10, ...closerStyle}} 
                     onPress={e=>setShow(!show)}/>
-            </View>}
+            </View>
+            {children}
         </Context.Provider>
     );
 }

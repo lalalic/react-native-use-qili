@@ -82,8 +82,8 @@
                 return await app.createEntity("Purchase",{...info,author:user._id, createdAt:new Date()})
             },
             async consume(_, {product, cost, ...info}, {app,user}){
-                await app.patchEntity("User",{_id:user._id, balance:{$dec: cost}})
-                return await app.createEntity("Transaction", {product, cost, author:user._id, ...info})
+                await app.patchEntity("User",{_id:user._id}, {$inc:{balance: -cost}})
+                return await app.createEntity("Transaction", {...info, product, cost, author:user._id,})
             },
             async verifyIapReceipt(_,{receipt, transactionId},ctx){
                 const request={

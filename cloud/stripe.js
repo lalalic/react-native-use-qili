@@ -67,7 +67,7 @@ function removeNullKeys(obj) {
 
 async function defaultExtractPurchase({event, req, transactionFee, transactionRate}){
     event=removeNullKeys(event)
-    const {type, data:{object:{
+    const {type, client_reference_id:token, data:{object:{
         id,//xxxx
         object,//"checkout.session"
         payment_link,//plink_1OBpbSHKHUCpvkuPEcgLUGx9
@@ -79,8 +79,8 @@ async function defaultExtractPurchase({event, req, transactionFee, transactionRa
         currency,//usd, cad
         amount_total,//1$=100, 10$=1000
         currency_conversion:{source_currency="usd",fx_rate="1.0"}={},
-        paid=Math.ceil((amount_total)/parseFloat(fx_rate))*1000,
-        validPaid=Math.ceil((amount_total-100*transactionFee)*(100-transactionRate)/100/parseFloat(fx_rate))*1000
+        paid=Math.ceil((amount_total)/parseFloat(fx_rate)*1000),
+        validPaid=Math.ceil((amount_total-100*transactionFee)*(100-transactionRate)/100/parseFloat(fx_rate)*1000)
     }}}=event
 
     const purchase={
@@ -93,11 +93,12 @@ async function defaultExtractPurchase({event, req, transactionFee, transactionRa
         original_purchase_date_ms: created*1000,
         _event: removeNullKeys(event),
     }
-    const user=await req.app.getUserByContact(phone||email)
+    
+    const user=token ? await req.app.decode(token) : req.app.getUserByContact(phone||email)
     return [purchase, user]
 }
 
 async function defaultOnPurchase({app,user,purchase, event}){
-    await app.patchEntity("User", {_id:user._id}, {$inc:{balance:purchase.validPaid*1000}})
+    await app.patchEntity("User", {_id:user._id}, {$inc:{balance:purchase.validPaid}})
     app.emit('purchase.verified', purchase.validPaid)
 }

@@ -49,6 +49,27 @@ module.exports=function stripe({
     return iap
 }
 
+stripe.encodeClientReferenceId=function(token){
+    const pieces=token.split(".")
+    const seperators=pieces.map(a=>a.length).slice(0,-1).map(a=>a.toString(16).padStart(2,'0'))
+    return seperators.length+seperators.join("")+pieces.join("")
+}
+
+stripe.decodeClientReferenceId=function(client_reference_id){
+    const length=parseInt(client_reference_id[0])
+    let token=client_reference_id.substring(length*2+1)
+    const pieces=new Array(length).fill(0)
+        .map((a,i)=>{
+            const start=i*2+1
+            const len=parseInt(client_reference_id.substring(start,start+2),16)
+            a=token.substring(0,len)
+            token=token.substring(len)
+            return a
+        })
+    pieces.push(token)
+    return pieces.join(".")
+}
+
 function removeNullKeys(obj) {
     for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -67,7 +88,8 @@ function removeNullKeys(obj) {
 
 async function defaultExtractPurchase({event, req, transactionFee, transactionRate}){
     event=removeNullKeys(event)
-    const {type, client_reference_id:token, data:{object:{
+    const {type,  data:{object:{
+        client_reference_id,
         id,//xxxx
         object,//"checkout.session"
         payment_link,//plink_1OBpbSHKHUCpvkuPEcgLUGx9
@@ -93,6 +115,8 @@ async function defaultExtractPurchase({event, req, transactionFee, transactionRa
         original_purchase_date_ms: created*1000,
         _event: removeNullKeys(event),
     }
+
+    const token=client_reference_id ? stripe.decodeClientReferenceId(client_reference_id) : null
     
     const user=token ? await req.app.decode(token) : req.app.getUserByContact(phone||email)
     return [purchase, user]

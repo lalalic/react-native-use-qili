@@ -1,10 +1,18 @@
-module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=>({
-    name:"iap",
+/**
+ * Provide apple payment receipt verify
+ * @param {object} 
+ *      path=/verifyReceipt, it's webhook called by apple to notify payment
+ *      password: configured in apple payment, used when retrieve transaction from apple
+ *      onPurchase: 
+ * @returns 
+ */
+ module.exports=({path='/verifyReceipt', password, onPurchase}={})=>({
+    name:"apple payment",
     typeDefs:`
         type Product{
-            id: String!,
-            type: String!,
-            sku: String!,
+            id: String!
+            type: String!
+            sku: String!
             group: String
             groupName: String
             title: String
@@ -17,13 +25,35 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
             status: String
         }
 
+        type Purchase{
+            id: String!
+            sku: String!
+            expires_date_ms: Int
+            purchase_date_ms: Int
+            original_purchase_date_ms: Int
+            upgradeFrom: String
+            subscription_group_identifier: String
+            original_transaction_id: String
+        }
+
+        type Transaction{
+            id: String!
+            product: String!
+            cost: Int!
+            amount: Int
+            author: String
+        }
+
         extend type User{
             activeProducts: [String]
             productsForSale: [Product]
+            transactions: [Transaction]
+            balance: Int
         }
 
         extend type Mutation{
-            buy(sku: String!):Boolean
+            buy(sku: String!):Purchase
+            consume(info: JSON!): Transaction
             verifyIapReceipt(receipt:String!, transactionId:String!):JSON
         }
     `,
@@ -42,14 +72,20 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
             async productsForSale(_,{},{app,user}){
                 return await app.findEntity("Product", {status:{$ne:"active"}})
             },
+            async transactions(_,{},{app,user}){
+                return await app.findEntity("Transaction", {author:user._id})
+            }
         },
 
         Mutation:{
             async buy(_,info,{app,user}){
                 return await app.createEntity("Purchase",{...info,author:user._id, createdAt:new Date()})
             },
+            async consume(_, {product, cost, ...info}, {app,user}){
+                await app.patchEntity("User",{_id:user._id, balance:{$dec: cost}})
+                return await app.createEntity("Transaction", {product, cost, author:user._id, ...info})
+            },
             async verifyIapReceipt(_,{receipt, transactionId},ctx){
-                debugger
                 const request={
                     method:"post",
                     body: JSON.stringify({
@@ -91,7 +127,7 @@ module.exports=({path='/verifyReceipt', password, onVerified, ...listeners}={})=
                     return {}
                 
                 ctx.app.emit('purchase', purchase)
-                const result=await onVerified?.(_,purchase,ctx)
+                const result=await onPurchase?.(_,purchase,ctx)
                 return result==undefined ? data : result
             }
         }

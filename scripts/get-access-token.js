@@ -9,7 +9,7 @@ const fetch = require("node-fetch2")
             ,apiKey=(await prompts({name:"apiKey",type:"text",message:"apiKey"})).apiKey
             ,type=(await prompts({name:"type",type:"text",message:"access token type"})).type
             ,name=(await prompts({name:"name",type:"text",message:"access token name"})).name
-            ,sessionToken=(await prompts({name:"sessionToken",type:"text",message:"session token"})).sessionToken
+            ,sessionToken=(await prompts({name:"sessionToken",type:"text",message:"session token(call qili-get-session-token to get one)"})).sessionToken
             ,api=(await prompts({name:"api",type:"text",message:"api url", initial:"https://api.qili2.com/1/graphql"})).api
         ]=process.argv
     const options= request=>({

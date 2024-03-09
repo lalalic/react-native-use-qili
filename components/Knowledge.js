@@ -4,6 +4,8 @@ import { Text, View, TextInput, FlatList, Pressable, Modal } from "react-native"
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate} from "react-router-native"
 import Select from "react-native-select-dropdown"
+import { v4 } from "uuid";
+
 
 import PressableIcon from "./PressableIcon";
 
@@ -48,6 +50,9 @@ export function Manage({labelStyle, selectFile}){
                         style={{borderTopWidth:1,borderBottomWidth:1, borderColor:"gray"}}
                         onClose={e=>toggleEditor(false)}
                         onSubmit={knowledge=>{
+                            if(!knowledge.id){
+                                knowledge.id=v4()
+                            }
                             dispatch({type:"my/knowledge/set", knowledge, index:current})
                             if(current==-1){
                                 setCurrent(knowledges.length)
@@ -161,8 +166,10 @@ export function KnowledgeSelector({onSelect, style, value, children, link}){
                 rowTextForSelection={(item)=>item.name}
                 buttonTextAfterSelection={(item)=>item.name}
                 onSelect={onSelect}/>
-            {link && <PressableIcon name="link" style={{width:30, position:"absolute", right:5, bottom:15}} 
+            {link && <PressableIcon name="link" style={{width:30, position:"absolute", right:35, bottom:15}} 
                 onPress={e=>navigate(link)}/>}
+            <PressableIcon name="link" style={{width:30, position:"absolute", right:5, bottom:15}} 
+                onPress={e=>onSelect()}/>
         </View>
         
     )

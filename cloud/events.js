@@ -15,7 +15,7 @@ module.exports={
             console.debug(`user request auth from ${source}`)
         },
         ["auth.result"](error, user){
-            console.debug(`user auth result: ${!error}, user: ${JSON.stringify(user||{})}`)
+            console.debug(`user auth result: ${!error}`)
         },
         ["auth.error"](error){
             console.debug(`user auth error: ${error}`)

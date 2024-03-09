@@ -1,4 +1,4 @@
-module.exports=function stripe({
+function stripe({
     apiKey, 
     endpointSecret, 
     onPurchase=defaultOnPurchase, 
@@ -21,13 +21,16 @@ module.exports=function stripe({
                 const event =  payload //stripe.webhooks.constructEvent(payload, req.headers['stripe-signature'], endpointSecret);                
                 // Handle the checkout.session.completed event
                 if (event.type === 'checkout.session.completed') {
-                    const [purchase,user]=await extractPurchase({event, req,transactionFee,transactionRate})
                     try{
-                        await req.app.resolver.Mutation.buy(
+                        const [purchase,user]=await extractPurchase({event, req,transactionFee,transactionRate})
+                        const done = await req.app.resolver.Mutation.buy(
                             {}, 
                             purchase, 
                             {app:req.app, user}
                         );
+                        if(!done){
+                            throw new Error("maybe duplicate key error")
+                        }
                         req.app.emit('purchase', purchase)
                         await onPurchase?.({app:req.app, user, event, purchase})
                     }catch(e){
@@ -126,3 +129,5 @@ async function defaultOnPurchase({app,user,purchase, event}){
     await app.patchEntity("User", {_id:user._id}, {$inc:{balance:purchase.validPaid}})
     app.emit('purchase.verified', purchase.validPaid)
 }
+
+module.exports=stripe

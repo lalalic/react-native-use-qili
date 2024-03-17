@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.1.16",
+  "version": "1.1.17",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
@@ -9,7 +9,6 @@
   "dependencies": {
     "deprecated-react-native-prop-types": "^4.2.1",
     "expo-constants": "~13.2.4",
-    "expo-document-picker": "^11.10.1",
     "expo-linking": "~3.2.4",
     "react-native-snap-carousel": "^3.9.1",
     "react-native-uuid": "^2.0.1"
@@ -55,7 +54,11 @@
     "redux": "^4.2.0",
     "redux-persist": "^6.0.0",
     "redux-persist-expo-filesystem": "^2.0.0",
-    "subscriptions-transport-ws": "^0.11.0"
+    "subscriptions-transport-ws": "^0.11.0",
+    "expo-document-picker": "~10.3.0",
+    "@react-native-voice/voice": "^3.2.4",
+    "async-mutex": "^0.5.0",
+    "expo-av": "~12.0.4"
   },
   "bin": {
     "qili-export-updates": "./scripts/export-updates.js",

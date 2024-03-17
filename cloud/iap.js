@@ -42,6 +42,7 @@
             cost: Int!
             amount: Int
             author: String
+            type: Int
         }
 
         extend type User{

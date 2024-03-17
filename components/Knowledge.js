@@ -166,10 +166,8 @@ export function KnowledgeSelector({onSelect, style, value, children, link}){
                 rowTextForSelection={(item)=>item.name}
                 buttonTextAfterSelection={(item)=>item.name}
                 onSelect={onSelect}/>
-            {link && <PressableIcon name="link" style={{width:30, position:"absolute", right:35, bottom:15}} 
+            {link && <PressableIcon name="link" style={{width:30, position:"absolute", right:5, bottom:15}} 
                 onPress={e=>navigate(link)}/>}
-            <PressableIcon name="link" style={{width:30, position:"absolute", right:5, bottom:15}} 
-                onPress={e=>onSelect()}/>
         </View>
         
     )

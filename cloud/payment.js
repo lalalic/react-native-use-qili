@@ -70,7 +70,11 @@ module.exports={
             },
             async transactions(_,{},{app,user}){
                 return await app.findEntity("Transaction", {author:user._id})
-            }
+            },
+            async balance(_,{},{app,user}){
+                const userInfo=await app.get1Entity("User",{_id:user._id},{balance:1})
+                return userInfo.balance||0
+            },
         },
 
         Mutation:{

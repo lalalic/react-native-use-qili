@@ -7,49 +7,47 @@ function stripe({
     transactionRate=2.9,
     extractPurchase=defaultExtractPurchase,
 }){
-    const iap=require("react-native-use-qili/cloud/iap")(...arguments)
-    const stripe = require('stripe')(apiKey);
-    iap.name="stripe payment"
-
-    iap.static=async function(service){
-        service.on(path, async function(req, response){
-            try {
-                if(!req.user){
-                    throw new Error('not authenticated user')
-                }
-                const payload=req.body
-                const event =  payload //stripe.webhooks.constructEvent(payload, req.headers['stripe-signature'], endpointSecret);                
-                // Handle the checkout.session.completed event
-                if (event.type === 'checkout.session.completed') {
-                    try{
-                        const [purchase,user]=await extractPurchase({event, req,transactionFee,transactionRate})
-                        const done = await req.app.resolver.Mutation.buy(
-                            {}, 
-                            purchase, 
-                            {app:req.app, user}
-                        );
-                        if(!done){
-                            throw new Error("maybe duplicate key error")
-                        }
-                        req.app.emit('purchase', purchase)
-                        await onPurchase?.({app:req.app, user, event, purchase})
-                    }catch(e){
-                        if(e.message.indexOf('duplicate key error')==-1){
-                            throw e
-                        }else{
-                            console.warn('stripe payment already addressed!')
+    Cloud.addModule(require("./payment"))
+    return {
+        name:"stripe payment",
+        async static(service){
+            service.on(path, async function(req, response){
+                try {
+                    if(!req.user){
+                        throw new Error('not authenticated user')
+                    }
+                    const payload=req.body
+                    const event =  payload //stripe.webhooks.constructEvent(payload, req.headers['stripe-signature'], endpointSecret);                
+                    // Handle the checkout.session.completed event
+                    if (event.type === 'checkout.session.completed') {
+                        try{
+                            const [purchase,user]=await extractPurchase({event, req,transactionFee,transactionRate})
+                            const done = await req.app.resolver.Mutation.buy(
+                                {}, 
+                                purchase, 
+                                {app:req.app, user}
+                            );
+                            if(!done){
+                                throw new Error("maybe duplicate key error")
+                            }
+                            req.app.emit('purchase', purchase)
+                            await onPurchase?.({app:req.app, user, event, purchase})
+                        }catch(e){
+                            if(e.message.indexOf('duplicate key error')==-1){
+                                throw e
+                            }else{
+                                console.warn('stripe payment already addressed!')
+                            }
                         }
                     }
+                    
+                    response.status(200).end()
+                } catch (err) {
+                    response.status(400).end(err.message)
                 }
-                
-                response.status(200).end()
-            } catch (err) {
-                response.status(400).end(err.message)
-            }
-        })
+            })
+        }
     }
-
-    return iap
 }
 
 stripe.encodeClientReferenceId=function(token){

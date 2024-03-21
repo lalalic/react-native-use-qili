@@ -51,6 +51,16 @@ const default_zh={
     "Restore successful":"恢复成功",
     "Your purchases have been restored successfully!":"你的购买已经恢复！", 
     "Has ChatGPT Account?":"有ChatGPT账号?", 
+
+    "Knowledges":"你的知识库",
+    "Knowledge Name":"知识名称",
+    "Knowledge":"知识",
+    "Select a knowledge":"选择知识...",
+    "No knowledge yet":"空知识库",
+    "Audio":"语音",
+    "Audio Response Sample":"语音回复样本",
+    "Audio Response":"语音回复",
+    "Audio Sample":`在一个漂亮的山坡上，有很多黄色的麦田。太阳很大很亮，天上还有白白的云朵。有很多小鸟在天上飞，它们唱着歌，好听极了！麦田里有一阵阵清香，像是花香一样。这个地方感觉真好，好像在梦里一样！`,
 }
 
 export default function makeLocalized({zh,en,...data}={},lang){

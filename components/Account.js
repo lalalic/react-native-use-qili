@@ -69,10 +69,18 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
             Alert.alert(l10n["Update"], l10n["There's no update."])
         }
     },[])
+    const textStyle=React.useMemo(()=>({flexGrow:1, marginLeft:4,paddingTop:12}),[])
     const sections=[
         {title:"Settings", data:[
-            signedIn && {name:"Sign Out", href:false, icon:"account-circle", onPress:e=>dispatch({type:"my",payload:{admin:{}}}) },
-            signedIn && {name:"Delete Account", href:false, icon:"delete-forever", onPress:deleteAccount},
+            signedIn && {
+                name:"Sign Out", href:false, icon:"account-circle", onPress:e=>dispatch({type:"my",payload:{admin:{}}}),
+                children: (
+                    <Pressable onPress={deleteAccount} style={{flexDirection:"row", alignItems:"center",paddingRight:30}}>
+                        <MaterialIcons style={{paddingTop:5}} name="delete-forever" size={30} />
+                        <Text style={[{color:"gray"},textStyle]}>{l10n["Delete Account"]}</Text>
+                    </Pressable>
+                )
+            },
             ...settings,
         ].filter(a=>!!a)},
 
@@ -105,7 +113,7 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
                     const content=(
                         <View style={{flexDirection:"row",width:"100%",height:50, paddingTop:5,paddingBottom:5, borderBottomWidth:1,borderColor:"gray"}}>
                             <MaterialIcons style={{paddingTop:5}} name={icon} size={30} />
-                            <Text style={{flexGrow:1,marginLeft:4,paddingTop:12}}>{l10n[name]}</Text>
+                            <Text style={textStyle}>{l10n[name]}</Text>
                             {children || href!==false && <MaterialIcons style={{paddingTop:8}} name="keyboard-arrow-right"   />}
                         </View>
                     )
@@ -118,3 +126,23 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
         </View>
     )
 }
+
+
+// function ContainerArea(){
+//     const {containerArea={}}=useSelector(state=>state.my)
+//     const dispatch=useDispatch()
+//     const set=React.useCallback((di, value)=>{
+//         dispatch({type:"my/set", payload:{containerArea:{...containerArea,[di]:value}}})
+//     },[])
+//     return (
+//         <View style={{flexDirection:"column", alignItems:"center"}}>
+//             <Input type="number" value={containerArea.top||0} step={1} onChangeValue={value=>set('top', value)}/>
+//             <View style={{flexDirection:"row"}}>
+//                 <Input type="number" step={1} value={containerArea.left||0} onChangeValue={value=>set('left', value)}/>
+//                 <View style={{flexGrow:1}}/>
+//                 <Input type="number" step={1} value={containerArea.right||0} onChangeValue={value=>set('right', value)}/>
+//             </View>
+//             <Input type="number" step={1} value={containerArea.bottom||0} onChangeValue={value=>set('bottom', value)}/>
+//         </View>
+//     )
+// }

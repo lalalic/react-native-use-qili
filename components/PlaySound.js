@@ -1,9 +1,9 @@
 import React from 'react';
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
-import { ColorScheme } from 'react-native-use-qili/components/default-style';
-import PressableIcon from "react-native-use-qili/components/PressableIcon";
-import FlyMessage from "react-native-use-qili/components/FlyMessage";
+import { ColorScheme } from './default-style';
+import PressableIcon from "./PressableIcon";
+import FlyMessage from "./FlyMessage";
 import lock from "./lock";
 
 

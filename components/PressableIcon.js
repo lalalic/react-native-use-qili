@@ -12,7 +12,7 @@ export default ({ AutoHideDuration = 3000, requireLogin,
     emphasizer=(<View pointerEvent="none" style={{position:"absolute",bottom:0,right:0,width:5,height:5,backgroundColor:"red", borderRadius:5}}/>),
     onPressIn, onPressOut, children, 
     label, labelFade, labelStyle, 
-    style, size, ...props 
+    style, ...props 
 }) => {
     const dispatch = useDispatch();
     const needLogin = useSelector(state => requireLogin && !isUserLogin(state));

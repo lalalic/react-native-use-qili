@@ -1,6 +1,11 @@
 import React from "react"
-import {Switch} from "react-native"
+import {Switch, Platform} from "react-native"
 
 export default function MySwitch({style, ...props}){
-    return <Switch style={[{ transform: [{ scale: 0.6 }] },style]} {...props}/>
+    const scale=React.useMemo(()=>Platform.select({
+        ios:0.6,
+        android:1,
+        web:1,
+    }))
+    return <Switch style={[{ transform: [{ scale }] },style]} {...props}/>
 }

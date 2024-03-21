@@ -150,7 +150,7 @@ function Editor({ data={name:"", items:[]}, style, onSubmit, onClose, selectFile
     )
 }
 
-export function KnowledgeSelector({onSelect, style, value, children, link}){
+export function KnowledgeSelector({style, value, children, link, ...props}){
     const knowledges=useSelector(state=>state.my.knowledges)
     const navigate=useNavigate()
 
@@ -159,13 +159,15 @@ export function KnowledgeSelector({onSelect, style, value, children, link}){
             {children}
             <Select data={knowledges} 
                 defaultValue={knowledges?.find(a=>a.id==value)}
-                defaultButtonText={l10n['Select a knowledge']}
+                rowTextForSelection={(item)=>item.name}
+                buttonTextAfterSelection={(item)=>item.name}
+                
+                defaultButtonText={l10n[!!knowledges?.length ?  'Select a knowledge' : 'No Knowledge yet']}
                 buttonTextStyle={{textAlign:"left"}}
                 rowTextStyle={{textAlign:"left"}}
                 buttonStyle={{ width:"100%", }}
-                rowTextForSelection={(item)=>item.name}
-                buttonTextAfterSelection={(item)=>item.name}
-                onSelect={onSelect}/>
+                {...props}
+                />
             {link && <PressableIcon name="link" style={{width:30, position:"absolute", right:5, bottom:15}} 
                 onPress={e=>navigate(link)}/>}
         </View>

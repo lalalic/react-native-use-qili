@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Modal, useWindowDimensions } from "react-native";
-import PressableIcon from "react-native-use-qili/components/PressableIcon";
+import PressableIcon from "./PressableIcon";
 import Recognizer from './Recognizer';
 
 

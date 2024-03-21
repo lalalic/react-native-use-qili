@@ -3,7 +3,7 @@ import { View, Text, DeviceEventEmitter } from "react-native";
 import Voice from "@react-native-voice/voice";
 import * as FileSystem from "expo-file-system";
 import { useSelector } from "react-redux";
-import { ColorScheme } from 'react-native-use-qili/components/default-style';
+import { ColorScheme } from './default-style';
 import lock from "./lock";
 
 

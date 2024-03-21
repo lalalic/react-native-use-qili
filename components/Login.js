@@ -104,7 +104,7 @@ export default function Login({onLogin, style, onCancel}) {
                     <TextInput style={textStyle}
                         editable={!tick}
                         value={contact}
-                        placeholder={l10n["Phone Number"]}
+                        placeholder={`${l10n["Phone Number"]}/${l10n.Email}`}
                         placeholderTextColor="gray"
                         onChangeText={text => setContact(text)} />
                 </View>
@@ -135,7 +135,7 @@ export default function Login({onLogin, style, onCancel}) {
                 </View>
             </View>
 
-            <View style={{ flexDirection: "row", height: 50, marginTop:20, justifyContent:"center" }}>
+            <View style={{ flexDirection: "row",marginTop:20, justifyContent:"center" }}>
                 <Button title={l10n["Cancel"]}
                     onPress={e => {
                         dispatch({ type: "my", payload: { requireLogin: false } })

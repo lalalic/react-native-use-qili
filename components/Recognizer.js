@@ -64,15 +64,13 @@ export default (() => {
                     await Voice.destroy();
                     if (recognized) {
                         DeviceEventEmitter.emit("recognized.done", [recognized, id, locale]);
-                        onRecord?.({
-                            lang: locale,
-                            recognized,
-                            uri: `file://${audioUri}`,
-                            duration: Date.now() - start
-                        });
-                    } else {
-                        onRecord?.({});
                     }
+                    onRecord?.({
+                        lang: locale,
+                        recognized,
+                        uri: `file://${audioUri}`,
+                        duration: Date.now() - start
+                    })
                 } finally {
                     releaseLock?.();
                 }

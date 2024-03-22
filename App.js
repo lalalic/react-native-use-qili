@@ -11,7 +11,7 @@ import { FirstTimeTutorial } from "./components/Tutorial"
 LogBox.ignoreAllLogs()
 ExpoSplashScreen.preventAutoHideAsync()
 
-export default function App({ContainerView=SafeAreaView, children, colorScheme:scheme="light", onCrash, recreateWhenCrash, tutorials, ...props}){
+export default function App({ContainerView=SafeAreaView, containerStyle,  children, colorScheme:scheme="light", onCrash, recreateWhenCrash, tutorials, ...props}){
     const [style, setStyle]=React.useState({})
     const [dataReady, setDataReady]=React.useState(false)
 
@@ -36,10 +36,10 @@ export default function App({ContainerView=SafeAreaView, children, colorScheme:s
 
     const content=React.useMemo(()=>{
         if(dataReady){
-            const containerStyle={flex:1, backgroundColor:style.backgroundColor}
             return (
                 <CrashReport {...{recreateWhenCrash, onCrash}}>
-                    <ContainerView onLayout={e=>ExpoSplashScreen.hideAsync()} style={containerStyle}>
+                    <ContainerView onLayout={e=>ExpoSplashScreen.hideAsync()} 
+                        style={[{flex:1, backgroundColor:style.backgroundColor},containerStyle]}>
                         <ColorScheme.Provider key={scheme} value={style}>
                             {children}
                         </ColorScheme.Provider>

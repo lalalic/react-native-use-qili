@@ -57,17 +57,15 @@ export default function Recorder({
                 {...props}
                 style={{ position: "absolute" }}
                 onRecord={record => {
-                    if (record.recognized) {
-                        switch (state.active) {
-                            case "text":
-                                onText?.(record);
-                                break;
-                            case "audio":
-                                onRecord?.(record);
-                                break;
-                            default:
-                                onCancel?.(record);
-                        }
+                    switch (state.active) {
+                        case "text":
+                            onText?.(record);
+                            break;
+                        case "audio":
+                            onRecord?.(record);
+                            break;
+                        default:
+                            onCancel?.(record);
                     }
                     setState(_initState);
                 }} />}

@@ -24,35 +24,37 @@
             }
         `,
         resolver:{
-            async verifyIapReceipt(_,{receipt, transactionId},ctx){
-                const request={
-                    method:"post",
-                    body: JSON.stringify({
-                        password,
-                        'receipt-data':receipt,
-                        'exclude-old-transations':true
-                    })
+            Mutation:{
+                async verifyIapReceipt(_,{receipt, transactionId},ctx){
+                    const request={
+                        method:"post",
+                        body: JSON.stringify({
+                            password,
+                            'receipt-data':receipt,
+                            'exclude-old-transations':true
+                        })
+                    }
+                    let done=await fetch("https://buy.itunes.apple.com/verifyReceipt",request)
+                    let data=await done.json()
+                    if(data.status==21007){
+                        done=await fetch("https://sandbox.itunes.apple.com/verifyReceipt",request)
+                        data=await done.json()
+                    }
+                    
+                    const { status,  latest_receipt_info }=data
+                    if(status!==0){
+                        throw new Error(status)
+                    }
+                    const purchase = extractPurchase(latest_receipt_info, transactionId)
+            
+                    const purchased=await ctx.app.resolver.Mutation.buy(_, purchase, ctx )
+                    if(!purchased)
+                        return {}
+                    
+                    ctx.app.emit('purchase', purchase)
+                    const result=await onPurchase?.({app:ctx.app, user:ctx.user, purchase})
+                    return result==undefined ? data : result
                 }
-                let done=await fetch("https://buy.itunes.apple.com/verifyReceipt",request)
-                let data=await done.json()
-                if(data.status==21007){
-                    done=await fetch("https://sandbox.itunes.apple.com/verifyReceipt",request)
-                    data=await done.json()
-                }
-                
-                const { status,  latest_receipt_info }=data
-                if(status!==0){
-                    throw new Error(status)
-                }
-                const purchase = extractPurchase(latest_receipt_info, transactionId)
-        
-                const purchased=await ctx.app.resolver.Mutation.buy(_, purchase, ctx )
-                if(!purchased)
-                    return {}
-                
-                ctx.app.emit('purchase', purchase)
-                const result=await onPurchase?.({app:ctx.app, user:ctx.user, purchase})
-                return result==undefined ? data : result
             }
         },
         static(service){

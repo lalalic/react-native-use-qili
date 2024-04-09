@@ -45,9 +45,11 @@ const PlaySound = Object.assign(({ audio, children = null, onEnd, onStart, onErr
         await lock.runExclusive(async () => {
             let sound, check;
             try {
-                const audioFile = await FileSystem.getInfoAsync(audio);
-                if (!audioFile.exists) {
-                    return;
+                if(audio?.startsWith("file:")){
+                    const audioFile = await FileSystem.getInfoAsync(audio);
+                    if (!audioFile.exists) {
+                        return;
+                    }
                 }
 
                 await new Promise(($resolve, reject) => {

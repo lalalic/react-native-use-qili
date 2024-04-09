@@ -9,7 +9,7 @@ function stripe({
     paymentLink, prefill_email="",
 }){
     Cloud.addModule(require("./payment"))
-    const module= {
+    const cloudModule= {
         name:"stripe payment",
         async static(service){
             service.on(path, async function(req, response){
@@ -51,25 +51,29 @@ function stripe({
     }
 
     if(paymentLink){
-        module.typeDefs=`
+        cloudModule.typeDefs=`
             extend type Query{
                 paymentLink: String
             }
         `
-        module.resolver.Query.paymentLink=async ($1,$2,ctx)=>{
-            if(typeof(paymentLink)=="function"){
-                return await paymentLink(ctx,$2)
-            }
-            
-            if(typeof(paymentLink)=="string"){
-                const token=ctx.app.resolver.User.token(ctx.user,{expiresIn:'10m'}, ctx)
-                const client_reference_id=stripe.encodeClientReferenceId(token)
-                return `${paymentLink}?prefill_email=${ctx.user.email||prefill_email}&client_reference_id=${client_reference_id}`
+        cloudModule.resolver={
+            Query:{
+                async paymentLink($1,$2,ctx){
+                    if(typeof(paymentLink)=="function"){
+                        return await paymentLink(ctx,$2)
+                    }
+                    
+                    if(typeof(paymentLink)=="string"){
+                        const token=ctx.app.resolver.User.token(ctx.user,{expiresIn:'10m'}, ctx)
+                        const client_reference_id=stripe.encodeClientReferenceId(token)
+                        return `${paymentLink}?prefill_email=${ctx.user.email||prefill_email}&client_reference_id=${client_reference_id}`
+                    }
+                }
             }
         }
     }
 
-    return module
+    return cloudModule
 }
 
 stripe.encodeClientReferenceId=function(token){

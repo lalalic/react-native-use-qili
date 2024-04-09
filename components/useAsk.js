@@ -9,7 +9,7 @@ function useCloudPredict({message:defaultQuestion, chatflow:defaultChatFlow, tim
             info={message:info}
         }
 
-        const {options, message, onError=console.error, onAccumulatedResponse, history, ...others}=info
+        const {options, question, message=question, onError=console.error, onAccumulatedResponse, history, ...others}=info
 
         Object.assign(config, others)
         config.question=message

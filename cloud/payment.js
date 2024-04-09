@@ -50,7 +50,6 @@ module.exports={
         extend type Mutation{
             buy(sku: String!):Purchase
             consume(info: JSON!): Transaction
-            verifyIapReceipt(receipt:String!, transactionId:String!):JSON
         }
     `,
 

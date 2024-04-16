@@ -1,13 +1,10 @@
 function stripe({
-    apiKey, 
-    endpointSecret, 
-    onPurchase=defaultOnPurchase, 
     path="/stripe/pay", 
-    transactionFee=0.3, 
-    transactionRate=2.9,
+    secretKey=process.env["stripe.secretKey"],  
+    onPurchase=defaultOnPurchase, 
     extractPurchase=defaultExtractPurchase,
-    paymentLink, prefill_email="",
-}){
+    endpointSecret, paymentLink, prefill_email="",transactionFee=0.3, transactionRate=2.9,
+}={}){
     Cloud.addModule(require("./payment"))
     const cloudModule= {
         name:"stripe payment",
@@ -18,11 +15,13 @@ function stripe({
                         throw new Error('not authenticated user')
                     }
                     const payload=req.body
-                    const event =  payload //stripe.webhooks.constructEvent(payload, req.headers['stripe-signature'], endpointSecret);                
-                    // Handle the checkout.session.completed event
+                    const event =  payload 
                     if (event.type === 'checkout.session.completed') {
                         try{
-                            const [purchase,user]=await extractPurchase({event, req,transactionFee,transactionRate})
+                            const [purchase,user]=await extractPurchase({event, req, secretKey})
+                            if(!user?.id){
+                                throw new Error("token is wrong")
+                            }
                             const done = await req.app.resolver.Mutation.buy(
                                 {}, 
                                 purchase, 
@@ -47,28 +46,13 @@ function stripe({
                     response.status(400).end(err.message)
                 }
             })
-        }
-    }
-
-    if(paymentLink){
-        cloudModule.typeDefs=`
-            extend type Query{
-                paymentLink: String
-            }
-        `
-        cloudModule.resolver={
-            Query:{
-                async paymentLink($1,$2,ctx){
-                    if(typeof(paymentLink)=="function"){
-                        return await paymentLink(ctx,$2)
-                    }
-                    
-                    if(typeof(paymentLink)=="string"){
-                        const token=ctx.app.resolver.User.token(ctx.user,{expiresIn:'10m'}, ctx)
-                        const client_reference_id=stripe.encodeClientReferenceId(token)
-                        return `${paymentLink}?prefill_email=${ctx.user.email||prefill_email}&client_reference_id=${client_reference_id}`
-                    }
-                }
+        },
+        events:{
+            purchase(){
+                console.debug("purchased")
+            },
+            ["purchase.verified"](){
+                console.debug("purchase.verified set user.balance")
             }
         }
     }
@@ -113,34 +97,30 @@ function removeNullKeys(obj) {
     return obj
 }
 
-async function defaultExtractPurchase({event, req, transactionFee, transactionRate}){
-    event=removeNullKeys(event)
+async function defaultExtractPurchase({event, req, secretKey}){
     const {type,  data:{object:{
         client_reference_id,
         id,//xxxx
         object,//"checkout.session"
+        payment_intent,//pi->ch->txn->fee 
         payment_link,//plink_1OBpbSHKHUCpvkuPEcgLUGx9
         payment_status, //paid
         status,// "complete"
         created, 
-
         customer_details:{email, phone},
-        currency,//usd, cad
-        amount_total,//1$=100, 10$=1000
-        currency_conversion:{source_currency="usd",fx_rate="1.0"}={},
-        paid=Math.ceil((amount_total)/parseFloat(fx_rate)*1000),
-        validPaid=Math.ceil((amount_total-100*transactionFee)*(100-transactionRate)/100/parseFloat(fx_rate)*1000)
     }}}=event
+    const v1=`https://api.stripe.com/v1/payment_intents/${payment_intent}?expand[]=latest_charge.balance_transaction`
+    const {latest_charge:{balance_transaction:{net, amount}}}=await (await fetch(v1,{headers:{Authorization:`Bearer ${secretKey}`}})).json()
 
     const purchase={
         _id:`stripe_${id}`,
         provider:'stripe',
         sku: payment_link, 
-        paid,validPaid,
+        paid:amount*1000,
+        validPaid:net*1000,
         expires_date_ms: (created+10*365*24*60*60)*1000,//10 years
         purchase_date_ms: created*1000,
         original_purchase_date_ms: created*1000,
-        _event: removeNullKeys(event),
     }
 
     const token=client_reference_id ? stripe.decodeClientReferenceId(client_reference_id) : null

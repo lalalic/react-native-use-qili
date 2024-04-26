@@ -5,7 +5,7 @@ module.exports={
     name:"payment",
     typeDefs:`
         type Product implements Node{
-            id: String!
+            id: ID!
             type: String!
             sku: String!
             group: String
@@ -18,10 +18,12 @@ module.exports={
             subscriptionDuration: String
             subscriptionIntroPhases: [JSON]
             status: String
+            createdAt: Date
+            updatedAt: Date
         }
 
         type Purchase implements Node{
-            id: String!
+            id: ID!
             sku: String!
             expires_date_ms: Int
             purchase_date_ms: Int
@@ -29,15 +31,19 @@ module.exports={
             upgradeFrom: String
             subscription_group_identifier: String
             original_transaction_id: String
+            createdAt: Date
+            updatedAt: Date
         }
 
         type Transaction implements Node{
-            id: String!
+            id: ID!
             product: String!
             cost: Int!
             amount: Int
             author: String
             type: Int
+            createdAt: Date
+            updatedAt: Date
         }
 
         extend type User{
@@ -55,7 +61,8 @@ module.exports={
 
     indexes:{
         Product:[{sku:1}, {status:1}],
-        Purchase:[{author:1, expires_date_ms:1}]
+        Purchase:[{author:1, expires_date_ms:1}],
+        Transaction: [{createdAt: -1, author:1}, {product:1}]
     },
 
     resolver:{
@@ -68,7 +75,7 @@ module.exports={
                 return await app.findEntity("Product", {status:{$ne:"active"}})
             },
             async transactions(_,{},{app,user}){
-                return await app.findEntity("Transaction", {author:user._id})
+                return await app.findEntity("Transaction", {author:user._id},{}, cursor=>cursor.sort({createdAt:-1}))
             },
             async balance(_,{},{app,user}){
                 const userInfo=await app.get1Entity("User",{_id:user._id},{balance:1})

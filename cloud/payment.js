@@ -4,7 +4,7 @@
 module.exports={
     name:"payment",
     typeDefs:`
-        type Product{
+        type Product implements Node{
             id: String!
             type: String!
             sku: String!
@@ -20,7 +20,7 @@ module.exports={
             status: String
         }
 
-        type Purchase{
+        type Purchase implements Node{
             id: String!
             sku: String!
             expires_date_ms: Int
@@ -31,7 +31,7 @@ module.exports={
             original_transaction_id: String
         }
 
-        type Transaction{
+        type Transaction implements Node{
             id: String!
             product: String!
             cost: Int!

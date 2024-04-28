@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.1.25",
+  "version": "1.1.26",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
@@ -58,7 +58,8 @@
     "expo-document-picker": "~10.3.0",
     "@react-native-voice/voice": "^3.2.4",
     "async-mutex": "^0.5.0",
-    "expo-av": "~12.0.4"
+    "expo-av": "~12.0.4",
+    "expect.js": "^0.3.1"
   },
   "bin": {
     "qili-export-updates": "./scripts/export-updates.js",

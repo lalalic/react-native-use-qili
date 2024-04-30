@@ -7,7 +7,7 @@ import Loading from './Loading';
 import FlyMessage from "./FlyMessage";
 
 
-export default ({ AutoHideDuration = 3000, requireLogin, 
+export default ({ AutoHideDuration = 3000, requireLogin, loading, 
     onPress: $onPress, onLongPress: $onLongPress, 
     emphasizer=(<View pointerEvent="none" style={{position:"absolute",bottom:0,right:0,width:5,height:5,backgroundColor:"red", borderRadius:5}}/>),
     onPressIn, onPressOut, children, 
@@ -34,7 +34,7 @@ export default ({ AutoHideDuration = 3000, requireLogin,
                 </AText>
             )}
             {!!$onLongPress && emphasizer}
-            {running && <Loading style={{ position: "absolute" }} />}
+            {(running || loading) && <Loading style={{ position: "absolute" }} />}
         </Pressable>
     );
 };

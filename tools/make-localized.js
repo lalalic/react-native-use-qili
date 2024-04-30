@@ -44,6 +44,7 @@ const default_zh={
     "Topup":"充值",
     "Restore":"恢复",
     "Amount":"数量",
+    "Balance":"余额",
     "Buy successfully!":"购买成功！",
     "You have an active subscription":"会员已开通",
     "Auto-renewal disabled":"自动更新已失效",

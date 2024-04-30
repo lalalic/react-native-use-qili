@@ -4,7 +4,7 @@ import { Qili } from "react-native-use-qili/store";
 import * as IAP from 'react-native-iap';
 const l10n=globalThis.l10n
 
-export default function PaymentLink({ sku = "2.10K" }) {
+export default function PaymentLink({ sku = "2.10K", badgeStyle, topupStyle  }) {
     const [balance, setBalance]=React.useState(0)
     const [amount, setAmount] = React.useState(1);
     const [product, setProduct] = React.useState({});
@@ -43,10 +43,10 @@ export default function PaymentLink({ sku = "2.10K" }) {
     return (
         <View style={{ display: "flex", height: "100%", flexDirection: "column", backgroundColor: "black" }}>
             <View style={{ height: 100, flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-                <Text>{l10n.Balance}:</Text>
+                <Text style={{paddingBottom:5}}>{l10n.Balance}</Text>
                 <Text>{balance}</Text>
             </View>
-            <View style={{ backgroundColor: "darkcyan", alignItems: "center", padding: 20, margin: 20 }}>
+            <View style={[badgeStyle, { backgroundColor: "darkcyan", alignItems: "center", padding: 20, margin: 20 }]}>
                 <View style={{ paddingBottom: 10, height: 50 }}><Text style={{ fontSize: 20, }}>{product.localizedPrice}</Text></View>
                 <View style={{ paddingBottom: 10, height: 50 }}><Text style={{ fontSize: 18, }}>{product.title}</Text></View>
                 <View style={{}}><Text style={{ fontSize: 16, }}>{product.description}</Text></View>
@@ -64,7 +64,7 @@ export default function PaymentLink({ sku = "2.10K" }) {
                     <Button color="gray" onPress={() => restore()} title={l10n.Restore} />
                 </View>
 
-                <View style={{ backgroundColor: "darkcyan", width: "100%", height: 50, marginBottom: 30, alignItems: "center", justifyContent: "center" }}>
+                <View style={[topupStyle,{ backgroundColor: "darkcyan", width: "100%", height: 50, marginBottom: 30, alignItems: "center", justifyContent: "center" }]}>
                     <Button color="white" onPress={() => buy(product.productId, amount)} title={l10n.Topup} />
                 </View>
 

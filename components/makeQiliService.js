@@ -67,6 +67,10 @@ export default function makeQiliService(getSession) {
 
 			return data?.file_create?.url;
 		},
+		async getUser(){
+			const data=await this.fetch({query:`query{me{id}}`})
+			return data.me
+		},
 		subscribe(request, callback, headers=globalHeaders) {
 			headers=headers||{...getSession(),}
 			const url = this.service.replace(/^http/, "ws").replace(/graphql$/,"websocket");

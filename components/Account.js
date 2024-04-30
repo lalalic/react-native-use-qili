@@ -86,9 +86,9 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
 
         {title:"Information", data:[
             ...information,
-            {name:"Privacy Policy", icon:"privacy-tip", onPress:e=>Linking.openURL(Constants.expoConfig.urlPrivacy)},
-            {name:"License Agreement", icon:"privacy-tip", onPress:e=>Linking.openURL(Constants.expoConfig.urlTerms)},
-            {name:"About", icon:"info-outline", onPress:e=>Linking.openURL(Constants.expoConfig.urlAbout)},
+            {name:"Privacy Policy", icon:"privacy-tip", onPress:e=>Linking.openURL(Constants.expoConfig.extra.urlPrivacy)},
+            {name:"License Agreement", icon:"privacy-tip", onPress:e=>Linking.openURL(Constants.expoConfig.extra.urlTerms)},
+            {name:"About", icon:"info-outline", onPress:e=>Linking.openURL(Constants.expoConfig.extra.urlAbout)},
             {
                 name:`${l10n['Version']}: ${Updates.runtimeVersion} ${Updates.createdAt ? ` - ${Updates.createdAt.asDateTimeString()}` : ''}`, 
                 icon:"bolt", 

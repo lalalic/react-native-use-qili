@@ -187,11 +187,11 @@ Login.Container=function({children, iconSource}){
             <View style={{paddingLeft:padding,paddingBottom:20}}>
                 <Text>
                     {l10n["By proceeding, you consent to"]}
-                    <TouchableOpacity onPress={e=>Linking.openURL(Constants.expoConfig.urlPrivacy)}>
+                    <TouchableOpacity onPress={e=>Linking.openURL(Constants.expoConfig.extra.urlPrivacy)}>
                         <Text style={linkStyle}>{l10n["Privacy Policy"]}</Text>
                     </TouchableOpacity>
                     { l10n["and"] }
-                    <TouchableOpacity onPress={e=>Linking.openURL(Constants.expoConfig.urlTerms)}>
+                    <TouchableOpacity onPress={e=>Linking.openURL(Constants.expoConfig.extra.urlTerms)}>
                         <Text style={linkStyle}>{l10n["License Agreement"]}</Text>
                     </TouchableOpacity>
                     .

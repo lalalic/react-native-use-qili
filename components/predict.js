@@ -39,8 +39,6 @@ export async function ask(message, chatflow, timeout=60*1000){
 }
 
 export async function uploadDocument(knowledgeId, urls){
-    const {me:user}=await Qili.fetch({query:"query{me{id}}"})
-    const [,userId]=user.id.split(":")
     const session=getSession()
     const result = await Qili.fetch({
         query: `mutation($metadata:JSON!){
@@ -48,7 +46,7 @@ export async function uploadDocument(knowledgeId, urls){
         }`,
         variables: {
             metadata: {
-                id:`${globalThis.QiliConf.apiKey}/${userId}/${knowledgeId}`,
+                id:knowledgeId,
                 urls,
             }
         }
@@ -66,7 +64,7 @@ export async function removeDocument(knowledgeId){
         }`,
         variables: {
             metadata: {
-                id: `${globalThis.QiliConf.apiKey}/${userId}/${knowledgeId}`
+                id: knowledgeId
             }
         }
     },{...session, "x-application-id":"ai"});

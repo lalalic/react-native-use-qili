@@ -67,8 +67,9 @@ export default function makeQiliService(getSession) {
 
 			return data?.file_create?.url;
 		},
-		async getUser(){
-			const data=await this.fetch({query:`query{me{id}}`})
+		async getUser(fields=[]){
+			const data=await this.fetch({query:`query{me{id\n${fields.join("\n")}}}`})
+			data.me.id=data.me.id.split(":").pop()
 			return data.me
 		},
 		subscribe(request, callback, headers=globalHeaders) {

@@ -4,13 +4,13 @@ import { Qili } from "react-native-use-qili/store";
 import * as IAP from 'react-native-iap';
 const l10n=globalThis.l10n
 
-export default function PaymentLink({ sku = "2.10K", badgeStyle, topupStyle  }) {
+export default function PaymentLink({ sku = "2.10K", badgeStyle, topupStyle, onError, onSuccess  }) {
     const [balance, setBalance]=React.useState(0)
     const [amount, setAmount] = React.useState(1);
     const [product, setProduct] = React.useState({});
+    const refreshBalance=React.useCallback(()=>Qili.fetch({query:`query{me{balance}}`}).then(data=>setBalance((data.me.balance))),[])
     React.useEffect(() => {
-        Qili.fetch({query:`query{me{balance}}`})
-            .then(data=>setBalance((data.me.balance)))
+        refreshBalance()        
 
         IAP.initConnection().then(async () => {
             IAP.purchaseUpdatedListener(async (purchase) => {
@@ -21,10 +21,12 @@ export default function PaymentLink({ sku = "2.10K", badgeStyle, topupStyle  }) 
                     variables: { receipt: purchase.transactionReceipt, transactionId: purchase.transactionId },
                 });
                 if (error) {
-                    this.emit("onError", error);
+                    onError?.(error)
                     return;
                 }
                 await IAP.finishTransaction({ purchase, isConsumable: true });
+                refreshBalance()
+                onSuccess?.(result)
             });
             if (sku) {
                 const [product] = await IAP.getProducts({ skus: [sku] });

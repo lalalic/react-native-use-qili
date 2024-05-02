@@ -4,6 +4,7 @@ import { Text, View, TextInput, FlatList, Pressable, Modal } from "react-native"
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate} from "react-router-native"
 import Select from "react-native-select-dropdown"
+import {Qili} from "../store"
 import { v4 } from "uuid";
 
 
@@ -49,9 +50,9 @@ export function Manage({labelStyle, selectFile}){
                         data={knowledges[current]} 
                         style={{borderTopWidth:1,borderBottomWidth:1, borderColor:"gray"}}
                         onClose={e=>toggleEditor(false)}
-                        onSubmit={knowledge=>{
+                        onSubmit={async knowledge=>{
                             if(!knowledge.id){
-                                knowledge.id=v4()
+                                knowledge.id=`${globalThis.QiliConf.apiKey}/${await Qili.getUser().id}/${v4()}`
                             }
                             dispatch({type:"my/knowledge/set", knowledge, index:current})
                             if(current==-1){

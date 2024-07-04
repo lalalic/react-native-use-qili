@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Button, TextInput } from "react-native";
+import { Button, View, Text, TextInput} from "./colored-native"
 import { Qili } from "react-native-use-qili/store";
 import * as IAP from 'react-native-iap';
 const l10n=globalThis.l10n
@@ -69,8 +69,6 @@ export default function PaymentLink({ sku = "2.10K", badgeStyle, topupStyle, onE
                 <View style={[topupStyle,{ backgroundColor: "darkcyan", width: "100%", height: 50, marginBottom: 30, alignItems: "center", justifyContent: "center" }]}>
                     <Button color="white" onPress={() => buy(product.productId, amount)} title={l10n.Topup} />
                 </View>
-
-
             </View>
         </View>
     );

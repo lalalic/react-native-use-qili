@@ -34,7 +34,7 @@ export function Manage({labelStyle, selectFile}){
                             >
                             <PressableIcon name="remove-circle-outline" color="gray" style={{ width: 40 }}
                                 onPress={e => dispatch({ type: "my/knowledge/remove", index, knowledge:item.id })} />
-                            <Text style={{ flexGrow: 1,  fontSize: 16 }}>{item.name}</Text>
+                            <Text style={{ flexGrow: 1,  fontSize: 16, overflow:"hidden" }}>{item.name}{`${item.summary ? ' : '+item.summary : ''}`}</Text>
                         </Pressable>
                     )
                 }}
@@ -52,7 +52,7 @@ export function Manage({labelStyle, selectFile}){
                         onClose={e=>toggleEditor(false)}
                         onSubmit={async knowledge=>{
                             if(!knowledge.id){
-                                knowledge.id=`${globalThis.QiliConf.apiKey}/${await Qili.getUser().id}/${v4()}`
+                                knowledge={id:`${globalThis.QiliConf.apiKey}/${(await Qili.getUser()).id}/${v4()}`, ...knowledge}
                             }
                             dispatch({type:"my/knowledge/set", knowledge, index:current})
                             if(current==-1){
@@ -131,6 +131,9 @@ function Editor({ data={name:"", items:[]}, style, onSubmit, onClose, selectFile
                 }}
                 keyExtractor={item => item.url}
                 extraData={knowledge.items.length} />
+            <View style={{maxHeight:50, overflow:"hidden", marginBottom:5}}>
+                <Text style={{color:"black"}}>{knowledge.summary}</Text>
+            </View>
             <View style={{flexDirection:"row", alignItems:"center", justifyContent:"space-around"}}>
                 <PressableIcon name="check"
                     onPress={async e=>{

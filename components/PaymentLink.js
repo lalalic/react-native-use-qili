@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, View, Text, TextInput} from "./colored-native"
+import {View, Text, TextInput} from "react-native"
+import { Button} from "./colored-native"
 import { Qili } from "react-native-use-qili/store";
 import * as IAP from 'react-native-iap';
 const l10n=globalThis.l10n

@@ -22,6 +22,7 @@ if(devicesFilePath){
 console.info(`converting all images in ${folderPath} to ${outputFolder}`);
 
 const iosDevices =  devicesFilePath ? require(devicesFilePath) : [
+	{ name: 'iPhone 6.7"', width: 1290, height: 2796},
 	{ name: 'iPhone 6.5"', width: 1284, height: 2778 },
 	{ name: 'iPhone 5.5"', width: 1242, height: 2208 },
 	{ name: 'iPad Pro 12.9" (6th Gen)', height: 2732, width: 2048 },

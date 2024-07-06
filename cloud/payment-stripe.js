@@ -3,7 +3,7 @@ function stripe({
     secretKey=process.env["stripe.secretKey"],  
     onPurchase=defaultOnPurchase, 
     extractPurchase=defaultExtractPurchase,
-    endpointSecret, paymentLink, prefill_email="",transactionFee=0.3, transactionRate=4.5,
+    endpointSecret, paymentLinkID, prefill_email="",transactionFee=0.3, transactionRate=4.5,
 }={}){
     Cloud.addModule(require("./payment"))
     const cloudModule= {
@@ -44,6 +44,10 @@ function stripe({
                     response.status(400).end(err.message)
                 }
             })
+            
+            service.on("/paymentLink", (req, res)=>{
+                res.reply(stripe.getPaymentLink(req, {paymentLinkID, prefill_email}))
+            })
         },
         events:{
             purchase(){
@@ -56,6 +60,12 @@ function stripe({
     }
 
     return cloudModule
+}
+
+stripe.getPaymentLink=function(req,{paymentLinkID, prefill_email}={}){
+    const {app,user}=req
+    const token1=stripe.encodeClientReferenceId(app.resolver.User.token(user,{expiresIn:"20m"},req))
+    return `https://buy.stripe.com/${paymentLinkID}?prefilled_email=${user.email||prefill_email}&client_reference_id=${token1}`
 }
 
 stripe.encodeClientReferenceId=function(token){

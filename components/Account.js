@@ -98,8 +98,6 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
         ]}
     ]
 
-
-    
     return (
         <View style={{flex: 1,padding:4, paddingTop:20}}>
             <SectionList 
@@ -111,7 +109,12 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
                 )}
                 renderItem={({index:i,item:{name,icon, href=`/account/${name}`, onPress, children}})=>{
                     const content=(
-                        <View style={{flexDirection:"row",width:"100%",height:50, paddingTop:5,paddingBottom:5, borderBottomWidth:1,borderColor:"gray"}}>
+                        <View style={{
+                                flexDirection:"row",width:"100%",height:50, 
+                                paddingTop:5,paddingBottom:5, borderBottomWidth:1,
+                                borderColor:"gray",
+                                alignItems:"center"
+                            }}>
                             <MaterialIcons style={{paddingTop:5}} name={icon} size={30} />
                             <Text style={textStyle}>{l10n[name]}</Text>
                             {children || href!==false && <MaterialIcons style={{paddingTop:8}} name="keyboard-arrow-right"   />}
@@ -119,30 +122,10 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
                     )
                     return onPress ? 
                         (<Pressable {...{children:content, onPress}}/>)
-                        :(!!!children ? <Link to={href} children={content}/> : content)
+                        :(!!href ? <Link to={href} children={content}/> : content)
                 }} 
                 sections={sections} /> 
                 {loading && <Loading style={{position:"absolute",width:"100%",height:"100%", flex:1}}/>}
         </View>
     )
 }
-
-
-// function ContainerArea(){
-//     const {containerArea={}}=useSelector(state=>state.my)
-//     const dispatch=useDispatch()
-//     const set=React.useCallback((di, value)=>{
-//         dispatch({type:"my/set", payload:{containerArea:{...containerArea,[di]:value}}})
-//     },[])
-//     return (
-//         <View style={{flexDirection:"column", alignItems:"center"}}>
-//             <Input type="number" value={containerArea.top||0} step={1} onChangeValue={value=>set('top', value)}/>
-//             <View style={{flexDirection:"row"}}>
-//                 <Input type="number" step={1} value={containerArea.left||0} onChangeValue={value=>set('left', value)}/>
-//                 <View style={{flexGrow:1}}/>
-//                 <Input type="number" step={1} value={containerArea.right||0} onChangeValue={value=>set('right', value)}/>
-//             </View>
-//             <Input type="number" step={1} value={containerArea.bottom||0} onChangeValue={value=>set('bottom', value)}/>
-//         </View>
-//     )
-// }

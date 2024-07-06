@@ -49,7 +49,7 @@ function Stripe(){
         if(!stripe)
             return 
         stripe.service
-            .on('stripeBro.ready',()=>{
+            .on('ready',()=>{
                 stripe.service.clean()
                 stripe.service.show()
             })

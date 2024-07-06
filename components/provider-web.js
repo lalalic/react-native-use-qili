@@ -113,7 +113,8 @@ export default function WebviewServiceProvider({
             hide(){
                 setShow(false)
             },
-            userAgent
+            userAgent,
+            name: broName
         };
 
         events.on("fnCall", ({ id, result }) => {
@@ -215,6 +216,7 @@ export default function WebviewServiceProvider({
             .on("loginUI", data=>{
                 proxy.status("loginUI")
             })
+            .on(`${broName}.ready`,()=>proxy.fire("ready"))
         return [proxy, injectBro];
     }, []);
 

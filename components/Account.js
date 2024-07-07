@@ -75,7 +75,7 @@ export default function Account({settings=[], information=[], onDeleteAccount}){
             signedIn && {
                 name:"Sign Out", href:false, icon:"account-circle", onPress:e=>dispatch({type:"my",payload:{admin:{}}}),
                 children: (
-                    <Pressable onPress={deleteAccount} style={{flexDirection:"row", alignItems:"center",paddingRight:30}}>
+                    <Pressable onPress={deleteAccount} style={{flexDirection:"row", alignItems:"center",width:"40%"}}>
                         <MaterialIcons style={{paddingTop:5}} name="delete-forever" size={30} />
                         <Text style={[{color:"gray"},textStyle]}>{l10n["Delete Account"]}</Text>
                     </Pressable>

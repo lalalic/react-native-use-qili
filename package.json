@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.1.35",
+  "version": "1.1.36",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
@@ -15,9 +15,9 @@
   },
   "scripts": {
     "prepublish": "node scripts/chrome-extension-to-service.js",
-    "wechat-bot": "sudo yarn --cwd ../wechat-bot && sudo yarn --cwd ../wechat-bot/cloud",
-    "parrot": "sudo yarn --cwd ../parrot && sudo yarn --cwd ../parrot/cloud",
-    "ai": "sudo yarn --cwd ../qili-ai && sudo yarn --cwd ../qili-ai/www",
+    "wechat-bot": "sudo yarn add react-native-use-qili --cwd ../wechat-bot && sudo yarn  add react-native-use-qili  --cwd ../wechat-bot/cloud",
+    "parrot": "sudo yarn  add react-native-use-qili --cwd ../parrot && sudo yarn add react-native-use-qili  --cwd ../parrot/cloud",
+    "ai": "sudo yarn  add react-native-use-qili --cwd ../qili-ai && sudo yarn  add react-native-use-qili --cwd ../qili-ai/www",
     "bridge": "sudo yarn add react-native-use-qili --cwd ../qili-web-bridge && yarn add react-native-use-qili --cwd ../qili-web-bridge/www",
     "upgrade-all": "yarn wechat-bot && yarn parrot && yarn ai",
     "test": ""

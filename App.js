@@ -72,7 +72,7 @@ class CrashReport extends React.Component{
     componentDidCatch(error, info){
         this.props.onCrash?.({error})
         const {componentStack, isComponentError, message, stack}=error
-        reportCrash({message, stack, componentStack, isComponentError})
+        reportCrash({message, stack, componentStack, isComponentError, source:"component"})
     }
 
     render(){
@@ -83,15 +83,16 @@ class CrashReport extends React.Component{
 
 setJSExceptionHandler(function(error, isFatal){
     reportCrash({
-        message:error.message,
-        stack: error.stack,
-        isFatal
+        ...error,
+        isFatal, 
+        source:"js exception"
     })
 })
 
 setNativeExceptionHandler(function(errorMessage){
     reportCrash({
-        message:errorMessage
+        message:errorMessage,
+        source: "native exception"
     })
 })
 

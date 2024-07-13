@@ -16,7 +16,7 @@ cwd = process.cwd();
 folderPath = path.resolve(cwd, folderPath);
 outputFolder = path.resolve(cwd, outputFolder);
 if(devicesFilePath){
-	devicesFilePath=path.resolve(cwd, outputFolder);
+	devicesFilePath=path.resolve(cwd, devicesFilePath);
 }
 
 console.info(`converting all images in ${folderPath} to ${outputFolder}`);

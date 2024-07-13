@@ -56,3 +56,7 @@ Break Changes
 
 > 1.1.0
 >> remove all chat provider, chatgpt, bing, and etc. 
+
+todo
+===
+* login code as password in UI

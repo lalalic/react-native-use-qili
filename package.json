@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.1.37",
+  "version": "1.1.38",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
@@ -39,8 +39,13 @@
     "prompts": "^2.4.2"
   },
   "optionalDependencies": {
+    "@react-native-voice/voice": "^3.2.4",
     "@reduxjs/toolkit": "^1.8.6",
-    "expo-file-system": "^15.2.2",
+    "async-mutex": "^0.5.0",
+    "expect.js": "^0.3.1",
+    "expo-av": "~12.0.4",
+    "expo-document-picker": "~10.3.0",
+    "expo-file-system": "~14.1.0",
     "expo-splash-screen": "~0.16.2",
     "expo-status-bar": "~1.4.0",
     "expo-updates": "~0.14.7",
@@ -55,12 +60,7 @@
     "redux": "^4.2.0",
     "redux-persist": "^6.0.0",
     "redux-persist-expo-filesystem": "^2.0.0",
-    "subscriptions-transport-ws": "^0.11.0",
-    "expo-document-picker": "~10.3.0",
-    "@react-native-voice/voice": "^3.2.4",
-    "async-mutex": "^0.5.0",
-    "expo-av": "~12.0.4",
-    "expect.js": "^0.3.1"
+    "subscriptions-transport-ws": "^0.11.0"
   },
   "bin": {
     "qili-export-updates": "./scripts/export-updates.js",

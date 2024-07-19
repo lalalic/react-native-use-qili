@@ -245,6 +245,7 @@ export default function WebviewServiceProvider({
                     injectedJavaScriptBeforeContentLoaded={injectBro}
                     onMessage={onMessage}
                     onLoad={onLoad}
+                    onError={e=>{service.fire("error", e)}}
                     onNavigationStateChange={onNavigationStateChange}
                     {...props} />
                 <PressableIcon name="close" size={32}

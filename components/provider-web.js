@@ -117,6 +117,12 @@ export default function WebviewServiceProvider({
             name: broName
         };
 
+        const proxy = new Proxy(extendFx, {
+            get(o, fnKey) {
+                return o[fnKey] || events[fnKey] || fx(fnKey);
+            }
+        });
+
         events.on("fnCall", ({ id, result }) => {
             try {
                 const p = resultPs[id];
@@ -124,12 +130,6 @@ export default function WebviewServiceProvider({
                 p.resolve(result);
             } catch (e) {
                 console.error(e);
-            }
-        });
-
-        const proxy = new Proxy(extendFx, {
-            get(o, fnKey) {
-                return o[fnKey] || events[fnKey] || fx(fnKey);
             }
         });
 
@@ -205,7 +205,6 @@ export default function WebviewServiceProvider({
         `;
         
         onServiceReady?.(proxy)
-        globalThis[broName]=proxy
         proxy
             .on("login", data=>{
                 proxy.status("loginInited")

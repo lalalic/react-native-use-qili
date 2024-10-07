@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.1.41",
+  "version": "1.1.42",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
@@ -66,6 +66,7 @@
     "qili-export-updates": "./scripts/export-updates.js",
     "qili-get-session-token": "./scripts/get-session-token.js",
     "qili-get-access-token": "./scripts/get-access-token.js",
-    "qili-screenshots": "./scripts/screenshots.js"
+    "qili-screenshots": "./scripts/screenshots.js",
+    "qili-upload":"./scripts/upload-qiniu.js"
   }
 }

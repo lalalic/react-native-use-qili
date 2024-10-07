@@ -59,6 +59,8 @@ export default function App({ContainerView=SafeAreaView, containerStyle,  childr
     )
 }
 
+let lastCrash=null
+
 class CrashReport extends React.Component{
     constructor(){
         super(...arguments)
@@ -70,9 +72,14 @@ class CrashReport extends React.Component{
     }
     
     componentDidCatch(error, info){
-        this.props.onCrash?.({error})
-        const {componentStack, isComponentError, message, stack}=error
-        reportCrash({message, stack, componentStack, isComponentError, source:"component"})
+        const shouldReport=this.props.onCrash?.({error}) ?? true
+        if(shouldReport){
+            const {componentStack, isComponentError, message, stack}=error
+            if(lastCrash!=message){
+                lastCrash=message
+                reportCrash({message, stack, componentStack, isComponentError, source:"component"})
+            }   
+        }
     }
 
     render(){

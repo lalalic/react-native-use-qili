@@ -50,7 +50,7 @@ module.exports={
             activeProducts: [String]
             productsForSale: [Product]
             transactions: [Transaction]
-            balance: Int
+            balance: Float
         }
 
         extend type Mutation{

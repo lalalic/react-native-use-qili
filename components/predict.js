@@ -1,4 +1,5 @@
 import { Qili, getSession} from "../store"
+import client from "socket.io-client"
  
 export async function ask(message, chatflow, timeout=60*1000){
     if(typeof(message)=="string"){
@@ -11,6 +12,11 @@ export async function ask(message, chatflow, timeout=60*1000){
 
     if(!chatflow){
         chatflow=globalThis.QiliConf.chatflow
+    }
+
+    if(message.runMonitorSocketListener){
+        message.runMonitorSocket=await makeRunMoinitorSocket(message.runMonitorSocketListener)
+        delete message.runMonitorSocketListener
     }
 
     const control=new AbortController()
@@ -69,4 +75,36 @@ export async function removeDocument(knowledgeId){
         }
     },{...session, "x-application-id":"ai"});
     return result?.removeDocument
+}
+
+async function makeRunMoinitorSocket(listener){
+    const {api, apiServer=api.substring(0, api.indexOf("/",api.indexOf("//")+2))}=globalThis.QiliConf
+
+    return new Promise(resolve=>{
+        const socket=client(apiServer, {
+            path:"/1/websocket/socket.io", 
+            query:{
+                ...getSession()
+            }
+        })
+
+        function done(){
+            socket.disconnect()
+            listener.emit("done")
+        }
+
+        socket.on('done',done)
+
+        socket.on('connect_error', done)
+
+        socket.on('connect', () => {
+            resolve(socket.id)
+        })
+
+        ["apiMessage", "userMessage", "conversation/summary/update", "VectorStore/addVectors", "VectorStore/similaritySearchVectorWithScore", "feedback", "echo"].forEach(event=>{
+            socket.on(event, function(){
+                listener.emit(event, ...arguments)
+            })
+        })
+    })
 }

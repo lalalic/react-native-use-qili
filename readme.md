@@ -23,7 +23,14 @@ api
 * store: redux store
     * Qili
 * components
-    * useAsk
+    * predict
+        * ask(message:{question, history, overrideConfig:{variables, ...}, events:[...], runMonitorSocketListener})
+        * runMonitorSocketListener events
+            * "apiMessage", "userMessage", 
+            * "conversation/summary/update", 
+            * "VectorStore/addVectors", 
+            * "VectorStore/similaritySearchVectorWithScore", 
+            * "feedback", "echo"
     * Loading
     * Login
     * ChatProvider

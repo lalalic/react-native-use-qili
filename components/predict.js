@@ -78,13 +78,14 @@ export async function removeDocument(knowledgeId){
 }
 
 async function makeRunMoinitorSocket(listener){
-    const {api, apiServer=api.substring(0, api.indexOf("/",api.indexOf("//")+2))}=globalThis.QiliConf
-
+    const {apiKey, api, apiServer=api.substring(0, api.indexOf("/",api.indexOf("//")+2))}=globalThis.QiliConf
+    listener=listener.emit && listener || new MonitorSocketListener(listener)
     return new Promise(resolve=>{
         const socket=client(apiServer, {
             path:"/1/websocket/socket.io", 
             query:{
-                ...getSession()
+                ...getSession(),
+                "x-application-id": apiKey
             }
         })
 
@@ -99,12 +100,62 @@ async function makeRunMoinitorSocket(listener){
 
         socket.on('connect', () => {
             resolve(socket.id)
-        })
+        });
 
-        ["apiMessage", "userMessage", "conversation/summary/update", "VectorStore/addVectors", "VectorStore/similaritySearchVectorWithScore", "feedback", "echo"].forEach(event=>{
+        ["apiMessage", "userMessage", "conversation/summary/update", 
+            "VectorStore/addVectors", "VectorStore/similaritySearchVectorWithScore", 
+            "feedback", "echo"].forEach(event=>{
             socket.on(event, function(){
                 listener.emit(event, ...arguments)
             })
         })
     })
+}
+
+export class MonitorSocketListener {
+    constructor(listener){
+        Object.assign(this, listener)
+    }
+
+    emit(event, ...args) {
+        event=event.replace(/\//g, "_")
+        this[event]?.(...args)
+    }
+
+    monitor(data) {
+        //store.dispatch({ type: "monitor/run", data });
+    }
+
+    cost(data) {
+        //store.dispatch({ type: "monitor/cost", data });
+    }
+
+    apiMessage(content) {
+        //chatmessageApi.createNewChatmessage(chatflowId, { type: 'apiMessage', ...content });
+    }
+
+    userMessage(content) {
+        //chatmessageApi.createNewChatmessage(chatflowId, { type: 'userMessage', ...content });
+    }
+
+    VectorStore_addVectors({ indexName, vectors }) {
+        //VectorStores[indexName].addVectors(vectors);
+    }
+
+    async VectorStore_similaritySearchVectorWithScore({ indexName, args: { query, k } }, callback) {
+        // const result = await VectorStores[indexName].similaritySearchVectorWithScore(query, k);
+        // callback(result);
+    }
+
+    async feedback(message, callback) {
+        callback("Y");
+    }
+
+    async echo(data, callback) {
+        callback(data);
+    }
+
+    async conversation_summary_update(summary) {
+        //store.dispatch({ type: "chatmessage/summary", id: chatflowId, ...summary });
+    }
 }

@@ -33,7 +33,7 @@ module.exports={
     updateMemoryFromMessageInHistory(message, history) {
         const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+kind="(?<kind>[^"]+)">(?<content>[\s\S]*?)<\/memory>/g;
     
-        message.message.replace(memoryRegex, (_, key, kind, content) => {
+        return message.message.replace(memoryRegex, (_, key, kind, content) => {
             const current={ type: "system", id: key, message: {content, kind} }
             const i = history.findIndex(a => a.type == "system" && a.id == key);
             if (i != -1) {

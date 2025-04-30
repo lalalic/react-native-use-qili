@@ -28,5 +28,20 @@ module.exports={
 
         history.splice(currentSummaryIndex, 0, { id: Date.now(), type: "historySummaryMessage", message: summary })
         return history
+    },
+
+    updateMemoryFromMessageInHistory(message, history) {
+        const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+kind="(?<kind>[^"]+)">(?<content>[\s\S]*?)<\/memory>/g;
+    
+        message.message.replace(memoryRegex, (_, key, kind, content) => {
+            const current={ type: "system", id: key, message: {content, kind} }
+            const i = history.findIndex(a => a.type == "system" && a.id == key);
+            if (i != -1) {
+                history.splice(i, 1, current);
+            }else{
+                history.push(current);
+            }
+            return "";
+        });
     }
 }

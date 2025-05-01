@@ -2,7 +2,7 @@
 // main for multiple-modal
 // Entry point
 start
-  = (audio / htmlAudio / image / htmlImage / video / htmlVideo / text)+
+  = (audio / link / htmlLink / htmlAudio / image / htmlImage / video / htmlVideo / text)+
 
 /* audio Definition */
 
@@ -17,6 +17,19 @@ htmlAudio
   = "<audio" _ "src" "=" "\"" url:[^\"]+ "\"" _ "alt" "=" "\"" altText:[^\"]+ "\"" _ "/>" {
       return { type: "audio_url", audio_url:{title: altText.join(""), url: url.join("") }};
     }
+
+//link
+link
+  = "[" altText:[^\]]* "](" url:[^)]* ")" {
+      return { type: "link", url: {title: altText.join(""), url: url.join("") }};
+    }
+
+//html link <a href=""></a>
+htmlLink
+  = "<a" _ "href" "=" "\"" url:[^\"]+ "\"" _ ">" altText:[^<]* "</a>" {
+      return { type: "link", url:{title: altText.join(""), url: url.join("") }};
+    }
+
 
 /* Image Definitions */
 

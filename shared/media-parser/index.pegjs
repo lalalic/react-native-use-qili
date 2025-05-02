@@ -2,7 +2,12 @@
 // main for multiple-modal
 // Entry point
 start
-  = (audio / link / htmlLink / htmlAudio / image / htmlImage / video / htmlVideo / text)+
+  = (audio / link / htmlLink / htmlAudio / image / htmlImage / video / htmlVideo / url / text)+
+
+htmlAttribute
+  = _ name:("src"i / "alt"i / "href"i) _ "=" _ "\"" value:[^\"]+ "\"" {
+      return { key:name.toLowerCase(), value: value.join("") };
+    }
 
 /* audio Definition */
 
@@ -14,8 +19,11 @@ audio
 
 // HTML <audio src="...">
 htmlAudio
-  = "<audio" _ "src" "=" "\"" url:[^\"]+ "\"" _ "alt" "=" "\"" altText:[^\"]+ "\"" _ "/>" {
-      return { type: "audio_url", audio_url:{title: altText.join(""), url: url.join("") }};
+  = "<audio" atts:htmlAttribute+ _ "/>" {
+      return { type: "audio_url", audio_url:{
+          title: atts.find(a=>a.key=="alt")?.value, 
+          url:  atts.find(a=>a.key=="src").value
+        }};
     }
 
 //link
@@ -41,16 +49,19 @@ image
 
 // HTML <img src="...">
 htmlImage
-  = "<img" _ "src" "=" "\"" url:[^\"]+ "\"" _ "alt" "=" "\"" altText:[^\"]+ "\"" _ "/>" {
-      return { type: "image_url", image_url:{title: altText.join(""), url: url.join("") }};
+  = "<img" atts:htmlAttribute+ _ "/>" {
+      return { type: "image_url", image_url:{
+        title: atts.find(a=>a.key=="alt")?.value, 
+        url: atts.find(a=>a.key=="src")?.value
+      }};
     }
 
 /* Video Definitions */
 
 // HTML <video src="...">
 video
-  = "<video" _ "src" "=" "\"" url:[^\"]+ "\"" _ "/>" {
-      return { type: "video", video: url.join("") };
+  = "<video" atts:htmlAttribute+ _ "/>" {
+      return { type: "video", video: atts.find(a=>a.key=="src")?.value };
     }
 
 // HTML <video><source></video>, supporting multiple <source> tags
@@ -65,12 +76,23 @@ sourceTag
       return url.join("")
     }
 
+url
+  = url:("http"i "s"i? "://" [^ \t\n\r]+) {
+      return { type: "url", url: url.flat().join("") };
+    }
+
 /* Text Definition */
 
 // Plain text (anything that is not a special tag like <img>, <video>, or ![...])
 text
-  = text:[^!<]+ {
-      return { type: "text", text: text.join("").trim() };
+  = text:(
+    [^\[<!h] /
+    "h"i !("ttp"i "s"i? "://"i) /
+    "[" !([^\]]* "](") /
+    "!" !("[" [^\]]* "](") /
+    "<" !(("img"i / "video"i / "audio"i / "a"i) _)
+    )+ {
+      return { type: "text", text: text.flat().join("") };
     }
 
 /* Whitespace and Ignored Characters */

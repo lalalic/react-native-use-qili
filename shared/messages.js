@@ -30,7 +30,7 @@ module.exports={
         return history
     },
 
-    updateMemoryFromMessageInHistory(message, history) {
+    updateMemoryFromMessageInHistory(message, history, replaceFx=m=>"") {
         const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+kind="(?<kind>[^"]+)">(?<content>[\s\S]*?)<\/memory>/g;
     
         return message.message.replace(memoryRegex, (_, key, kind, content) => {
@@ -41,7 +41,7 @@ module.exports={
             }else{
                 history.push(current);
             }
-            return "";
+            return replaceFx({key, kind, content});
         });
     }
 }

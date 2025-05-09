@@ -1,6 +1,6 @@
 module.exports={
     updateHistoryMessageSummaryInHistory(history, {summary, removed}) {
-        let currentSummaryIndex = history.findLastIndex(a => a.type == "historySummaryMessage")
+        let currentSummaryIndex = history.findLastIndex(a => a.id == "historySummaryMessage")
         if (currentSummaryIndex != -1) {
             history.splice(currentSummaryIndex, 1) // only 1 summary
         } else {
@@ -26,7 +26,7 @@ module.exports={
             }
         }
 
-        history.splice(currentSummaryIndex, 0, { id: Date.now(), type: "historySummaryMessage", message: summary })
+        history.splice(currentSummaryIndex, 0, { id: "historySummaryMessage", type:"system", message: {content: summary, kind:"historySummaryMessage"} })
         return history
     },
 

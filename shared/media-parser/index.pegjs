@@ -2,7 +2,7 @@
 // main for multiple-modal
 // Entry point
 start
-  = (audio / link / htmlLink / htmlAudio / image / htmlImage / video / htmlVideo / url / text)+
+  = (audio / link / htmlLink / htmlAudio / image / htmlImage / video / htmlVideo / url / codeBlock / text)+
 
 htmlAttribute
   = _ name:("src"i / "alt"i / "href"i) _ "=" _ "\"" value:[^\"]+ "\"" {
@@ -81,16 +81,43 @@ url
       return { type: "url", url: url.flat().join("") };
     }
 
+codeBlock
+  = "```" lang:LangName? [ \t]* newline
+    code:CodeContent
+    "```" newline?
+    {
+      return {
+        type: "code",
+        lang: lang !== null ? lang : "plain",
+        code: code
+      };
+    }
+
+LangName
+  = chars:[a-zA-Z0-9_]+ { return chars.join(""); }
+
+CodeContent
+  = lines:((!EndBacktick .)+ newline?)* {
+      return lines.map(l => l.join("")).join("\n").split(",").join("");
+    }
+
+EndBacktick
+  = "```"
+
+newline
+  = "\r\n" / "\n" / "\r"
+
 /* Text Definition */
 
 // Plain text (anything that is not a special tag like <img>, <video>, or ![...])
 text
   = text:(
-    [^\[<!h] /
+    [^\[<!h`] /
     "h"i !("ttp"i "s"i? "://"i) /
     "[" !([^\]]* "](") /
     "!" !("[" [^\]]* "](") /
-    "<" !(("img"i / "video"i / "audio"i / "a"i) _)
+    "<" !(("img"i / "video"i / "audio"i / "a"i) _) /
+    "`" !("``" [^`]* "```")
     )+ {
       return { type: "text", text: text.flat().join("") };
     }

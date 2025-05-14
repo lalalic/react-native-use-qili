@@ -61,13 +61,13 @@ htmlImage
 // HTML <video src="...">
 video
   = "<video" atts:htmlAttribute+ _ "/>" {
-      return { type: "video", video: atts.find(a=>a.key=="src")?.value };
+      return { type: "video_url", video_url: {url:atts.find(a=>a.key=="src")?.value }};
     }
 
 // HTML <video><source></video>, supporting multiple <source> tags
 htmlVideo
   = "<video" _ ">" _ sources:(sourceTag _)* _ "</video>" {
-      return { type: "video", video: sources.map(a=>a[0]) };
+      return { type: "video_url", video_url: {url:sources.map(a=>a[0])[0] }};
     }
 
 // <source src="..."> tag inside <video>

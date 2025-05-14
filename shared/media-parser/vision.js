@@ -182,14 +182,14 @@ function peg$parse(input, options) {
       peg$c29 = "<video",
       peg$c30 = peg$literalExpectation("<video", false),
       peg$c31 = function(atts) {
-            return { type: "video", video: atts.find(a=>a.key=="src")?.value };
+            return { type: "video_url", video_url: {url:atts.find(a=>a.key=="src")?.value }};
           },
       peg$c32 = ">",
       peg$c33 = peg$literalExpectation(">", false),
       peg$c34 = "</video>",
       peg$c35 = peg$literalExpectation("</video>", false),
       peg$c36 = function(sources) {
-            return { type: "video", video: sources.map(a=>a[0]) };
+            return { type: "video_url", video_url: {url:sources.map(a=>a[0])[0] }};
           },
       peg$c37 = "<source",
       peg$c38 = peg$literalExpectation("<source", false),

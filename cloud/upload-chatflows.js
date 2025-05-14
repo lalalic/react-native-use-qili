@@ -1,5 +1,5 @@
 module.exports=(token,from)=>({
-    name:"upload built-in chatflows",
+    name:"upload chatflows",
     async init(qili){
         if(typeof(token)=="function"){
             token=token(qili)
@@ -31,7 +31,7 @@ module.exports=(token,from)=>({
         }
         const failed=[], success=[]
         for (const chatflow of chatflows) {
-            const {error}=await fetch("https://ai.qili2.com/graphql",{
+            const res=await fetch("https://ai.qili2.com/graphql",{
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
@@ -40,14 +40,16 @@ module.exports=(token,from)=>({
                 },
                 body:JSON.stringify({
                     query:`mutation($chatflow:JSON!){
-                        error:upload_chatflow(chatflow: $chatfloat)
+                        error:upload_chatflow(chatflow: $chatflow)
                     }`,
-                    variables:chatflow,
+                    variables:{chatflow},
                 })
             })
+            
+            const {data:{error}}=await res.json()
 
             if(error){
-                failed.push(error)
+                failed.push(`${chatflow.name}: ${error}`)
             }else{
                 success.push(chatflow.name)
             }

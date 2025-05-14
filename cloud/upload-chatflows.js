@@ -1,4 +1,4 @@
-module.exports=token=>({
+module.exports=(token,from)=>({
     name:"upload built-in chatflows",
     async init(qili){
         if(typeof(token)=="function"){
@@ -24,7 +24,7 @@ module.exports=token=>({
             });
         }
 
-        const chatflows = loadChatflows(path.join(path.dirname(require.resolve(".")), 'chatflows'));
+        const chatflows = loadChatflows(from);
 
         if(chatflows.length==0){
             return 

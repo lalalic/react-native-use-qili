@@ -54,7 +54,7 @@ module.exports=(token,from)=>({
                 success.push(chatflow.name)
             }
         }
-        console.info(`built-int chatflows: [${chatflows.length}] found. **********`)
+        console.info(`built-in chatflows: [${chatflows.length}] found. **********`)
         if(success.length){
             console.debug(success)
         }

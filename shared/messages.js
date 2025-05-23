@@ -26,22 +26,21 @@ module.exports={
             }
         }
 
-        history.splice(currentSummaryIndex, 0, { id: "historySummaryMessage", type:"system", message: {content: summary, kind:"historySummaryMessage"} })
+        history.splice(currentSummaryIndex, 0, { id: "historySummaryMessage", type:"system", message: "chat history summarized", value: summary})
         return history
     },
 
     updateMemoryFromMessageInHistory(message, history, replaceFx=m=>"") {
-        const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+kind="(?<kind>[^"]+)">(?<content>[\s\S]*?)<\/memory>/g;
+        const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+hint="(?<hint>[^"]+)">(?<content>[\s\S]*?)<\/memory>/g;
     
-        return message.message.replace(memoryRegex, (_, key, kind, content) => {
-            const current={ type: "system", id: key, message: {content, kind} }
+        return message.message.replace(memoryRegex, (_, key, hint, content) => {
+            const current={ type: "system", id: key, message: hint, value:content}
             const i = history.findIndex(a => a.type == "system" && a.id == key);
             if (i != -1) {
-                history.splice(i, 1, current);
-            }else{
-                history.push(current);
+                history.splice(i, 1);
             }
-            return replaceFx({key, kind, content});
+            history.push(current);
+            return replaceFx({key, hint, content});
         });
     }
 }

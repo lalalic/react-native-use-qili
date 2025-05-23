@@ -1,4 +1,10 @@
 module.exports={
+    /**
+     * {id:"historySummaryMessage",type:"apiMessage", message: summary}
+     * @param {*} history 
+     * @param {*} param1 
+     * @returns 
+     */
     updateHistoryMessageSummaryInHistory(history, {summary, removed}) {
         let currentSummaryIndex = history.findLastIndex(a => a.id == "historySummaryMessage")
         if (currentSummaryIndex != -1) {
@@ -26,10 +32,11 @@ module.exports={
             }
         }
 
-        history.splice(currentSummaryIndex, 0, { id: "historySummaryMessage", type:"system", message: "chat history summarized", value: summary})
+        history.splice(currentSummaryIndex, 0, { id: "historySummaryMessage", type:"apiMessage", message: summary})
         return history
     },
 
+    //<memory key hint>value</memory> -> (system, message:hint, value)
     updateMemoryFromMessageInHistory(message, history, replaceFx=m=>"") {
         const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+hint="(?<hint>[^"]+)">(?<content>[\s\S]*?)<\/memory>/g;
     
@@ -42,5 +49,19 @@ module.exports={
             history.push(current);
             return replaceFx({key, hint, content});
         });
+    },
+
+    /**
+     * keep id:"historySummaryMessage"
+     * keep non-cache system message (system but no value)
+     * @param {*} messages 
+     */
+    asPredictChatHistory(messages){
+        return messages.map(({id,message,type})=>{
+            if(type=="system" && !!message){
+                return false
+            }
+            return {type, message, id}
+        }).filter(a=>!!a)
     }
 }

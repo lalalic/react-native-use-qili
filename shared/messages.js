@@ -57,11 +57,19 @@ module.exports={
      * @param {*} messages 
      */
     asPredictChatHistory(messages){
-        return messages.map(({id,message,type})=>{
+        const memoryKeys=[]
+        const history=messages.map(({id,message,type})=>{
             if(type=="system" && !!message){
+                memoryKeys.push(id)
                 return false
             }
             return {type, message, id}
         }).filter(a=>!!a)
+
+        if(memoryKeys.length){
+            history.unshift({type:"system", message:`existing memory cache keys: ${memoryKeys.join(",")}`})
+        }
+
+        return history
     }
 }

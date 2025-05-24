@@ -38,7 +38,7 @@ module.exports={
 
     //<memory key hint>value</memory> -> (system, message:hint, value)
     updateMemoryFromMessageInHistory(message, history, replaceFx=m=>"") {
-        const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+hint="(?<hint>[^"]+)">(?<content>[\s\S]*?)<\/memory>/g;
+        const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+hint="(?<hint>[^"]*)">(?<content>[\s\S]*?)<\/memory>/g;
     
         return message.message.replace(memoryRegex, (_, key, hint, content) => {
             const current={ type: "system", id: key, message: hint, value:content}
@@ -58,10 +58,14 @@ module.exports={
      */
     asPredictChatHistory(messages){
         const memoryKeys=[]
-        const history=messages.map(({id,message,type})=>{
-            if(type=="system" && !!message){
-                memoryKeys.push(id)
-                return false
+        const history=messages.map(({id,message,type, value})=>{
+            if(type=="system"){
+                if(!!value){
+                    memoryKeys.push(id)
+                }
+                if(message.trim().length==0){
+                    return false
+                }
             }
             return {type, message, id}
         }).filter(a=>!!a)

@@ -71,7 +71,7 @@ module.exports={
         }).filter(a=>!!a)
 
         if(memoryKeys.length){
-            history.unshift({type:"system", message:`existing memory cache keys: ${memoryKeys.join(",")}`})
+            history.unshift({type:"system", id:"currentCacheKeys", message:`existing memory cache keys: ${memoryKeys.join(",")}`, value:memoryKeys})
         }
 
         return history

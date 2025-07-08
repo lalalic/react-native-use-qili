@@ -38,8 +38,8 @@ module.exports={
         type Transaction implements Node{
             id: ID!
             product: String!
-            cost: Int!
-            amount: Int
+            cost: Float!
+            amount: Float
             author: String
             type: Int
             createdAt: Date

@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 module.exports=(token,from)=>({
     name:"upload chatflows",
     async init(qili){
@@ -8,10 +11,8 @@ module.exports=(token,from)=>({
             console.error(`No token to upload chatflows`)
             return 
         }
-        const fs = require('fs');
-        const path = require('path');
 
-        function loadChatflows(dir) {
+        function loadChatflows(dir=`${Cloud.root}/chatflows`) {
             const files = fs.readdirSync(dir, { withFileTypes: true });
             return files.flatMap(file => {
             const fullPath = path.join(dir, file.name);
@@ -29,6 +30,7 @@ module.exports=(token,from)=>({
         if(chatflows.length==0){
             return 
         }
+        console.info(`built-in chatflows: [${chatflows.length}] found. Uploading...`)
         const failed=[], success=[]
         for (const chatflow of chatflows) {
             const res=await fetch("https://ai.qili2.com/graphql",{
@@ -45,21 +47,35 @@ module.exports=(token,from)=>({
                     variables:{chatflow},
                 })
             })
-            
-            const {data:{error}}=await res.json()
 
-            if(error){
-                failed.push(`${chatflow.name}: ${error}`)
-            }else{
-                success.push(chatflow.name)
+            if(!res.ok){
+                failed.push(`${chatflow.name}: ${res.status} ${res.statusText}`)
+                continue
+            }
+
+            const text=await res.text()
+            if(!text){
+                failed.push(`${chatflow.name}: empty response`)
+                continue
+            }
+            
+            try{
+                const {data:{error}}=JSON.parse(text)
+                if(error){
+                    failed.push(`${chatflow.name}: ${error}`)
+                }else{
+                    success.push(chatflow.name)
+                }
+            }catch(e){
+                failed.push(`${chatflow.name}: ${e.message||e.toString()}`)
             }
         }
-        console.info(`built-in chatflows: [${chatflows.length}] found. **********`)
+
         if(success.length){
             console.debug(success)
         }
         if(failed.length){
-            console.error(failed)
+            console.warn(failed)
         }
     }
 })

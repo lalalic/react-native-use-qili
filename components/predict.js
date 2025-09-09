@@ -16,6 +16,9 @@ export async function ask(message, chatflow, timeout=60*1000){
 
     if(message.runMonitorSocketListener){
         message.runMonitorSocket=await makeRunMoinitorSocket(message.runMonitorSocketListener)
+        if(!message.events){
+            message.events=Object.keys(message.runMonitorSocketListener).map(a=>a.replace(/_/g,"/"))
+        }
         delete message.runMonitorSocketListener
     }
 
@@ -102,13 +105,9 @@ async function makeRunMoinitorSocket(listener){
             resolve(socket.id)
         });
 
-        ["apiMessage", "userMessage", "conversation/summary/update", 
-            "VectorStore/addVectors", "VectorStore/similaritySearchVectorWithScore", 
-            "feedback", "echo"].forEach(event=>{
-            socket.on(event, function(){
-                listener.emit(event, ...arguments)
-            })
-        })
+        socket.onAny(function(event, ...args){
+            listener.emit(event, ...args)
+        });
     })
 }
 

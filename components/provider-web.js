@@ -20,7 +20,7 @@ export default React.forwardRef(function WebviewServiceProvider({
     webviewStyle:containerStyle = showWebview ? {position:"relative", flex:1, ...style} : style, 
     closer = showWebview ? false : true, 
     closerStyle,
-    ...props }) {
+    ...props }, refService) {
     const webviewRef = useRef(null);
     const [status, setStatus, $status] = useStateAndLatest("loading");
     const [show, setShow]=React.useState(showWebview)
@@ -268,4 +268,4 @@ export default React.forwardRef(function WebviewServiceProvider({
             {children}
         </Context.Provider>
     );
-},refService);
+});

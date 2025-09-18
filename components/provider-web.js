@@ -16,16 +16,16 @@ export default React.forwardRef(function WebviewServiceProvider({
     onServiceReady, 
     disabled,
     showWebview=false,
-    style=showWebview ? {position:"relative", flex:1} : undefined,
-    webviewStyle:containerStyle= showWebview ? {position:"relative", flex:1, ...style} : undefined, 
-    closer= showWebview ? false : true, 
+    style = showWebview ? {position:"relative", flex:1} : undefined,
+    webviewStyle:containerStyle = showWebview ? {position:"relative", flex:1, ...style} : style, 
+    closer = showWebview ? false : true, 
     closerStyle,
     ...props }) {
     const webviewRef = useRef(null);
     const [status, setStatus, $status] = useStateAndLatest("loading");
     const [show, setShow]=React.useState(showWebview)
 
-    const style = React.useMemo(() => {
+    const viewStyle = React.useMemo(() => {
         const style={zIndex:99, position: "absolute", overflow:"hidden", width: "100%", height: "100%", top: 0, left: 0, ...containerStyle}
         if(disabled){
             return { ...style, left:99999999}
@@ -247,7 +247,7 @@ export default React.forwardRef(function WebviewServiceProvider({
 
     return (
         <Context.Provider value={{ service, status }}>
-            <View style={style}>
+            <View style={viewStyle}>
                 <WebView
                     ref={webviewRef}
                     webviewDebuggingEnabled={true}

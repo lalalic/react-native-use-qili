@@ -67,3 +67,7 @@ Break Changes
 todo
 ===
 * login code as password in UI
+
+change
+===
+* react-native-webview 13.4.0 to fix safari inspect

@@ -76,6 +76,10 @@ export function getSession(){
 	return admin?.headers
 }
 
+export function getToken(){
+	return getSession()?.["x-session-token"]
+}
+
 export const Qili=makeQiliService(getSession)
 export const Reset={type:"$/delete/account"}
 

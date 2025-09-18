@@ -237,6 +237,7 @@ export default function WebviewServiceProvider({
             <View {...webviewProps}>
                 <WebView
                     ref={webviewRef}
+                    webviewDebuggingEnabled={true}
                     style={{ flex: 1 }}
                     source={{ uri }}
                     sharedCookiesEnabled={true}

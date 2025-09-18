@@ -6,38 +6,44 @@ import PressableIcon from "./PressableIcon"
 
 import useStateAndLatest from "./useStateAndLatest"
 
-export default function WebviewServiceProvider({ 
+export const DefaultContext = React.createContext({});
+
+export default React.forwardRef(function WebviewServiceProvider({ 
     id, 
     uri, 
-    Context, children, 
-    bro, broName, 
+    Context=DefaultContext, children, 
+    bro, broName=`HelloMyBro`, 
     onServiceReady, 
     disabled,
-    webviewStyle, closerStyle,
+    showWebview=false,
+    style=showWebview ? {position:"relative", flex:1} : undefined,
+    webviewStyle:containerStyle= showWebview ? {position:"relative", flex:1, ...style} : undefined, 
+    closer= showWebview ? false : true, 
+    closerStyle,
     ...props }) {
     const webviewRef = useRef(null);
     const [status, setStatus, $status] = useStateAndLatest("loading");
-    const [show, setShow]=React.useState(false)
+    const [show, setShow]=React.useState(showWebview)
 
-    const webviewProps = React.useMemo(() => {
-        const style={zIndex:99, position: "absolute", overflow:"hidden", width: "100%", height: "100%", top: 0, left: 0, ...webviewStyle}
+    const style = React.useMemo(() => {
+        const style={zIndex:99, position: "absolute", overflow:"hidden", width: "100%", height: "100%", top: 0, left: 0, ...containerStyle}
         if(disabled){
-            return { style: { ...style, left:99999999} }
+            return { ...style, left:99999999}
         }
 
         if(show){
-            return { style }
+            return style
         }
         
         switch(status){
             case "loginUI":
-                return { style }
+                return style
             case "loginInited":
             case "logout":
             default:
-                return { style: { ...style, left:99999999} }
+                return { ...style, left:99999999}
         }
-    }, [show, webviewStyle, disabled, status]);
+    }, [show, containerStyle, disabled, status]);
 
     const userAgent = React.useMemo(() => Platform.select({
         ios: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
@@ -56,7 +62,7 @@ export default function WebviewServiceProvider({
                 return proxy;
             },
             fire(type, data) {
-                console.debug({ event: type, data });
+                console.debug({ event: type, data, bro: broName });
                 (eventsHandlers[type] || []).forEach(fn => fn(data));
                 return proxy;
             },
@@ -201,10 +207,17 @@ export default function WebviewServiceProvider({
                 $$bro$$.window=window
             };
             window.emit('${broName}.ready');
+
+            document.addEventListener('DOMContentLoaded', ()=>emit('DOMContentLoaded'))
             true;
         `;
         
+        if(refService){
+            refService.current=proxy
+        }
+
         onServiceReady?.(proxy)
+
         proxy
             .on("login", data=>{
                 proxy.status("loginInited")
@@ -234,7 +247,7 @@ export default function WebviewServiceProvider({
 
     return (
         <Context.Provider value={{ service, status }}>
-            <View {...webviewProps}>
+            <View style={style}>
                 <WebView
                     ref={webviewRef}
                     webviewDebuggingEnabled={true}
@@ -248,11 +261,11 @@ export default function WebviewServiceProvider({
                     onError={e=>{service.fire("error", e)}}
                     onNavigationStateChange={onNavigationStateChange}
                     {...props} />
-                <PressableIcon name="close" size={32}
+                {closer && <PressableIcon name="close" size={32}
                     style={{position:"absolute", top:10, right:10, ...closerStyle}} 
-                    onPress={e=>setShow(!show)}/>
+                    onPress={e=>setShow(!show)}/>}
             </View>
             {children}
         </Context.Provider>
     );
-}
+},refService);

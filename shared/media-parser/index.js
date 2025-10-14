@@ -234,7 +234,16 @@ function peg$parse(input, options) {
       peg$c64 = /^[^ \t\n\r]/,
       peg$c65 = peg$classExpectation([" ", "\t", "\n", "\r"], true, false),
       peg$c66 = function(url) {
-            return { type: "url", url: url.flat().join("") };
+            const link=url.flat().join("")
+            // check if link is image
+            if(/\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(link)) {
+              return { type: "image_url", image_url: { url: link } };
+            }
+            // check if link is video
+            if(/\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(link)) {
+              return { type: "video_url", video_url: { url:link } };
+            }
+            return { type: "url", url: link };
           },
       peg$c67 = "```",
       peg$c68 = peg$literalExpectation("```", false),

@@ -78,7 +78,16 @@ sourceTag
 
 url
   = url:("http"i "s"i? "://" [^ \t\n\r]+) {
-      return { type: "url", url: url.flat().join("") };
+      const link=url.flat().join("")
+      // check if link is image
+      if(/\.(jpe?g|png|gif|bmp|webp|svg)$/i.test(link)) {
+        return { type: "image_url", image_url: { url: link } };
+      }
+      // check if link is video
+      if(/\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(link)) {
+        return { type: "video_url", video_url: { url:link } };
+      }
+      return { type: "url", url: link };
     }
 
 codeBlock

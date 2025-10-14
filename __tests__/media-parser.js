@@ -20,15 +20,21 @@ describe('Peg.js Media Parser', () => {
         expect(parse(input)).toEqual(expected);
     });
 
-    it('parses url', () => {
+    it('parses url image', () => {
         const input = 'https://example.com/image.png';
-        const expected = [{ type: 'url',url:'https://example.com/image.png' }];
+        const expected = [{ type: 'image_url',image_url:{url:'https://example.com/image.png' }}];
         expect(parse(input)).toEqual(expected);
     });
 
-    it('parses case-insensitive url', () => {
-        const input = 'hTTps://example.com/image.png';
-        const expected = [{ type: 'url',url:'hTTps://example.com/image.png' }];
+    it('parses case-insensitive url video', () => {
+        const input = 'hTTps://example.com/image.mp4';
+        const expected = [{ type: 'video_url', video_url:{url:'hTTps://example.com/image.mp4' }}];
+        expect(parse(input)).toEqual(expected);
+    });
+
+    it('parses url docx', () => {
+        const input = 'https://example.com/document.docx';
+        const expected = [{ type: 'url', url:'https://example.com/document.docx' }];
         expect(parse(input)).toEqual(expected);
     });
 

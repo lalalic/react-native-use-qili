@@ -91,11 +91,17 @@ export default function createWebFileSystem(storeName, dbName) {
 		});
 	}
 
+	async function makeDirectoryAsync(dirPath, options) {
+		// No-op in this simple implementation, as directories are virtual
+		return;
+	}
+
 	return {
 		readAsStringAsync,
 		writeAsStringAsync,
 		readDirectoryAsync,
 		deleteAsync,
-		getInfoAsync
+		getInfoAsync,
+		makeDirectoryAsync,
 	};
 }

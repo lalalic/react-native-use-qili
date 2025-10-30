@@ -1,6 +1,7 @@
 import * as FileSystem from "expo-file-system";
 import prepareFolder from "./prepareFolder";
 import { SubscriptionClient } from "subscriptions-transport-ws";
+import createWebFileSystem from "./web-file-system";
 
 export default function makeQiliService(getSession) {
 	if(!'QiliConf' in globalThis){
@@ -116,6 +117,42 @@ export default function makeQiliService(getSession) {
 				}, when-Date.now()-ahead)
 			}else{
 				return setTimeout(()=>schedule(...arguments),aday)
+			}
+		},
+		fs:(storeName="files", dbName="qili")=>{
+			const root=(()=>{
+				if (typeof window !== "undefined" && typeof indexedDB !== "undefined") {
+					const WebFileSystem = createWebFileSystem(storeName, dbName);
+					Object.assign(FileSystem, WebFileSystem);
+					return ""
+				}else{
+					return FileSystem.documentDirectory + (`${dbName}/${storeName}/`)
+				}
+			})();
+			return {
+				async read({filePath}){
+					return await FileSystem.readAsStringAsync(`${root}${filePath}`);
+				},
+
+				async write({filePath, content}){
+					await prepareFolder(`${root}${filePath}`.replace(/\/[^\/]*$/, ""));
+					return await FileSystem.writeAsStringAsync(`${root}${filePath}`, content);
+				},
+
+				async list({dirPath}){ 
+					const items = await FileSystem.readDirectoryAsync(`${root}${dirPath}`);
+					await Promise.all(items.map(async name => {
+						const path = `${dirPath}/${name}`;
+						const info = await FileSystem.getInfoAsync(path);
+						return `${name}${info.isDirectory ? "/" : ""}`;
+					}));
+
+					return items;
+				},
+
+				async delete({filePath}){
+					return await FileSystem.deleteAsync(`${root}${filePath}`);
+				}
 			}
 		}
 	})

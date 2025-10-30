@@ -1,7 +1,7 @@
 
 // expo file system doesn't support web, so we need implement FileSystem for web
 // Simple FileSystem implementation using IndexedDB for web
-
+// use filepath as key, and store content as value
 export default function createWebFileSystem(storeName, dbName) {
 	let dbPromise = null;
 
@@ -12,7 +12,7 @@ export default function createWebFileSystem(storeName, dbName) {
 			request.onupgradeneeded = function (event) {
 				const db = event.target.result;
 				if (!db.objectStoreNames.contains(storeName)) {
-					db.createObjectStore(storeName, { keyPath: "filePath" });
+					db.createObjectStore(storeName);
 				}
 			};
 			request.onsuccess = function (event) {
@@ -31,7 +31,7 @@ export default function createWebFileSystem(storeName, dbName) {
 			const tx = db.transaction(storeName, "readonly");
 			const store = tx.objectStore(storeName);
 			const req = store.get(filePath);
-			req.onsuccess = () => resolve(req.result ? req.result.content : null);
+			req.onsuccess = () => resolve(req.result);
 			req.onerror = () => reject(req.error);
 		});
 	}
@@ -41,28 +41,28 @@ export default function createWebFileSystem(storeName, dbName) {
 		return new Promise((resolve, reject) => {
 			const tx = db.transaction(storeName, "readwrite");
 			const store = tx.objectStore(storeName);
-			const req = store.put({ filePath, content });
+			const req = store.put(content, filePath);
 			req.onsuccess = () => resolve();
 			req.onerror = () => reject(req.error);
 		});
 	}
 
-	async function readDirectoryAsync(dirPath) {
-		const db = await getDB();
-		return new Promise((resolve, reject) => {
-			const tx = db.transaction(storeName, "readonly");
-			const store = tx.objectStore(storeName);
-			const req = store.getAll();
-			req.onsuccess = () => {
-				const files = req.result
-					.filter(f => f.filePath.startsWith(dirPath))
-					.map(f => f.filePath.replace(dirPath + "/", "").split("/")[0])
-					.filter((v, i, a) => a.indexOf(v) === i);
-				resolve(files);
-			};
-			req.onerror = () => reject(req.error);
-		});
-	}
+		async function readDirectoryAsync(dirPath) {
+			const db = await getDB();
+			return new Promise((resolve, reject) => {
+				const tx = db.transaction(storeName, "readonly");
+				const store = tx.objectStore(storeName);
+				const req = store.getAllKeys();
+				req.onsuccess = () => {
+					const files = req.result
+						.filter(key => key.startsWith(dirPath))
+						.map(key => key.replace(dirPath + "/", "").split("/")[0])
+						.filter((v, i, a) => a.indexOf(v) === i);
+					resolve(files);
+				};
+				req.onerror = () => reject(req.error);
+			});
+		}
 
 	async function deleteAsync(filePath) {
 		const db = await getDB();
@@ -91,7 +91,7 @@ export default function createWebFileSystem(storeName, dbName) {
 		});
 	}
 
-	async function makeDirectoryAsync(dirPath, options) {
+	async function makeDirectoryAsync() {
 		// No-op in this simple implementation, as directories are virtual
 		return;
 	}
@@ -102,6 +102,6 @@ export default function createWebFileSystem(storeName, dbName) {
 		readDirectoryAsync,
 		deleteAsync,
 		getInfoAsync,
-		makeDirectoryAsync,
+		makeDirectoryAsync
 	};
 }

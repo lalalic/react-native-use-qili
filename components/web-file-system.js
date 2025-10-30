@@ -5,11 +5,6 @@
 export default function createWebFileSystem(storeName, dbName) {
 	let dbPromise = null;
 
-	function safePath(path) {
-		// Simple sanitation, can be improved
-		//remove start /
-		return path.replace(/^\/*/, '/').replace(/\/+/g, '/');
-	}
 	function getDB() {
 		if (dbPromise) return dbPromise;
 		dbPromise = new Promise((resolve, reject) => {
@@ -32,7 +27,6 @@ export default function createWebFileSystem(storeName, dbName) {
 
 	async function readAsStringAsync(filePath) {
 		const db = await getDB();
-		filePath = safePath(filePath);
 		return new Promise((resolve, reject) => {
 			const tx = db.transaction(storeName, "readonly");
 			const store = tx.objectStore(storeName);
@@ -44,7 +38,6 @@ export default function createWebFileSystem(storeName, dbName) {
 
 	async function writeAsStringAsync(filePath, content) {
 		const db = await getDB();
-		filePath = safePath(filePath);
 		return new Promise((resolve, reject) => {
 			const tx = db.transaction(storeName, "readwrite");
 			const store = tx.objectStore(storeName);
@@ -56,7 +49,6 @@ export default function createWebFileSystem(storeName, dbName) {
 
 		async function readDirectoryAsync(dirPath) {
 			const db = await getDB();
-			dirPath = safePath(dirPath);
 			return new Promise((resolve, reject) => {
 				const tx = db.transaction(storeName, "readonly");
 				const store = tx.objectStore(storeName);
@@ -74,7 +66,6 @@ export default function createWebFileSystem(storeName, dbName) {
 
 	async function deleteAsync(filePath) {
 		const db = await getDB();
-		filePath = safePath(filePath);
 		return new Promise((resolve, reject) => {
 			const tx = db.transaction(storeName, "readwrite");
 			const store = tx.objectStore(storeName);

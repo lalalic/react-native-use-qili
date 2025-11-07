@@ -87,6 +87,11 @@ url
       if(/\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(link)) {
         return { type: "video_url", video_url: { url:link } };
       }
+
+      if(/\.(mp3|wav|ogg|m4a|flac|aac)$/i.test(link)) {
+        return { type: "audio_url", audio_url: { url: link} };
+      }
+
       return { type: "url", url: link };
     }
 

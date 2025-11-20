@@ -6,9 +6,10 @@ module.exports={
      * @returns 
      */
     updateHistoryMessageSummaryInHistory(history, {summary, removed}) {
+        const subchat={history:[], type:"summary"}
         let currentSummaryIndex = history.findLastIndex(a => a.id == "historySummaryMessage")
         if (currentSummaryIndex != -1) {
-            history.splice(currentSummaryIndex, 1) // only 1 summary
+            subchat.history=history.splice(currentSummaryIndex, 1) // only 1 summary
         } else {
             currentSummaryIndex = 0
         }
@@ -25,29 +26,30 @@ module.exports={
         let removedCount = 0
         for (let i = currentSummaryIndex; i < history.length && removedCount < removed; ) {
             if (history[i].type !== "system") {
-                history.splice(i, 1)
+                const [one]=history.splice(i, 1)
+                subchat.history.push(one)
                 removedCount++
             } else {
                 i++
             }
         }
 
-        history.splice(currentSummaryIndex, 0, { id: "historySummaryMessage", type:"apiMessage", message: summary})
+        history.splice(currentSummaryIndex, 0, { 
+            id: "historySummaryMessage", 
+            type:"apiMessage", 
+            message: `<previous_conversation_summary>\n${summary}\n</previous_conversation_summary>`,
+            subchat,
+        })
         return history
     },
 
     //<memory key hint>value</memory> -> (system, message:hint, value)
-    updateMemoryFromMessageInHistory(message, history, replaceFx=m=>"") {
+    updateMemoryFromMessageInHistory(message, chat) {
         const memoryRegex = /<memory\s+key="(?<key>[^"]+)"\s+hint="(?<hint>[^"]*)">(?<content>[\s\S]*?)<\/memory>/g;
     
         return message.message.replace(memoryRegex, (_, key, hint, content) => {
-            const current={ type: "system", id: key, message: hint, value:content}
-            const i = history.findIndex(a => a.type == "system" && a.id == key);
-            if (i != -1) {
-                history.splice(i, 1);
-            }
-            history.push(current);
-            return replaceFx({key, hint, content});
+            chat.memory[key]=content
+            return "";
         });
     },
 
@@ -56,22 +58,20 @@ module.exports={
      * keep non-cache system message (system but no value)
      * @param {*} messages 
      */
-    asPredictChatHistory(messages){
-        const memoryKeys=[]
-        const history=messages.map(({id,message,type, value})=>{
-            if(type=="system"){
-                if(!!value){
-                    memoryKeys.push(id)
-                }
-                if(message.trim().length==0){
-                    return false
-                }
-            }
+    asPredictChatHistory(messages, memoryKeys=[]){
+        const history=messages.map(({id,message,type})=>{
             return {type, message, id}
         }).filter(a=>!!a)
 
-        if(memoryKeys.length){
-            history.unshift({type:"system", id:"currentCacheKeys", message:`existing memory cache keys: ${memoryKeys.join(",")}`, value:memoryKeys})
+        if(memoryKeys.length>0){
+            const MemoryKeys=
+                    `<memory_cache_keys>${memoryKeys.join(",")}</memory_cache_keys>
+                    - You may use these memory caches when relevant.
+                    - Only request or use keys listed above.
+                    `;
+            history[0]?.type==="system"?
+                history[0].message+=`\n\n${MemoryKeys}`:
+                history.unshift({type:"system", message:MemoryKeys})
         }
 
         return history

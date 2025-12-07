@@ -1,6 +1,6 @@
 {
   "name": "react-native-use-qili",
-  "version": "1.1.76",
+  "version": "1.1.77",
   "description": "api.qili2.com utilities",
   "main": "index.js",
   "repository": "https://github.com/lalalic/use-qili",
@@ -20,7 +20,8 @@
     "ai": " yarn  add react-native-use-qili --cwd ../qili-ai &&  yarn  add react-native-use-qili --cwd ../qili-ai/www",
     "bridge": " yarn add react-native-use-qili --cwd ../qili-web-bridge && yarn add react-native-use-qili --cwd ../qili-web-bridge/www",
     "upgrade-all": "yarn wechat-bot && yarn parrot && yarn ai",
-    "test": "node node_modules/jest-cli/bin/jest.js"
+    "test": "node node_modules/jest-cli/bin/jest.js",
+        "debug": "node --inspect-brk=9226 --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "peerDependencies": {
     "expo": "~46.0.16",

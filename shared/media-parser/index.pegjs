@@ -96,27 +96,20 @@ url
     }
 
 codeBlock
-  = "```" lang:LangName? [ \t]* newline
-    code:CodeContent
+  = "```" lang:LangName? params:[^\r\n]* newline
+    code:(!("```") c:. {return c})*
     "```" newline?
     {
       return {
         type: "code",
         lang: lang !== null ? lang : "plain",
-        code: code
+        params: params.join("").trim(),
+        code: code.join("").trim()
       };
     }
 
 LangName
   = chars:[a-zA-Z0-9_]+ { return chars.join(""); }
-
-CodeContent
-  = lines:((!EndBacktick .)+ newline?)* {
-      return lines.map(l => l.join("")).join("\n").split(",").join("");
-    }
-
-EndBacktick
-  = "```"
 
 newline
   = "\r\n" / "\n" / "\r"

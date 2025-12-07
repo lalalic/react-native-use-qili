@@ -179,4 +179,11 @@ let name='test';
         expect(parsed.length).toBe(expected.length)
         expect(parsed).toMatchObject(expected);
     });
+
+    test.only(`response format`, ()=>{
+        const parsed=parse(`\`\`\`json response_format
+{"type":"object","properties":{"title":{"type":"string","description":"用媒体拍摄的日期作为标题"},"narratives":{"type":"array","items":{"type":"string"},"description":"所有媒体的旁白,对应媒体的顺序"},"tags":{"type":"array","items":{"type":"string"},"minItems":3,"maxItems":3},"noteForNext":{"type":"string","description":"主要用作下一个vlog的前情提要"}},"required":["title","narratives","tags","noteForNext"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
+\`\`\``)
+        expect(parsed).toMatchObject([{type:"code", lang:"json", params:"response_format", code:`{"type":"object","properties":{"title":{"type":"string","description":"用媒体拍摄的日期作为标题"},"narratives":{"type":"array","items":{"type":"string"},"description":"所有媒体的旁白,对应媒体的顺序"},"tags":{"type":"array","items":{"type":"string"},"minItems":3,"maxItems":3},"noteForNext":{"type":"string","description":"主要用作下一个vlog的前情提要"}},"required":["title","narratives","tags","noteForNext"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}`}])
+    })
 });
